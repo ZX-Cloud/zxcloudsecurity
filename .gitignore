@@ -1,0 +1,37 @@
+# API keys and secrets — NEVER commit these
+*.env
+.env
+.env.*
+*API Key*
+*api_key*
+*apikey*
+secrets.txt
+secrets.json
+
+# Pipeline output files — generated fresh each run, no need to version
+raw_feed.json
+enriched_feed.json
+enrichment_failures.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# Hugo build output
+public/
+resources/
+
+# OS clutter
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor clutter
+.vscode/
+.idea/
+*.swp
+*.swo
