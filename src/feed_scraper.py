@@ -1,8 +1,6 @@
 """
 feed_scraper.py
 ZX Cloud Security — Daily Feed Ingestion Pipeline
-Fetches RSS/Atom/JSON feeds from AWS, GCP, Azure, and general security sources.
-Outputs structured JSON ready for Claude API enrichment.
 """
 
 import feedparser
@@ -18,138 +16,34 @@ from email.utils import parsedate_to_datetime
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Feed definitions
-# ---------------------------------------------------------------------------
-
 FEEDS = [
-    # ── AWS ──────────────────────────────────────────────────────────────────
-    {
-        "id": "aws_bulletins",
-        "category": "aws",
-        "name": "AWS Security Bulletins",
-        "url": "https://aws.amazon.com/security/security-bulletins/feed/",
-        "type": "rss",
-        "priority": "high",
-    },
-    {
-        "id": "aws_blog",
-        "category": "aws",
-        "name": "AWS Security Blog",
-        "url": "http://feeds.feedburner.com/AWSSecurity",
-        "type": "rss",
-        "priority": "medium",
-    },
-    {
-        "id": "aws_whats_new",
-        "category": "aws",
-        "name": "AWS What's New",
-        "url": "https://aws.amazon.com/about-aws/whats-new/recent/feed/",
-        "type": "rss",
-        "priority": "low",
-        "keyword_filter": ["security", "iam", "waf", "guardduty", "inspector",
-                           "security hub", "macie", "kms", "cloudtrail",
-                           "config", "shield", "firewall", "scp"],
-    },
-    # ── GCP ──────────────────────────────────────────────────────────────────
-    {
-        "id": "gcp_bulletins",
-        "category": "gcp",
-        "name": "GCP Security Bulletins",
-        "url": "https://cloud.google.com/feeds/cloud-security-bulletins.xml",
-        "type": "rss",
-        "priority": "high",
-    },
-    {
-        "id": "google_project_zero",
-        "category": "gcp",
-        "name": "Google Project Zero",
-        "url": "https://googleprojectzero.blogspot.com/feeds/posts/default",
-        "type": "atom",
-        "priority": "medium",
-    },
-    # ── Azure ─────────────────────────────────────────────────────────────────
-    {
-        "id": "msrc",
-        "category": "azure",
-        "name": "Microsoft Security Response Center",
-        "url": "https://msrc.microsoft.com/update-guide/rss",
-        "type": "rss",
-        "priority": "high",
-    },
-    {
-        "id": "azure_updates",
-        "category": "azure",
-        "name": "Azure Updates",
-        "url": "https://azurecomcdn.azureedge.net/en-us/updates/feed/",
-        "type": "rss",
-        "priority": "low",
-        "keyword_filter": ["security", "defender", "sentinel", "entra",
-                           "firewall", "key vault", "policy", "rbac",
-                           "zero trust", "identity"],
-    },
-    # ── Cross-cloud / General ─────────────────────────────────────────────────
-    {
-        "id": "cisa_kev",
-        "category": "general",
-        "name": "CISA Known Exploited Vulnerabilities",
-        "url": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
-        "type": "json_cisa",
-        "priority": "critical",
-    },
-    {
-        "id": "thehackernews",
-        "category": "general",
-        "name": "The Hacker News",
-        "url": "http://thehackernews.com/feeds/posts/default",
-        "type": "rss",
-        "priority": "medium",
-    },
-    {
-        "id": "krebs",
-        "category": "general",
-        "name": "Krebs on Security",
-        "url": "https://krebsonsecurity.com/feed/",
-        "type": "rss",
-        "priority": "medium",
-    },
-    {
-        "id": "theregister_security",
-        "category": "general",
-        "name": "The Register — Security",
-        "url": "https://www.theregister.co.uk/security/headlines.atom",
-        "type": "atom",
-        "priority": "medium",
-    },
-    {
-        "id": "schneier",
-        "category": "general",
-        "name": "Schneier on Security",
-        "url": "https://www.schneier.com/blog/atom.xml",
-        "type": "atom",
-        "priority": "medium",
-    },
+    {"id": "aws_bulletins", "category": "aws", "name": "AWS Security Bulletins", "url": "https://aws.amazon.com/security/security-bulletins/feed/", "type": "rss", "priority": "high"},
+    {"id": "aws_blog", "category": "aws", "name": "AWS Security Blog", "url": "http://feeds.feedburner.com/AWSSecurity", "type": "rss", "priority": "medium"},
+    {"id": "aws_whats_new", "category": "aws", "name": "AWS What's New", "url": "https://aws.amazon.com/about-aws/whats-new/recent/feed/", "type": "rss", "priority": "low", "keyword_filter": ["security", "iam", "waf", "guardduty", "inspector", "security hub", "macie", "kms", "cloudtrail", "config", "shield", "firewall", "scp"]},
+    {"id": "gcp_bulletins", "category": "gcp", "name": "GCP Security Bulletins", "url": "https://cloud.google.com/feeds/cloud-security-bulletins.xml", "type": "rss", "priority": "high"},
+    {"id": "google_project_zero", "category": "gcp", "name": "Google Project Zero", "url": "https://googleprojectzero.blogspot.com/feeds/posts/default", "type": "atom", "priority": "medium"},
+    {"id": "msrc", "category": "azure", "name": "Microsoft Security Response Center", "url": "https://msrc.microsoft.com/update-guide/rss", "type": "rss", "priority": "high"},
+    {"id": "azure_updates", "category": "azure", "name": "Azure Updates", "url": "https://azurecomcdn.azureedge.net/en-us/updates/feed/", "type": "rss", "priority": "low", "keyword_filter": ["security", "defender", "sentinel", "entra", "firewall", "key vault", "policy", "rbac", "zero trust", "identity"]},
+    {"id": "cisa_kev", "category": "general", "name": "CISA Known Exploited Vulnerabilities", "url": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json", "type": "json_cisa", "priority": "critical", "fallback_url": "https://raw.githubusercontent.com/cisagov/known-exploited-vulnerabilities/main/json/known_exploited_vulnerabilities.json"},
+    {"id": "thehackernews", "category": "general", "name": "The Hacker News", "url": "http://thehackernews.com/feeds/posts/default", "type": "rss", "priority": "medium"},
+    {"id": "krebs", "category": "general", "name": "Krebs on Security", "url": "https://krebsonsecurity.com/feed/", "type": "rss", "priority": "medium"},
+    {"id": "theregister_security", "category": "general", "name": "The Register — Security", "url": "https://www.theregister.co.uk/security/headlines.atom", "type": "atom", "priority": "medium"},
+    {"id": "schneier", "category": "general", "name": "Schneier on Security", "url": "https://www.schneier.com/blog/atom.xml", "type": "atom", "priority": "medium"},
 ]
-
-# ---------------------------------------------------------------------------
-# Data model
-# ---------------------------------------------------------------------------
 
 @dataclass
 class FeedItem:
-    id: str                          # SHA-256 of source_id + link
-    source_id: str                   # Feed identifier
+    id: str
+    source_id: str
     source_name: str
-    category: str                    # aws | gcp | azure | general
+    category: str
     title: str
     link: str
-    summary: str                     # Raw summary/description (may be HTML)
-    published: str                   # ISO 8601
-    priority: str                    # critical | high | medium | low
+    summary: str
+    published: str
+    priority: str
     keyword_matched: bool = False
     tags: list = field(default_factory=list)
-
-    # Populated later by Claude enrichment stage
     ai_summary: Optional[str] = None
     ai_architects_take: Optional[str] = None
     ai_severity: Optional[str] = None
@@ -163,18 +57,11 @@ def make_id(source_id: str, link: str) -> str:
     return hashlib.sha256(f"{source_id}:{link}".encode()).hexdigest()[:16]
 
 
-# ---------------------------------------------------------------------------
-# Parsers
-# ---------------------------------------------------------------------------
-
 def _parse_date(entry) -> str:
-    """Return ISO 8601 string from a feedparser entry, best-effort."""
     if hasattr(entry, "published_parsed") and entry.published_parsed:
-        dt = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
-        return dt.isoformat()
+        return datetime(*entry.published_parsed[:6], tzinfo=timezone.utc).isoformat()
     if hasattr(entry, "updated_parsed") and entry.updated_parsed:
-        dt = datetime(*entry.updated_parsed[:6], tzinfo=timezone.utc)
-        return dt.isoformat()
+        return datetime(*entry.updated_parsed[:6], tzinfo=timezone.utc).isoformat()
     if hasattr(entry, "published") and entry.published:
         try:
             return parsedate_to_datetime(entry.published).isoformat()
@@ -183,9 +70,8 @@ def _parse_date(entry) -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _keyword_match(text: str, keywords: list[str]) -> bool:
-    text_lower = text.lower()
-    return any(kw in text_lower for kw in keywords)
+def _keyword_match(text: str, keywords: list) -> bool:
+    return any(kw in text.lower() for kw in keywords)
 
 
 def _is_recent(published_iso: str, max_age_hours: int = 48) -> bool:
@@ -195,11 +81,10 @@ def _is_recent(published_iso: str, max_age_hours: int = 48) -> bool:
             dt = dt.replace(tzinfo=timezone.utc)
         return datetime.now(timezone.utc) - dt < timedelta(hours=max_age_hours)
     except Exception:
-        return True  # include if we can't parse
+        return True
 
 
-def fetch_rss_feed(feed_def: dict, max_age_hours: int = 48) -> list[FeedItem]:
-    """Fetch an RSS or Atom feed via feedparser."""
+def fetch_rss_feed(feed_def: dict, max_age_hours: int = 48) -> list:
     items = []
     try:
         log.info(f"Fetching {feed_def['name']} ...")
@@ -207,12 +92,13 @@ def fetch_rss_feed(feed_def: dict, max_age_hours: int = 48) -> list[FeedItem]:
             feed_def["url"],
             request_headers={"User-Agent": "ZXCloudSecurity/1.0 (+https://zxcloudsecurity.co.uk)"},
         )
-        if parsed.bozo and not parsed.entries:
-            log.warning(f"  Feed parse error ({feed_def['id']}): {parsed.bozo_exception}")
-            return items
+        if parsed.bozo:
+            log.warning(f"  Minor parse warning ({feed_def['id']}): {parsed.bozo_exception}")
+            if not parsed.entries:
+                log.error(f"  No entries returned for {feed_def['id']} — skipping")
+                return items
 
         keywords = feed_def.get("keyword_filter", [])
-
         for entry in parsed.entries:
             title = getattr(entry, "title", "") or ""
             link = getattr(entry, "link", "") or ""
@@ -221,12 +107,8 @@ def fetch_rss_feed(feed_def: dict, max_age_hours: int = 48) -> list[FeedItem]:
 
             if not _is_recent(published, max_age_hours):
                 continue
-
-            matched = True
-            if keywords:
-                matched = _keyword_match(title + " " + summary, keywords)
-                if not matched:
-                    continue
+            if keywords and not _keyword_match(title + " " + summary, keywords):
+                continue
 
             items.append(FeedItem(
                 id=make_id(feed_def["id"], link),
@@ -235,33 +117,36 @@ def fetch_rss_feed(feed_def: dict, max_age_hours: int = 48) -> list[FeedItem]:
                 category=feed_def["category"],
                 title=title,
                 link=link,
-                summary=summary[:2000],  # cap raw summary size
+                summary=summary[:2000],
                 published=published,
                 priority=feed_def["priority"],
                 keyword_matched=bool(keywords),
             ))
-
         log.info(f"  → {len(items)} items from {feed_def['name']}")
     except Exception as e:
         log.error(f"  Error fetching {feed_def['id']}: {e}")
     return items
 
 
-def fetch_cisa_kev(feed_def: dict, max_age_hours: int = 48) -> list[FeedItem]:
-    """Fetch CISA Known Exploited Vulnerabilities JSON feed."""
+def fetch_cisa_kev(feed_def: dict, max_age_hours: int = 48) -> list:
     items = []
+    # CISA blocks non-browser user-agents; use a fallback GitHub mirror if primary fails
+    headers = {
+        "User-Agent": "Mozilla/5.0 (compatible; ZXCloudSecurity/1.0; +https://zxcloudsecurity.co.uk)",
+        "Accept": "application/json",
+    }
     try:
         log.info("Fetching CISA KEV ...")
-        resp = requests.get(
-            feed_def["url"],
-            timeout=30,
-            headers={"User-Agent": "ZXCloudSecurity/1.0 (+https://zxcloudsecurity.co.uk)"},
-        )
+        url = feed_def["url"]
+        resp = requests.get(url, timeout=30, headers=headers)
+        if resp.status_code != 200:
+            fallback = feed_def.get("fallback_url")
+            if fallback:
+                log.warning(f"  CISA primary returned {resp.status_code}, trying GitHub mirror ...")
+                resp = requests.get(fallback, timeout=30, headers=headers)
         resp.raise_for_status()
         data = resp.json()
-        vulns = data.get("vulnerabilities", [])
-
-        for v in vulns:
+        for v in data.get("vulnerabilities", []):
             date_added = v.get("dateAdded", "")
             if date_added:
                 try:
@@ -281,75 +166,50 @@ def fetch_cisa_kev(feed_def: dict, max_age_hours: int = 48) -> list[FeedItem]:
             description = v.get("shortDescription", "")
             due_date = v.get("dueDate", "")
 
-            title = f"{cve_id}: {vendor} {product}"
-            link = f"https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
-            summary = f"{description} (Remediation due: {due_date})"
-
             items.append(FeedItem(
                 id=make_id(feed_def["id"], cve_id),
                 source_id=feed_def["id"],
                 source_name=feed_def["name"],
                 category=feed_def["category"],
-                title=title,
-                link=link,
-                summary=summary,
+                title=f"{cve_id}: {vendor} {product}",
+                link="https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+                summary=f"{description} (Remediation due: {due_date})",
                 published=published,
                 priority="critical",
                 tags=[cve_id, vendor, product],
             ))
-
         log.info(f"  → {len(items)} new KEV entries")
     except Exception as e:
         log.error(f"  Error fetching CISA KEV: {e}")
     return items
 
 
-# ---------------------------------------------------------------------------
-# Main ingestion entry point
-# ---------------------------------------------------------------------------
-
-def ingest_all(max_age_hours: int = 48) -> list[FeedItem]:
-    """
-    Fetch all configured feeds and return a deduplicated list of FeedItems,
-    sorted by published date descending.
-    """
-    all_items: list[FeedItem] = []
-    seen_ids: set[str] = set()
-
+def ingest_all(max_age_hours: int = 48) -> list:
+    all_items = []
+    seen_ids = set()
     for feed_def in FEEDS:
         if feed_def["type"] == "json_cisa":
             items = fetch_cisa_kev(feed_def, max_age_hours)
         else:
             items = fetch_rss_feed(feed_def, max_age_hours)
-
         for item in items:
             if item.id not in seen_ids:
                 seen_ids.add(item.id)
                 all_items.append(item)
-
-    # Sort newest first
     all_items.sort(key=lambda x: x.published, reverse=True)
-
     log.info(f"Total unique items ingested: {len(all_items)}")
     return all_items
 
 
-def save_raw(items: list[FeedItem], path: str = "raw_feed.json") -> None:
-    """Persist raw items to JSON for the enrichment stage."""
+def save_raw(items: list, path: str = "raw_feed.json") -> None:
     with open(path, "w") as f:
         json.dump([asdict(i) for i in items], f, indent=2, default=str)
     log.info(f"Saved {len(items)} items to {path}")
 
 
-# ---------------------------------------------------------------------------
-# CLI entry point
-# ---------------------------------------------------------------------------
-
 if __name__ == "__main__":
     items = ingest_all(max_age_hours=48)
     save_raw(items, "raw_feed.json")
-
-    # Quick summary
     from collections import Counter
     cats = Counter(i.category for i in items)
     priorities = Counter(i.priority for i in items)
