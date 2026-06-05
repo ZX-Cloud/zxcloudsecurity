@@ -152,6 +152,10 @@ def generate(
 
     log.info(f"Loaded {len(items)} items from {input_path}")
 
+    # Sort by severity: Critical → High → Medium → Low → unknown
+    severity_order = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
+    items.sort(key=lambda x: severity_order.get(x.get("ai_severity", ""), 4))
+    
     # Create output directory
     output_dir.mkdir(parents=True, exist_ok=True)
 
