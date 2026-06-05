@@ -24,6 +24,7 @@ buildFuture = false
   ShowCodeCopyButtons = true
   ShowToc = false
   hidemeta = false
+  orderSections = "weight"
 
   [params.homeInfoParams]
     Title = "Cloud Security Intelligence"

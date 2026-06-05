@@ -83,6 +83,10 @@ def build_frontmatter(item: dict) -> str:
         tags = item.get("tags", [])
     tags_toml = ", ".join(f'"{t}"' for t in tags[:8])
 
+    # Lower weight = higher in list
+    weight_map = {"Critical": 1, "High": 2, "Medium": 3, "Low": 4}
+    weight = weight_map.get(severity, 5)
+
     return f"""+++
 title = "{title}"
 date = "{date}"
@@ -93,6 +97,7 @@ tags = [{tags_toml}]
 severity = "{severity}"
 source = "{source_name}"
 source_url = "{link}"
+weight = {weight}
 draft = false
 +++
 """
@@ -155,7 +160,7 @@ def generate(
     # Sort by severity: Critical → High → Medium → Low → unknown
     severity_order = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
     items.sort(key=lambda x: severity_order.get(x.get("ai_severity", ""), 4))
-    
+
     # Create output directory
     output_dir.mkdir(parents=True, exist_ok=True)
 
