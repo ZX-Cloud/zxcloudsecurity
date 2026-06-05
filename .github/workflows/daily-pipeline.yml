@@ -1,0 +1,73 @@
+name: Daily Security Feed Pipeline
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # 6am UTC daily
+  workflow_dispatch:        # allow manual trigger from GitHub UI
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Checkout ────────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true   # needed for Hugo PaperMod theme
+
+      # ── Python setup ────────────────────────────────────────────────────────
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: pip install -r src/requirements.txt
+
+      # ── Hugo setup ──────────────────────────────────────────────────────────
+      - name: Install Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: '0.162.1'
+          extended: true
+
+      # ── Pipeline ────────────────────────────────────────────────────────────
+      - name: Scrape feeds
+        run: python src/feed_scraper.py
+
+      - name: Enrich with Claude API
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python src/enricher.py
+
+      - name: Generate Hugo content
+        run: python src/generate.py
+
+      - name: Build Hugo site
+        run: hugo --minify
+        working-directory: site
+
+      # ── Deploy ──────────────────────────────────────────────────────────────
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-2
+
+      - name: Deploy to S3
+        run: aws s3 sync site/public/ s3://zxcloudsecurity-site --delete
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
+
+      # ── Notify on failure ───────────────────────────────────────────────────
+      - name: Pipeline summary
+        if: always()
+        run: |
+          echo "Pipeline completed at $(date)"
+          echo "Feeds scraped, enriched, and deployed to zxcloudsecurity.co.uk"

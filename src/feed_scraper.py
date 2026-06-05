@@ -20,10 +20,11 @@ FEEDS = [
     {"id": "aws_bulletins", "category": "aws", "name": "AWS Security Bulletins", "url": "https://aws.amazon.com/security/security-bulletins/feed/", "type": "rss", "priority": "high"},
     {"id": "aws_blog", "category": "aws", "name": "AWS Security Blog", "url": "http://feeds.feedburner.com/AWSSecurity", "type": "rss", "priority": "medium"},
     {"id": "aws_whats_new", "category": "aws", "name": "AWS What's New", "url": "https://aws.amazon.com/about-aws/whats-new/recent/feed/", "type": "rss", "priority": "low", "keyword_filter": ["security", "iam", "waf", "guardduty", "inspector", "security hub", "macie", "kms", "cloudtrail", "config", "shield", "firewall", "scp"]},
-    {"id": "gcp_bulletins", "category": "gcp", "name": "GCP Security Bulletins", "url": "https://cloud.google.com/feeds/cloud-security-bulletins.xml", "type": "rss", "priority": "high"},
+    {"id": "gcp_compute_bulletins", "category": "gcp", "name": "GCP Compute Engine Security Bulletins", "url": "https://cloud.google.com/feeds/compute-engine-security-bulletins.xml", "type": "rss", "priority": "high"},
+    {"id": "gcp_gke_bulletins", "category": "gcp", "name": "GCP GKE Security Bulletins", "url": "https://cloud.google.com/feeds/kubernetes-engine-security-bulletins.xml", "type": "rss", "priority": "high"},
     {"id": "google_project_zero", "category": "gcp", "name": "Google Project Zero", "url": "https://googleprojectzero.blogspot.com/feeds/posts/default", "type": "atom", "priority": "medium"},
-    {"id": "msrc", "category": "azure", "name": "Microsoft Security Response Center", "url": "https://msrc.microsoft.com/update-guide/rss", "type": "rss", "priority": "high"},
-    {"id": "azure_updates", "category": "azure", "name": "Azure Updates", "url": "https://azurecomcdn.azureedge.net/en-us/updates/feed/", "type": "rss", "priority": "low", "keyword_filter": ["security", "defender", "sentinel", "entra", "firewall", "key vault", "policy", "rbac", "zero trust", "identity"]},
+    {"id": "msrc", "category": "azure", "name": "Microsoft Security Response Center", "url": "https://api.msrc.microsoft.com/update-guide/rss", "type": "rss", "priority": "high", "max_items": 20},
+    {"id": "azure_updates", "category": "azure", "name": "Azure Updates", "url": "https://azure.microsoft.com/en-gb/updates/feed/", "type": "rss", "priority": "low", "keyword_filter": ["security", "defender", "sentinel", "entra", "firewall", "key vault", "policy", "rbac", "zero trust", "identity"]},
     {"id": "cisa_kev", "category": "general", "name": "CISA Known Exploited Vulnerabilities", "url": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json", "type": "json_cisa", "priority": "critical", "fallback_url": "https://raw.githubusercontent.com/cisagov/known-exploited-vulnerabilities/main/json/known_exploited_vulnerabilities.json"},
     {"id": "thehackernews", "category": "general", "name": "The Hacker News", "url": "http://thehackernews.com/feeds/posts/default", "type": "rss", "priority": "medium"},
     {"id": "krebs", "category": "general", "name": "Krebs on Security", "url": "https://krebsonsecurity.com/feed/", "type": "rss", "priority": "medium"},
@@ -86,6 +87,7 @@ def _is_recent(published_iso: str, max_age_hours: int = 48) -> bool:
 
 def fetch_rss_feed(feed_def: dict, max_age_hours: int = 48) -> list:
     items = []
+    items = []
     try:
         log.info(f"Fetching {feed_def['name']} ...")
         parsed = feedparser.parse(
@@ -122,6 +124,10 @@ def fetch_rss_feed(feed_def: dict, max_age_hours: int = 48) -> list:
                 priority=feed_def["priority"],
                 keyword_matched=bool(keywords),
             ))
+        # Cap items if max_items is set
+        max_items = feed_def.get("max_items")
+        if max_items:
+            items = items[:max_items]
         log.info(f"  → {len(items)} items from {feed_def['name']}")
     except Exception as e:
         log.error(f"  Error fetching {feed_def['id']}: {e}")

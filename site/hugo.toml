@@ -1,0 +1,63 @@
+baseURL = "https://zxcloudsecurity.co.uk"
+languageCode = "en-gb"
+locale = "en-GB"
+title = "ZX Cloud Security"
+theme = "PaperMod"
+paginate = 20
+enableRobotsTXT = true
+buildDrafts = false
+buildFuture = false
+
+[params]
+  env = "production"
+  title = "ZX Cloud Security"
+  description = "Daily cloud security advisories, CVEs, and threat intelligence for AWS, GCP, and Azure architects."
+  keywords = ["cloud security", "AWS security", "GCP security", "Azure security", "CVE", "security advisories"]
+  author = "ZX Cloud Security"
+  DateFormat = "2 January 2006"
+  defaultTheme = "dark"
+  disableThemeToggle = false
+  ShowReadingTime = false
+  ShowShareButtons = false
+  ShowPostNavLinks = true
+  ShowBreadCrumbs = true
+  ShowCodeCopyButtons = true
+  ShowToc = false
+  hidemeta = false
+
+  [params.homeInfoParams]
+    Title = "Cloud Security Intelligence"
+    Content = "Daily advisories, CVEs, and threat intelligence across AWS, GCP, and Azure — curated for security architects."
+
+  [[params.socialIcons]]
+    name = "github"
+    url = "https://github.com/ZX-Cloud"
+
+[taxonomies]
+  category = "categories"
+  tag = "tags"
+
+[[menu.main]]
+  identifier = "menu-aws"
+  name = "AWS"
+  url = "/categories/aws/"
+  weight = 10
+[[menu.main]]
+  identifier = "menu-gcp"
+  name = "GCP"
+  url = "/categories/gcp/"
+  weight = 20
+[[menu.main]]
+  identifier = "menu-azure"
+  name = "Azure"
+  url = "/categories/azure/"
+  weight = 30
+[[menu.main]]
+  identifier = "menu-general"
+  name = "General"
+  url = "/categories/general/"
+  weight = 40
+
+[markup]
+  [markup.highlight]
+    noClasses = false
