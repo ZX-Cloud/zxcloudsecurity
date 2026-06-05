@@ -38,7 +38,7 @@ SEVERITY_EMOJI = {
 
 def safe_slug(item: dict) -> str:
     """Return a clean URL slug — prefer AI-generated, fall back to title-based."""
-    slug = item.get("ai_slug", "").strip()
+    slug = (item.get("ai_slug") or "").strip()
     if slug:
         return slug
     # Fallback: slugify the title
