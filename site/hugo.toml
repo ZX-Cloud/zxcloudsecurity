@@ -62,3 +62,9 @@ buildFuture = false
 [markup]
   [markup.highlight]
     noClasses = false
+    
+[outputFormats]
+
+[params.list]
+  orderBy = "weight"
+  orderDir = "asc"
