@@ -122,7 +122,7 @@ def build_body(item: dict) -> str:
         lines.append(f"{summary}\n")
 
     if architects_take:
-        lines.append(f"\n> **Architect's Take:** {architects_take}\n")
+        lines.append(f"\n> **Security Architect's Take:** {architects_take}\n")
 
     lines.append(f"\n**Original advisory:** [{original_title}]({link})\n")
 
