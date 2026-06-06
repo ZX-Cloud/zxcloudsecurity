@@ -67,7 +67,16 @@ def severity_badge(severity: str) -> str:
 def build_frontmatter(item: dict) -> str:
     """Build Hugo TOML front matter for an article."""
     slug = safe_slug(item)
-    date = format_date(item.get("published", ""))
+    # Encode severity into the year so Hugo always sorts Critical first
+    # Time of day is preserved so items within same severity sort by recency
+    severity_year = {"Critical": 2026, "High": 2025, "Medium": 2024, "Low": 2023}
+    try:
+        raw_dt = datetime.fromisoformat(item.get("published", ""))
+        year = severity_year.get(severity, 2023)
+        dt = raw_dt.replace(year=year)
+        date = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+    except Exception:
+        date = format_date(item.get("published", ""))
     title = item.get("ai_seo_title") or item.get("title", "Untitled")
     title = title.replace('"', '\\"')
     description = (item.get("ai_seo_description") or "").replace('"', '\\"')
