@@ -203,6 +203,7 @@ def ingest_all(max_age_hours: int = 48) -> list:
                 seen_ids.add(item.id)
                 all_items.append(item)
     all_items.sort(key=lambda x: x.published, reverse=True)
+    all_items = all_items[:5]  # TODO: increase once testing is complete
     log.info(f"Total unique items ingested: {len(all_items)}")
     return all_items
 
