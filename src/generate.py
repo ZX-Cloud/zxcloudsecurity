@@ -21,7 +21,6 @@ log = logging.getLogger(__name__)
 
 INPUT_FILE = "enriched_feed.json"
 SITE_CONTENT_DIR = Path("../site/content/posts")
-CATEGORIES = ["aws", "gcp", "azure", "general"]
 
 SEVERITY_EMOJI = {
     "Critical": "🔴",
@@ -38,7 +37,6 @@ WEIGHT_MAP = {"Critical": 10, "High": 20, "Medium": 30, "Low": 40}
 # ---------------------------------------------------------------------------
 
 def safe_slug(item: dict) -> str:
-    """Return a clean URL slug — prefer AI-generated, fall back to title-based."""
     slug = (item.get("ai_slug") or "").strip()
     if slug:
         return slug
@@ -51,7 +49,6 @@ def safe_slug(item: dict) -> str:
 
 
 def format_date(iso_date: str) -> str:
-    """Return Hugo-compatible date string."""
     try:
         dt = datetime.fromisoformat(iso_date)
         return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -65,53 +62,10 @@ def severity_badge(severity: str) -> str:
 
 
 def build_frontmatter(item: dict) -> str:
-    """Build Hugo TOML front matter for an article."""
-    slug = safe_slug(item)
-    # Encode severity into the year so Hugo always sorts Critical first
-    # Time of day is preserved so items within same severity sort by recency
-    severity_year = {"Critical": 2026, "High": 2025, "Medium": 2024, "Low": 2023}
-    try:
-        raw_dt = datetime.fromisoformat(item.get("published", ""))
-        year = severity_year.get(severity, 2023)
-        dt = raw_dt.replace(year=year)
-        date = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-    except Exception:
-        date = format_date(item.get("published", ""))
-    title = item.get("ai_seo_title") or item.get("title", "Untitled")
-    title = title.replace('"', '\\"')
-    description = (item.get("ai_seo_description") or "").replace('"', '\\"')
-    severity = item.get("ai_severity", "Medium")
-    category = item.get("category", "general")
-    source_name = item.get("source_name", "")
-    link = item.get("link", "")
-
-    tags = item.get("ai_tags", []) or item.get("tags", [])
-    tags_toml = ", ".join(f'"{t}"' for t in tags[:8])
-
-    weight = WEIGHT_MAP.get(severity, 50)
-
-    return f"""+++
-title = "{title}"
-date = "{date}"
-slug = "{slug}"
-description = "{description}"
-categories = ["{category}"]
-tags = [{tags_toml}]
-severity = "{severity}"
-source = "{source_name}"
-source_url = "{link}"
-weight = {weight}
-draft = false
-+++
-"""
-
-
-def build_frontmatter(item: dict) -> str:
-    """Build Hugo TOML front matter for an article."""
     slug = safe_slug(item)
     severity = item.get("ai_severity", "Medium")
 
-    # Encode severity into the year so Hugo always sorts Critical first
+    # Encode severity into year so Hugo sorts Critical first
     severity_year = {"Critical": 2026, "High": 2025, "Medium": 2024, "Low": 2023}
     try:
         raw_dt = datetime.fromisoformat(item.get("published", ""))
@@ -147,6 +101,32 @@ weight = {weight}
 draft = false
 +++
 """
+
+
+def build_body(item: dict) -> str:
+    severity = item.get("ai_severity", "Medium")
+    source_name = item.get("source_name", "")
+    link = item.get("link", "#")
+    summary = item.get("ai_summary") or item.get("summary", "")
+    architects_take = item.get("ai_architects_take", "")
+    original_title = item.get("title", "")
+
+    if not item.get("ai_summary"):
+        summary = re.sub(r"<[^>]+>", "", summary)
+
+    lines = []
+    lines.append(f"{severity_badge(severity)} &nbsp;|&nbsp; **Source:** [{source_name}]({link})\n")
+    lines.append("---\n")
+
+    if summary:
+        lines.append(f"{summary}\n")
+
+    if architects_take:
+        lines.append(f"\n> **Architect's Take:** {architects_take}\n")
+
+    lines.append(f"\n**Original advisory:** [{original_title}]({link})\n")
+
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------
@@ -157,10 +137,6 @@ def generate(
     input_path: str = INPUT_FILE,
     output_dir: Path = SITE_CONTENT_DIR,
 ) -> int:
-    """
-    Generate Hugo markdown files from enriched_feed.json.
-    Returns the number of files written.
-    """
     input_path = Path(input_path)
     if not input_path.exists():
         raise FileNotFoundError(f"Input file not found: {input_path}")
@@ -176,7 +152,6 @@ def generate(
         x.get("published", "")
     ))
 
-    # Create output directory
     output_dir.mkdir(parents=True, exist_ok=True)
 
     written = 0
