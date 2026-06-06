@@ -106,31 +106,47 @@ draft = false
 """
 
 
-def build_body(item: dict) -> str:
-    """Build the markdown body for an article."""
+def build_frontmatter(item: dict) -> str:
+    """Build Hugo TOML front matter for an article."""
+    slug = safe_slug(item)
     severity = item.get("ai_severity", "Medium")
+
+    # Encode severity into the year so Hugo always sorts Critical first
+    severity_year = {"Critical": 2026, "High": 2025, "Medium": 2024, "Low": 2023}
+    try:
+        raw_dt = datetime.fromisoformat(item.get("published", ""))
+        year = severity_year.get(severity, 2023)
+        dt = raw_dt.replace(year=year)
+        date = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+    except Exception:
+        date = format_date(item.get("published", ""))
+
+    title = item.get("ai_seo_title") or item.get("title", "Untitled")
+    title = title.replace('"', '\\"')
+    description = (item.get("ai_seo_description") or "").replace('"', '\\"')
+    category = item.get("category", "general")
     source_name = item.get("source_name", "")
-    link = item.get("link", "#")
-    summary = item.get("ai_summary") or item.get("summary", "")
-    architects_take = item.get("ai_architects_take", "")
-    original_title = item.get("title", "")
+    link = item.get("link", "")
 
-    if not item.get("ai_summary"):
-        summary = re.sub(r"<[^>]+>", "", summary)
+    tags = item.get("ai_tags", []) or item.get("tags", [])
+    tags_toml = ", ".join(f'"{t}"' for t in tags[:8])
 
-    lines = []
-    lines.append(f"{severity_badge(severity)} &nbsp;|&nbsp; **Source:** [{source_name}]({link})\n")
-    lines.append("---\n")
+    weight = WEIGHT_MAP.get(severity, 50)
 
-    if summary:
-        lines.append(f"{summary}\n")
-
-    if architects_take:
-        lines.append(f"\n> **Architect's Take:** {architects_take}\n")
-
-    lines.append(f"\n**Original advisory:** [{original_title}]({link})\n")
-
-    return "\n".join(lines)
+    return f"""+++
+title = "{title}"
+date = "{date}"
+slug = "{slug}"
+description = "{description}"
+categories = ["{category}"]
+tags = [{tags_toml}]
+severity = "{severity}"
+source = "{source_name}"
+source_url = "{link}"
+weight = {weight}
+draft = false
++++
+"""
 
 
 # ---------------------------------------------------------------------------
