@@ -1,5 +1,4 @@
 baseURL = "https://zxcloudsecurity.co.uk"
-languageCode = "en-gb"
 locale = "en-GB"
 title = "ZX Cloud Security"
 theme = "PaperMod"
@@ -24,7 +23,6 @@ buildFuture = false
   ShowCodeCopyButtons = true
   ShowToc = false
   hidemeta = false
-  orderSections = "weight"
 
   [params.homeInfoParams]
     Title = "Cloud Security Intelligence"
@@ -62,12 +60,3 @@ buildFuture = false
 [markup]
   [markup.highlight]
     noClasses = false
-    
-[outputFormats]
-
-[params.list]
-  orderBy = "weight"
-  orderDir = "asc"
-
-  [params.list]
-  defaultOrderBy = "weight"
