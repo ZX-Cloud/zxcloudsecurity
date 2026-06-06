@@ -49,10 +49,10 @@ jobs:
 
       - name: Debug content files
         run: |
-        echo "Files in site/content/posts:"
-        ls site/content/posts/ | head -20
-        echo "Total files:"
-        ls site/content/posts/*.md | wc -l
+          echo "Files in site/content/posts:"
+          ls site/content/posts/ | head -20
+          echo "Total files:"
+          ls site/content/posts/*.md | wc -l
 
       - name: Build Hugo site
         run: hugo --minify
