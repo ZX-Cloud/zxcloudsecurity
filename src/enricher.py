@@ -220,6 +220,14 @@ def enrich_all(
         if i < len(items):
             time.sleep(REQUEST_DELAY)
 
+    # Filter out Low severity items and cap at 50
+    before_filter = len(enriched)
+    enriched = [i for i in enriched if i.get("ai_severity", "Medium") != "Low"]
+    severity_order = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
+    enriched.sort(key=lambda x: severity_order.get(x.get("ai_severity", ""), 4))
+    enriched = enriched[:50]
+    log.info(f"After filter: {before_filter} → {len(enriched)} items (Lows removed, capped at 50)")
+
     # Write outputs
     with open(output_path, "w") as f:
         json.dump(enriched, f, indent=2, default=str)
