@@ -4,14 +4,12 @@ ZX Cloud Security — Hugo Content Generator
 
 Reads enriched_feed.json produced by enricher.py.
 Creates one Hugo-formatted markdown file per article in the site/content/posts/ directory.
-Also generates a _index.md for each category.
 """
 
 import json
 import logging
-import os
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -32,6 +30,9 @@ SEVERITY_EMOJI = {
     "Low":      "🟢",
 }
 
+SEVERITY_ORDER = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
+WEIGHT_MAP = {"Critical": 10, "High": 20, "Medium": 30, "Low": 40}
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -41,7 +42,6 @@ def safe_slug(item: dict) -> str:
     slug = (item.get("ai_slug") or "").strip()
     if slug:
         return slug
-    # Fallback: slugify the title
     title = item.get("title", "untitled")
     slug = title.lower()
     slug = re.sub(r"[^a-z0-9\s-]", "", slug)
@@ -56,7 +56,7 @@ def format_date(iso_date: str) -> str:
         dt = datetime.fromisoformat(iso_date)
         return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
     except Exception:
-        return datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+        return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def severity_badge(severity: str) -> str:
@@ -67,36 +67,19 @@ def severity_badge(severity: str) -> str:
 def build_frontmatter(item: dict) -> str:
     """Build Hugo TOML front matter for an article."""
     slug = safe_slug(item)
-    # Use severity to override date so Hugo sorts Critical first
-    # Hugo sorts newest first, so Critical gets the latest fake date
-    severity_date_offset = {"Critical": 4, "High": 3, "Medium": 2, "Low": 1}
-    offset = severity_date_offset.get(severity, 0)
-    base_date = format_date(item.get("published", ""))
-    # Add severity offset as years to force ordering
-    try:
-        from datetime import datetime, timezone
-        dt = datetime.now(timezone.utc).replace(year=2020 + offset)
-        date = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-    except Exception:
-        date = base_date
+    date = format_date(item.get("published", ""))
     title = item.get("ai_seo_title") or item.get("title", "Untitled")
-    title = title.replace('"', '\\"')  # escape quotes
-    description = item.get("ai_seo_description", "")
-    description = description.replace('"', '\\"')
+    title = title.replace('"', '\\"')
+    description = (item.get("ai_seo_description") or "").replace('"', '\\"')
     severity = item.get("ai_severity", "Medium")
     category = item.get("category", "general")
     source_name = item.get("source_name", "")
     link = item.get("link", "")
 
-    # Build tags list
-    tags = item.get("ai_tags", [])
-    if not tags:
-        tags = item.get("tags", [])
+    tags = item.get("ai_tags", []) or item.get("tags", [])
     tags_toml = ", ".join(f'"{t}"' for t in tags[:8])
 
-    # Lower weight = higher in list
-    weight_map = {"Critical": 1, "High": 2, "Medium": 3, "Low": 4}
-    weight = weight_map.get(severity, 5)
+    weight = WEIGHT_MAP.get(severity, 50)
 
     return f"""+++
 title = "{title}"
@@ -123,25 +106,19 @@ def build_body(item: dict) -> str:
     architects_take = item.get("ai_architects_take", "")
     original_title = item.get("title", "")
 
-    # Strip HTML tags from raw summary if ai_summary not available
     if not item.get("ai_summary"):
         summary = re.sub(r"<[^>]+>", "", summary)
 
     lines = []
-
-    # Severity + source line
     lines.append(f"{severity_badge(severity)} &nbsp;|&nbsp; **Source:** [{source_name}]({link})\n")
     lines.append("---\n")
 
-    # Summary
     if summary:
         lines.append(f"{summary}\n")
 
-    # Architect's take
     if architects_take:
         lines.append(f"\n> **Architect's Take:** {architects_take}\n")
 
-    # Original title + link
     lines.append(f"\n**Original advisory:** [{original_title}]({link})\n")
 
     return "\n".join(lines)
@@ -168,9 +145,11 @@ def generate(
 
     log.info(f"Loaded {len(items)} items from {input_path}")
 
-    # Sort by severity: Critical → High → Medium → Low → unknown
-    severity_order = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
-    items.sort(key=lambda x: severity_order.get(x.get("ai_severity", ""), 4))
+    # Sort by severity first, then by date within each severity group
+    items.sort(key=lambda x: (
+        SEVERITY_ORDER.get(x.get("ai_severity", ""), 4),
+        x.get("published", "")
+    ))
 
     # Create output directory
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -181,7 +160,6 @@ def generate(
     for item in items:
         slug = safe_slug(item)
 
-        # Deduplicate slugs
         if slug in slugs_seen:
             slug = f"{slug}-{item['id'][:6]}"
         slugs_seen.add(slug)

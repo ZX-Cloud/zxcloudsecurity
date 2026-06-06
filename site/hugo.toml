@@ -68,3 +68,6 @@ buildFuture = false
 [params.list]
   orderBy = "weight"
   orderDir = "asc"
+
+  [params.list]
+  defaultOrderBy = "weight"
