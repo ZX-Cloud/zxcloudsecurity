@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 INPUT_FILE = "enriched_feed.json"
-SITE_CONTENT_DIR = Path("../site/content/posts")
+SITE_CONTENT_DIR = Path("site/content/posts")
 
 SEVERITY_EMOJI = {
     "Critical": "🔴",
