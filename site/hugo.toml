@@ -60,3 +60,4 @@ buildFuture = false
 [markup]
   [markup.highlight]
     noClasses = false
+	
