@@ -47,6 +47,15 @@ jobs:
       - name: Generate Hugo content
         run: python src/generate.py
 
+      - name: Debug content location
+        run: |
+          echo "=== site/content/posts ==="
+          ls site/content/posts/ 2>/dev/null | wc -l || echo "EMPTY OR MISSING"
+          echo "=== ../site/content/posts ==="
+          ls ../site/content/posts/ 2>/dev/null | wc -l || echo "EMPTY OR MISSING"
+          echo "=== pwd ==="
+          pwd
+
       - name: Build Hugo site
         run: hugo --minify
         working-directory: site
