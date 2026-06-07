@@ -1,0 +1,16 @@
+<div class="subscribe-form">
+  <h3>📬 Stay Informed</h3>
+  <p>Get daily cloud security advisories delivered to your inbox.</p>
+  <form
+    action="https://buttondown.com/api/emails/embed-subscribe/zxcloudsecurity"
+    method="post"
+    class="embeddable-buttondown-form"
+  >
+    <input type="email" name="email" id="bd-email" placeholder="your@email.com" required />
+    <input type="submit" value="Subscribe" />
+    <p style="font-size:0.8em; margin-top:0.5em;">
+      Free. No spam. Unsubscribe anytime. 
+      <a href="https://buttondown.com/refer/zxcloudsecurity" target="_blank">Powered by Buttondown.</a>
+    </p>
+  </form>
+</div>
