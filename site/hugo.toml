@@ -26,7 +26,7 @@ buildFuture = false
 
   [params.homeInfoParams]
     Title = "Cloud Security Intelligence"
-    Content = "Daily advisories, CVEs, and threat intelligence across AWS, GCP, and Azure Ã¢â‚¬â€ curated for security architects."
+    Content = "Daily advisories, CVEs, and threat intelligence across AWS, GCP, and Azure, curated for security architects. This is a very much a MVP and is being developed daily with added functionality"
 
   [[params.socialIcons]]
     name = "github"
