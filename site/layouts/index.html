@@ -1,0 +1,90 @@
+{{ define "main" }}
+
+{{ $stats := .Site.Data.stats }}
+
+{{ if $stats }}
+<div style="margin-bottom: 2rem;">
+
+  {{ if $stats.updated }}
+  <div style="display: flex; align-items: center; gap: 8px; padding: 0.6rem 1rem; background: var(--code-bg); border-radius: 6px; margin-bottom: 1.5rem; font-size: 13px; color: var(--secondary);">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+    <span>Updated <strong style="color: var(--primary);">{{ $stats.updated }}</strong></span>
+    <span style="margin-left: auto; display: flex; align-items: center; gap: 5px;">
+      <span style="width: 7px; height: 7px; border-radius: 50%; background: #1D9E75; display: inline-block;"></span>
+      Pipeline runs daily at 06:00 UTC
+    </span>
+  </div>
+  {{ end }}
+
+  {{ if $stats.severity }}
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 1.5rem;">
+    <div style="background: #FCEBEB; border-radius: 8px; padding: 1rem; text-align: center;">
+      <div style="font-size: 11px; color: #A32D2D; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em;">Critical</div>
+      <div style="font-size: 28px; font-weight: 500; color: #A32D2D;">{{ $stats.severity.critical }}</div>
+    </div>
+    <div style="background: #FAEEDA; border-radius: 8px; padding: 1rem; text-align: center;">
+      <div style="font-size: 11px; color: #854F0B; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em;">High</div>
+      <div style="font-size: 28px; font-weight: 500; color: #854F0B;">{{ $stats.severity.high }}</div>
+    </div>
+    <div style="background: #E6F1FB; border-radius: 8px; padding: 1rem; text-align: center;">
+      <div style="font-size: 11px; color: #185FA5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em;">Medium</div>
+      <div style="font-size: 28px; font-weight: 500; color: #185FA5;">{{ $stats.severity.medium }}</div>
+    </div>
+    <div style="background: var(--code-bg); border-radius: 8px; padding: 1rem; text-align: center;">
+      <div style="font-size: 11px; color: var(--secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em;">Total</div>
+      <div style="font-size: 28px; font-weight: 500; color: var(--primary);">{{ $stats.total }}</div>
+    </div>
+  </div>
+  {{ end }}
+
+  {{ if $stats.categories }}
+  <div style="display: flex; gap: 1rem; flex-wrap: wrap; font-size: 13px; color: var(--secondary); margin-bottom: 1.5rem; padding: 0.75rem 1rem; background: var(--code-bg); border-radius: 6px;">
+    <span>AWS: <strong style="color: var(--primary);">{{ $stats.categories.aws }}</strong></span>
+    <span>Azure: <strong style="color: var(--primary);">{{ $stats.categories.azure }}</strong></span>
+    <span>GCP: <strong style="color: var(--primary);">{{ $stats.categories.gcp }}</strong></span>
+    <span>General: <strong style="color: var(--primary);">{{ $stats.categories.general }}</strong></span>
+  </div>
+  {{ end }}
+
+  {{ if $stats.top_critical }}
+  {{ $tc := $stats.top_critical }}
+  <div style="border: 2px solid #E24B4A; border-radius: 10px; padding: 1.25rem; margin-bottom: 1.5rem; position: relative;">
+    <div style="position: absolute; top: -11px; left: 14px; background: #E24B4A; color: white; font-size: 11px; font-weight: 500; padding: 2px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.06em;">Critical advisory</div>
+    <a href="/posts/{{ $tc.slug }}/" style="display: block; text-decoration: none; margin-top: 0.5rem;">
+      <div style="font-size: 16px; font-weight: 500; color: var(--primary); margin-bottom: 0.5rem;">{{ $tc.title }}</div>
+      <div style="font-size: 13px; color: var(--secondary); margin-bottom: 0.75rem;">{{ $tc.summary }}</div>
+      {{ if $tc.architects_take }}
+      <div style="font-size: 12px; padding: 0.5rem 0.75rem; background: #FCEBEB; border-radius: 6px; color: #A32D2D;">
+        <strong>Security Architect's Take:</strong> {{ $tc.architects_take }}
+      </div>
+      {{ end }}
+    </a>
+  </div>
+  {{ end }}
+
+</div>
+{{ end }}
+
+{{ $pages := where .Site.RegularPages "Type" "posts" }}
+{{ $pages = $pages.ByParam "weight" }}
+
+{{ range $pages }}
+<article style="border: 0.5px solid var(--border); border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem;">
+  <a href="{{ .Permalink }}" style="text-decoration: none;">
+    <h2 style="font-size: 16px; font-weight: 500; margin: 0 0 0.4rem; color: var(--primary);">{{ .Title }}</h2>
+    <p style="font-size: 13px; color: var(--secondary); margin: 0 0 0.5rem;">{{ .Description }}</p>
+    <div style="font-size: 12px; color: var(--secondary);">
+      {{ with .Params.severity }}
+        {{ if eq . "Critical" }}<span style="color: #A32D2D;">🔴 Critical</span>{{ end }}
+        {{ if eq . "High" }}<span style="color: #854F0B;">🟠 High</span>{{ end }}
+        {{ if eq . "Medium" }}<span style="color: #185FA5;">🟡 Medium</span>{{ end }}
+        {{ if eq . "Low" }}<span>🟢 Low</span>{{ end }}
+      {{ end }}
+      &nbsp;|&nbsp; {{ .Params.source }}
+      &nbsp;|&nbsp; {{ .Date.Format "2 Jan 2006" }}
+    </div>
+  </a>
+</article>
+{{ end }}
+
+{{ end }}

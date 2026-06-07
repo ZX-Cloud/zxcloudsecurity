@@ -4,23 +4,22 @@ ZX Cloud Security — Hugo Content Generator
 
 Reads enriched_feed.json produced by enricher.py.
 Creates one Hugo-formatted markdown file per article in the site/content/posts/ directory.
+Also writes site/data/stats.json for the homepage dashboard.
 """
 
 import json
 import logging
 import re
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Config
-# ---------------------------------------------------------------------------
-
 INPUT_FILE = "enriched_feed.json"
 SITE_CONTENT_DIR = Path("site/content/posts")
+SITE_DATA_DIR = Path("site/data")
 
 SEVERITY_EMOJI = {
     "Critical": "🔴",
@@ -32,9 +31,6 @@ SEVERITY_EMOJI = {
 SEVERITY_ORDER = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
 WEIGHT_MAP = {"Critical": 10, "High": 20, "Medium": 30, "Low": 40}
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 def safe_slug(item: dict) -> str:
     slug = (item.get("ai_slug") or "").strip()
@@ -65,7 +61,6 @@ def build_frontmatter(item: dict) -> str:
     slug = safe_slug(item)
     severity = item.get("ai_severity", "Medium")
 
-    # Encode severity into year so Hugo sorts Critical first
     severity_year = {"Critical": 2026, "High": 2025, "Medium": 2024, "Low": 2023}
     try:
         raw_dt = datetime.fromisoformat(item.get("published", ""))
@@ -84,7 +79,6 @@ def build_frontmatter(item: dict) -> str:
 
     tags = item.get("ai_tags", []) or item.get("tags", [])
     tags_toml = ", ".join(f'"{t}"' for t in tags[:8])
-
     weight = WEIGHT_MAP.get(severity, 50)
 
     return f"""+++
@@ -117,21 +111,57 @@ def build_body(item: dict) -> str:
     lines = []
     lines.append(f"{severity_badge(severity)} &nbsp;|&nbsp; **Source:** [{source_name}]({link})\n")
     lines.append("---\n")
-
     if summary:
         lines.append(f"{summary}\n")
-
     if architects_take:
         lines.append(f"\n> **Security Architect's Take:** {architects_take}\n")
-
     lines.append(f"\n**Original advisory:** [{original_title}]({link})\n")
 
     return "\n".join(lines)
 
 
-# ---------------------------------------------------------------------------
-# Main generation
-# ---------------------------------------------------------------------------
+def write_stats(items: list) -> None:
+    """Write stats.json for the Hugo homepage dashboard."""
+    severity_counts = Counter(i.get("ai_severity", "Medium") for i in items)
+    category_counts = Counter(i.get("category", "general") for i in items)
+
+    # Find top critical item
+    top_item = None
+    for item in items:
+        if item.get("ai_severity") == "Critical":
+            top_item = {
+                "title": item.get("ai_seo_title") or item.get("title", ""),
+                "summary": item.get("ai_summary", "")[:200],
+                "architects_take": item.get("ai_architects_take", ""),
+                "slug": safe_slug(item),
+                "source": item.get("source_name", ""),
+                "category": item.get("category", "general"),
+            }
+            break
+
+    stats = {
+        "updated": datetime.now(timezone.utc).strftime("%d %b %Y %H:%M UTC"),
+        "total": len(items),
+        "severity": {
+            "critical": severity_counts.get("Critical", 0),
+            "high": severity_counts.get("High", 0),
+            "medium": severity_counts.get("Medium", 0),
+        },
+        "categories": {
+            "aws": category_counts.get("aws", 0),
+            "azure": category_counts.get("azure", 0),
+            "gcp": category_counts.get("gcp", 0),
+            "general": category_counts.get("general", 0),
+        },
+        "top_critical": top_item,
+    }
+
+    SITE_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    stats_path = SITE_DATA_DIR / "stats.json"
+    with open(stats_path, "w") as f:
+        json.dump(stats, f, indent=2)
+    log.info(f"Wrote stats to {stats_path}")
+
 
 def generate(
     input_path: str = INPUT_FILE,
@@ -146,11 +176,13 @@ def generate(
 
     log.info(f"Loaded {len(items)} items from {input_path}")
 
-    # Sort by severity first, then by date within each severity group
     items.sort(key=lambda x: (
         SEVERITY_ORDER.get(x.get("ai_severity", ""), 4),
         x.get("published", "")
     ))
+
+    # Write stats for homepage
+    write_stats(items)
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -159,7 +191,6 @@ def generate(
 
     for item in items:
         slug = safe_slug(item)
-
         if slug in slugs_seen:
             slug = f"{slug}-{item['id'][:6]}"
         slugs_seen.add(slug)
@@ -178,10 +209,6 @@ def generate(
     log.info(f"Generated {written} content files in {output_dir}")
     return written
 
-
-# ---------------------------------------------------------------------------
-# CLI entry point
-# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     count = generate()
