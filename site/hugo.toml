@@ -61,7 +61,13 @@ buildFuture = false
   identifier = "menu-subscribe"
   name = "Subscribe"
   url = "https://buttondown.com/zxcloudsecurity"
-  weight = 50  
+  weight = 50
+
+[[menu.main]]
+  identifier = "menu-guides"
+  name = "Guides"
+  url = "/guides/"
+  weight = 45
 
 [markup]
   [markup.highlight]
