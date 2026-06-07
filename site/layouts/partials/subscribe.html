@@ -1,16 +1,17 @@
-<div class="subscribe-form">
-  <h3>📬 Stay Informed</h3>
-  <p>Get daily cloud security advisories delivered to your inbox.</p>
+<div style="text-align: center; padding: 2rem 1rem; border-top: 1px solid var(--border); margin-top: 2rem;">
+  <h3 style="margin-bottom: 0.5rem;">📬 Stay Informed</h3>
+  <p style="margin-bottom: 1rem;">Get daily cloud security advisories delivered to your inbox.</p>
   <form
     action="https://buttondown.com/api/emails/embed-subscribe/zxcloudsecurity"
     method="post"
-    class="embeddable-buttondown-form"
+    style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap;"
   >
-    <input type="email" name="email" id="bd-email" placeholder="your@email.com" required />
-    <input type="submit" value="Subscribe" />
-    <p style="font-size:0.8em; margin-top:0.5em;">
-      Free. No spam. Unsubscribe anytime. 
-      <a href="https://buttondown.com/refer/zxcloudsecurity" target="_blank">Powered by Buttondown.</a>
-    </p>
+    <input type="email" name="email" id="bd-email" placeholder="your@email.com" required
+      style="padding: 0.5rem 1rem; border-radius: 4px; border: 1px solid var(--border); background: var(--entry); color: var(--primary); width: 250px;" />
+    <input type="submit" value="Subscribe"
+      style="padding: 0.5rem 1.5rem; border-radius: 4px; background: var(--primary); color: var(--theme); border: none; cursor: pointer;" />
   </form>
+  <p style="font-size: 0.8em; margin-top: 0.75rem; color: var(--secondary);">
+    Free. No spam. Unsubscribe anytime. <a href="https://buttondown.com/refer/zxcloudsecurity" target="_blank">Powered by Buttondown.</a>
+  </p>
 </div>
