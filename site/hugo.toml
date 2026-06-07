@@ -57,6 +57,12 @@ buildFuture = false
   url = "/categories/general/"
   weight = 40
 
+[[menu.main]]
+  identifier = "menu-subscribe"
+  name = "Subscribe"
+  url = "https://buttondown.com/zxcloudsecurity"
+  weight = 50  
+
 [markup]
   [markup.highlight]
     noClasses = false
