@@ -10,7 +10,7 @@ buildFuture = false
 [params]
   env = "production"
   title = "ZX Cloud Security"
-  description = "Daily cloud security advisories, CVEs, and threat intelligence for AWS, GCP, and Azure architects."
+  description = "Daily cloud security advisories, CVEs, and threat intelligence for AWS, GCP, and Azure security architects."
   keywords = ["cloud security", "AWS security", "GCP security", "Azure security", "CVE", "security advisories"]
   author = "ZX Cloud Security"
   DateFormat = "2 January 2006"
