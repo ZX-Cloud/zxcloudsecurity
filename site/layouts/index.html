@@ -1,5 +1,14 @@
 {{ define "main" }}
 
+<div style="text-align: center; max-width: 680px; margin: 0 auto 2rem; padding: 1.5rem 1.25rem; border: 0.5px solid var(--border); border-radius: 10px; background: var(--code-bg);">
+  <p style="margin: 0; font-size: 15px; line-height: 1.6; color: var(--primary);">
+    Welcome to <strong>ZX Cloud Security</strong> — a daily intelligence feed for cloud security architects and engineers. We track the latest CVEs, advisories and threats across AWS, Azure and GCP, each enriched with a practical architect's take so you know what actually matters and what to do about it.
+  </p>
+  <p style="margin: 0.75rem 0 0; font-size: 14px; line-height: 1.6; color: var(--secondary);">
+    New here? Explore our <a href="/guides/" style="text-decoration: underline;">in-depth cloud security guides</a> covering Zero Trust, CSPM, IAM, Kubernetes security and cross-cloud service comparisons.
+  </p>
+</div>
+
 {{ $stats := .Site.Data.stats }}
 
 {{ if $stats }}
