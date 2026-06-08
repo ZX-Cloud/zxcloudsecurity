@@ -1,93 +1,83 @@
 +++
 title = "What is DSPM (Data Security Posture Management)?"
-date = "2026-06-07T14:20:33Z"
+date = "2026-06-08T09:27:50Z"
 slug = "what-is-dspm-data-security-posture-management"
 description = "What is DSPM (Data Security Posture Management)? — a practical guide for cloud security architects."
 keywords = ["DSPM", "data security posture management", "data discovery", "classification"]
+type = "guides"
 draft = false
 +++
 
-Data security posture management (DSPM) is a category of security tooling and practice focused on continuously discovering, classifying, and monitoring sensitive data across cloud environments to identify and remediate exposure risks. Unlike perimeter-centric controls, DSPM starts with the data itself — where it lives, who can access it, and whether its protection posture matches its sensitivity. As organisations distribute data across multi-cloud storage, data lakes, SaaS platforms, and managed databases, DSPM has become a foundational discipline for cloud security programmes.
+Data Security Posture Management (DSPM) is a security discipline focused on continuously discovering, classifying, and monitoring sensitive data across cloud environments to identify and remediate exposure risks. Unlike perimeter-focused controls, DSPM keeps the data itself at the centre of your security strategy — understanding where it lives, who can access it, and whether those access patterns are appropriate. As organisations spread data across multi-cloud storage, SaaS platforms, and data pipelines, DSPM has become an essential capability for maintaining a defensible security posture.
 
 ---
 
-## Why DSPM Has Emerged Now
+## Why DSPM Has Become a Priority
 
-Cloud adoption fundamentally changed the data risk calculus. In on-premises environments, sensitive data had relatively predictable boundaries — a DBA could enumerate most datastores. In cloud environments, an S3 bucket can be created in seconds, a Snowflake share can expose a dataset to an external account without touching a firewall rule, and a developer can snapshot a production RDS instance into a personal AWS account for debugging purposes.
+Cloud adoption has fundamentally changed the data risk landscape. Data no longer sits in a handful of on-premises databases with well-understood access controls — it is scattered across S3 buckets, Azure Blob containers, Snowflake warehouses, Google BigQuery datasets, SaaS applications, and dozens of data pipeline stages. Shadow data — copies created by ETL jobs, development clones, analytics exports — multiplies faster than security teams can track manually.
 
-The result is **data sprawl**: sensitive data duplicated, moved, and forgotten across hundreds of services and accounts. Traditional data loss prevention (DLP) tools were built for egress monitoring at defined control points — they cannot inventory what they cannot see. DSPM addresses this gap by treating discovery as a continuous, cloud-native process rather than a periodic scan.
+The consequences are concrete. Misconfigured S3 buckets containing PII have been the source of some of the most damaging breaches of the past decade. Under UK GDPR and the Data Protection Act 2018, organisations are legally required to know where personal data resides, limit its collection, and demonstrate appropriate safeguards. Failure to do so carries ICO enforcement risk beyond the reputational damage.
 
-Regulatory pressure has compounded the urgency. GDPR, the UK Data Protection Act 2018, PCI DSS v4.0, and sector-specific frameworks such as DORA all impose obligations to know where sensitive data resides and demonstrate that appropriate controls are applied. An inability to locate personal data is itself a compliance failure under UK GDPR Article 30 (records of processing).
-
----
-
-## What DSPM Actually Does
-
-A mature DSPM capability typically covers four interconnected functions:
-
-### 1. Data Discovery
-
-DSPM tools connect to cloud environments — AWS, Azure, GCP, Snowflake, Databricks, Microsoft 365, and others — using read-only API access or agentless scanning to enumerate datastores. This includes object storage, relational and NoSQL databases, data warehouses, file shares, and increasingly SaaS application datastores. The output is a living inventory of where data assets exist across your estate.
-
-Discovery must be continuous, not point-in-time. A quarterly scan misses the bucket created last Tuesday that already contains exported customer records.
-
-### 2. Classification
-
-Once datastores are discovered, DSPM applies classification to understand what types of data they contain. This uses a combination of structural pattern matching (regular expressions for formats such as NI numbers, IBANs, passport numbers), machine learning models trained on data types, and metadata inference (column names, table schemas, file naming conventions).
-
-Classification outputs are typically mapped to sensitivity labels — public, internal, confidential, highly confidential — and to regulatory categories such as PII, PHI, PCI cardholder data, or credentials. The quality of classification logic directly determines the signal-to-noise ratio; poorly tuned tools generate enough false positives to make triage unworkable.
-
-### 3. Posture Assessment
-
-With data located and classified, DSPM assesses the security posture of each datastore: Is the S3 bucket publicly accessible? Does this Snowflake database have MFA enforcement on service accounts? Are RDS snapshots encrypted? Is this BigQuery dataset shared outside the organisation? Is there excessive IAM access — identities that have SELECT permissions but have never queried the table?
-
-This is where DSPM diverges from generic cloud security posture management (CSPM). CSPM evaluates infrastructure configuration in isolation; it can tell you a bucket's ACL is overly permissive without knowing whether that bucket contains anything sensitive. DSPM contextualises configuration findings against data sensitivity. A misconfigured bucket containing log files is a different risk profile from a misconfigured bucket containing UK resident health records.
-
-### 4. Risk Prioritisation and Remediation Guidance
-
-The most actionable DSPM platforms combine discovery, classification, and posture findings into a risk-ranked view. They surface "toxic combinations" — for example, a datastore containing PII that is publicly accessible, lacks encryption at rest, and has not been accessed in six months (suggesting it may be a forgotten data shadow). Remediation guidance is typically mapped to specific API calls, IaC changes, or native console steps.
+DSPM addresses this by giving security and data teams a continuous, automated answer to the question: where is our sensitive data, who has access to it, and is that access appropriate?
 
 ---
 
-## DSPM vs CSPM: Understanding the Distinction
+## Core Capabilities: What DSPM Actually Does
 
-This comparison is worth being precise about because the two are frequently conflated in vendor marketing.
+### Automated Data Discovery
 
-| Dimension | CSPM | DSPM |
-|---|---|---|
-| Primary focus | Infrastructure configuration | Data assets and their protection |
-| What it inventories | Resources (compute, storage, network) | Datastores and their contents |
-| Risk context | Config deviation from baselines | Sensitivity of data at risk |
-| Key question answered | "Is this resource misconfigured?" | "Is this sensitive data exposed?" |
+At its foundation, DSPM continuously scans cloud storage, databases, data warehouses, SaaS APIs, and data pipelines to build an inventory of data assets. This goes well beyond what you can achieve with manual tagging or periodic audits. Discovery engines connect to cloud-native services — AWS, Azure, GCP, Snowflake, Databricks — and enumerate data stores, including ones that security teams were previously unaware of.
 
-In practice, the two are complementary. CSPM is strong at detecting misconfigured security groups, missing logging, and IAM policy anomalies at scale. DSPM is strong at answering "of all our misconfigurations, which ones actually put sensitive data at risk right now?" Security programmes that have CSPM deployed and are drowning in findings often find that DSPM integration allows them to triage effectively by anchoring remediation priority to data sensitivity.
+The critical distinction is that DSPM scans the *content* of data stores, not just their metadata. It samples records to determine whether a store contains financial data, health records, credentials, PII, or other sensitive categories — producing findings grounded in what the data actually is, rather than what a tag says it should be.
 
-Some CSPM vendors have extended their platforms to include DSPM capabilities; purpose-built DSPM vendors include Cyera, Varonis, Securiti, BigID, and Dig Security (now part of Palo Alto). Evaluation should focus on breadth of datastore connectors, classification accuracy, and the quality of the risk-scoring model rather than on category label.
+### Classification
+
+Once data is discovered, classification engines apply pattern matching, machine learning, and contextual analysis to categorise it. Good DSPM platforms ship with pre-built classifiers for common sensitive data types — UK National Insurance numbers, passport numbers, payment card data (PCI DSS scope), NHS numbers, and categories defined under UK GDPR's special category data provisions.
+
+Classification is rarely a solved problem. Effective implementations allow security architects to build custom classifiers for organisation-specific sensitive data — internal project codenames, proprietary formulas, customer identifiers that don't fit standard patterns. The output of classification feeds risk prioritisation: a publicly accessible S3 bucket containing marketing copy is a different risk from one containing classified customer health records.
+
+### Access and Entitlement Analysis
+
+Knowing where sensitive data lives is only half the picture. DSPM tools map data stores to their access entitlements — IAM roles, user permissions, group memberships, and public exposure — to determine the blast radius if a data store were compromised or accessed inappropriately.
+
+This produces findings such as: "This Snowflake table containing financial PII is accessible by 47 IAM roles, 12 of which belong to contractors, and three of which have not accessed it in 180 days." That context is what transforms a raw inventory into actionable risk reduction.
+
+### Risk Prioritisation and Continuous Monitoring
+
+DSPM platforms score data risks by combining sensitivity classification with access breadth, exposure (public vs. private), encryption status, and activity anomalies. Continuous monitoring means that when a new data store appears, a permission change occurs, or a misconfiguration exposes previously protected data, the platform raises an alert — rather than waiting for the next scheduled audit.
 
 ---
 
-## What Architects Should Do: Practical Steps
+## DSPM vs. CSPM: Understanding the Distinction
 
-**Establish a continuous data inventory before anything else.** You cannot protect what you cannot see. Deploy DSPM discovery across all cloud accounts and SaaS integrations, not just production. Shadow data frequently originates in non-production environments where controls are relaxed.
+Cloud Security Posture Management (CSPM) and DSPM are complementary but address different problem spaces. CSPM tools — Wiz, Orca, Prisma Cloud, Microsoft Defender for Cloud — focus on cloud infrastructure configuration. They identify misconfigurations such as overly permissive security groups, disabled MFA on root accounts, or unencrypted storage volumes.
 
-**Define classification taxonomies that align to your regulatory obligations.** Work with your data protection officer to agree on sensitivity tiers and the specific data types that trigger each tier. Build these into DSPM policy rather than accepting vendor defaults — a fintech will care about cardholder data; an NHS supplier will prioritise NHS numbers and clinical data.
+CSPM knows that an S3 bucket is publicly accessible. DSPM tells you whether that bucket contains anything sensitive worth caring about. A bucket of public marketing assets is a low-risk misconfiguration; the same misconfiguration on a bucket containing NHS patient records is a critical breach.
 
-**Integrate DSPM findings with your CSPM and SIEM.** Risk scoring is only useful if it feeds existing workflows. Map high-severity DSPM findings to your ticketing system with defined SLAs. A publicly exposed datastore containing PII should trigger P1 remediation; an internal datastore with stale access permissions might be P3.
+The practical implication: CSPM and DSPM should be used together. CSPM reduces the attack surface at the infrastructure layer; DSPM ensures that when configuration drift occurs (and it will), the impact on sensitive data is understood and prioritised accordingly. Some platforms — Wiz being the most prominent example — are moving towards unifying both capabilities, but purpose-built DSPM vendors such as Cyera, Varonis, Normalyze, and BigID offer deeper data-layer analysis.
 
-**Use DSPM output to drive IaC remediation, not just reactive fixes.** When DSPM identifies a recurring misconfiguration pattern — for example, RDS instances in a specific account consistently lack deletion protection on snapshots — that is a signal to update your Terraform modules and enforce policy via OPA or AWS Config rules.
+---
 
-**Audit access paths, not just bucket policies.** DSPM should assess effective permissions including IAM roles, resource-based policies, VPC endpoint policies, and service control policies together. A bucket policy that looks restrictive may be wide open when IAM role trust relationships are considered. Prioritise datastores where the set of identities with access is unexpectedly large relative to data sensitivity.
+## What Architects Should Do: Practical Steps to Reduce Data Exposure
 
-**Address data minimisation alongside posture.** Discovery often reveals data that should not exist — production PII copied to development environments, retained beyond its legal basis, or duplicated across regions without justification. DSPM creates the evidence base for data minimisation programmes that reduce your attack surface fundamentally rather than just hardening controls around unnecessary exposure.
+**Establish a baseline data inventory before worrying about controls.** You cannot protect what you cannot see. Begin with a full DSPM scan across all cloud accounts and SaaS integrations to understand your actual data footprint — including shadow data that business units have created without security awareness.
 
-**Run DSPM against your SaaS estate, not just IaaS.** A significant proportion of sensitive data in most enterprises now lives in Salesforce, ServiceNow, Google Workspace, or Microsoft 365. Modern DSPM platforms provide SaaS connectors; neglecting these leaves a substantial blind spot.
+**Prioritise classification around regulatory obligations.** Map your custom classifiers to the specific obligations your organisation carries: UK GDPR special categories, PCI DSS cardholder data, FCA-regulated data if you operate in financial services. This ensures that findings are directly translatable to compliance and legal risk, which accelerates remediation prioritisation.
+
+**Integrate DSPM findings into your broader risk register.** A DSPM finding in isolation is a ticket. A DSPM finding linked to a CSPM misconfiguration, a vulnerable workload, and an IAM overprivilege is a critical risk chain. Push DSPM data into your SIEM or risk platform so that findings gain context from other security signals.
+
+**Act on entitlement findings, not just misconfigurations.** Some of the highest-risk data exposures are not misconfigurations at all — they are the result of legitimate but excessive access. Work with data owners to review and reduce access scope, particularly for contractors, service accounts, and roles that have not accessed sensitive data recently.
+
+**Define data retention and minimisation policies and enforce them.** DSPM frequently uncovers data that should not exist — development environments seeded with production PII, analytics exports that were never deleted, backup copies in low-security accounts. Use discovery findings to drive deletion and anonymisation campaigns, reducing the attack surface directly.
+
+**Make DSPM a continuous process, not a project.** Cloud data environments change constantly. Schedule continuous scanning, set thresholds for alerting on new high-sensitivity data stores, and integrate DSPM checks into CI/CD pipelines where data infrastructure is deployed as code.
 
 ---
 
 ## Key Takeaways
 
-- **DSPM discovers and classifies sensitive data continuously** across cloud and SaaS environments, giving security teams an accurate picture of where sensitive data lives and how it is protected.
-- **The discipline is data-centric, not infrastructure-centric** — it contextualises configuration risk against actual data sensitivity, enabling meaningful prioritisation.
-- **DSPM and CSPM are complementary**, not competing: CSPM finds misconfigurations at scale; DSPM identifies which of those misconfigurations actually matter because sensitive data is involved.
-- **Classification quality and connector breadth** are the most important evaluation criteria when selecting tooling.
-- **Effective DSPM programmes go beyond alerting** — findings should drive IaC remediation, data minimisation, and access governance improvements that reduce long-term data exposure risk.
+- **DSPM centres security on data itself** — discovering, classifying, and monitoring sensitive data across cloud environments continuously, rather than relying on perimeter controls or manual audits.
+- **Data discovery and classification** are the foundation: you must know what data exists and what it contains before access and exposure risks can be meaningfully assessed.
+- **DSPM and CSPM are complementary**, not interchangeable. CSPM identifies infrastructure misconfigurations; DSPM reveals whether those misconfigurations expose sensitive data and how severe the risk actually is.
+- **Shadow data and entitlement sprawl** are the dominant real-world problems DSPM addresses — not just obvious public-exposure misconfigurations.
+- **Practical impact** requires connecting DSPM findings to remediation workflows, regulatory obligations, and access reviews — not treating the platform as a reporting tool.

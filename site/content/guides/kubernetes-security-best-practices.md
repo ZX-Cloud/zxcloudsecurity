@@ -1,37 +1,47 @@
 +++
 title = "Kubernetes Security Best Practices"
-date = "2026-06-07T14:22:17Z"
+date = "2026-06-08T09:29:27Z"
 slug = "kubernetes-security-best-practices"
 description = "Kubernetes Security Best Practices — a practical guide for cloud security architects."
 keywords = ["Kubernetes", "K8s security", "container security", "RBAC", "CKS"]
+type = "guides"
 draft = false
 +++
 
-Securing Kubernetes requires a defence-in-depth approach spanning identity and access control, network segmentation, workload hardening, secrets hygiene, and runtime threat detection. A single misconfigured admission webhook or overly permissive ClusterRole can expose your entire cluster. The guidance below reflects current best practice for production clusters on EKS, GKE, and AKS, and maps closely to the CNCF Certified Kubernetes Security Specialist (CKS) curriculum.
+Securing Kubernetes requires a defence-in-depth approach across the control plane, workload configuration, and runtime environment. The most impactful controls are RBAC hardening, network policy enforcement, pod security standards, proper secrets management, and continuous image scanning — the same domains tested in the CKS exam and exploited most frequently in real-world incidents. This guide covers each layer with practical guidance for teams running managed clusters on EKS, GKE, or AKS.
 
 ---
 
-## RBAC: Least Privilege at Every Layer
+## RBAC: Least Privilege at the API Layer
 
-Role-Based Access Control is the cornerstone of K8s security, yet it remains one of the most commonly misconfigured areas in enterprise clusters. The default service account in every namespace has token auto-mounting enabled — a foothold that lateral movement exploits routinely abuse.
+Role-Based Access Control is the primary authorisation mechanism in Kubernetes, and misconfigured RBAC remains one of the most common paths to cluster compromise. The default service account token mounted into every pod, combined with overly permissive ClusterRoleBindings, gives attackers a trivial lateral movement vector.
 
-**Key principles:**
+**What to audit immediately:**
 
-- Never bind `cluster-admin` to user identities or service accounts outside break-glass scenarios. Audit existing ClusterRoleBindings with `kubectl get clusterrolebindings -o json | jq '.items[] | select(.subjects[]?.name=="system:unauthenticated")'`.
-- Prefer Roles scoped to a namespace over ClusterRoles wherever possible.
-- Disable automatic service account token mounting with `automountServiceAccountToken: false` in pod specs and ServiceAccount manifests unless the pod genuinely needs API server access.
-- Use projected service account tokens (OIDC-based, audience-scoped, time-limited) rather than long-lived static tokens. EKS IRSA, GKE Workload Identity, and AKS Workload Identity all provide cloud-native implementations.
-- Regularly audit RBAC with tools such as `rbac-tool`, `kubectl-who-can`, or the open-source Polaris dashboard to surface wildcard verbs (`*`), access to `secrets` resources, and `exec` or `portforward` permissions.
+- Run `kubectl get clusterrolebindings -o wide` and identify anything bound to `system:anonymous` or `system:unauthenticated`
+- Look for subjects with `cluster-admin` that aren't break-glass service accounts
+- Use tools like [rbac-police](https://github.com/PaloAltoNetworks/rbac-police) or Fairwinds Insights to map effective permissions
 
-On managed services, integrate your cloud IAM with Kubernetes RBAC. On EKS, `aws-auth` ConfigMap (now superseded by EKS Access Entries in newer clusters) maps IAM roles to Kubernetes groups. Misconfigured mappings are a frequent source of privilege escalation.
+**Hardening principles:**
+
+- Create scoped Roles (namespace-level) rather than ClusterRoles wherever possible
+- Disable automounting of service account tokens with `automountServiceAccountToken: false` in the pod spec unless the workload explicitly requires API access
+- Use Workload Identity (GKE), IAM Roles for Service Accounts (EKS), or Azure Workload Identity (AKS) instead of long-lived credentials in secrets
+- Never grant `get`/`list`/`watch` on secrets cluster-wide — this is equivalent to reading every password in the cluster
+
+K8s security testing should include impersonating service accounts with `kubectl auth can-i --as=system:serviceaccount:default:myapp --list` to validate least privilege before deploying to production.
 
 ---
 
-## Network Policies: Zero-Trust Inside the Cluster
+## Network Policies: Zero Trust Between Pods
 
-By default, Kubernetes allows unrestricted pod-to-pod communication across namespaces. Implementing NetworkPolicy resources enforces zero-trust micro-segmentation at layer 3/4.
+By default, Kubernetes allows all pod-to-pod communication across namespaces. Without network policies, a compromised workload can freely reach databases, the metadata API, or internal microservices.
 
-Start with a default-deny baseline in every namespace:
+Network policies are enforced by the CNI plugin, not Kubernetes itself — so you need a policy-aware CNI. Cilium and Calico are the most capable options. AWS VPC CNI supports basic network policies from EKS 1.25+ with the `--enable-network-policy` flag, but Cilium provides far richer L7 controls and observability.
+
+**Practical baseline:**
+
+Start with a default-deny policy in every namespace:
 
 ```yaml
 apiVersion: networking.k8s.io/v1
@@ -46,79 +56,115 @@ spec:
     - Egress
 ```
 
-Then layer explicit allow rules for known traffic flows. Ensure your CNI plugin actually enforces NetworkPolicy — vanilla kubenet on AKS does not. Use Calico, Cilium, or Azure NPM. Cilium's eBPF-based enforcement extends policies to layer 7 (HTTP methods, DNS FQDNs), which is significantly more expressive than standard NetworkPolicy for controlling egress to external APIs.
+Then layer explicit allow rules per service. Egress policies are frequently overlooked — without them, a compromised pod can exfiltrate data or reach a C2 server via the internet.
 
-For EKS, consider Amazon VPC CNI with Network Policy support (GA since 2023), which provides native VPC-level enforcement. On GKE, Dataplane V2 (Cilium-based) is the recommended path for policy enforcement.
-
----
-
-## Pod Security Standards: Replacing PSPs
-
-Pod Security Policies were deprecated in Kubernetes 1.21 and removed in 1.25. The replacement is Pod Security Standards (PSS), enforced via the built-in Pod Security Admission controller.
-
-Three profiles are defined: `privileged`, `baseline`, and `restricted`. In practice:
-
-- Label namespaces to enforce `restricted` for all application workloads: `pod-security.kubernetes.io/enforce: restricted`
-- Use `warn` and `audit` modes during migration to identify violations without breaking deployments.
-- The `restricted` profile prohibits privilege escalation, requires non-root users, drops all Linux capabilities, and mandates a read-only root filesystem.
-
-For more granular policy, consider OPA/Gatekeeper or Kyverno. Kyverno is particularly popular on managed services due to its Kubernetes-native policy language and mutating admission capabilities — for example, automatically injecting `securityContext` defaults or stripping `hostPath` volumes.
+For teams on GKE, Dataplane V2 (powered by Cilium eBPF) provides network policy logging and FQDN-based egress filtering without deploying a separate CNI. On AKS, Azure CNI with Calico is the recommended combination.
 
 ---
 
-## Secrets Management: Don't Trust etcd Alone
+## Pod Security Standards: Removing Host-Level Access
 
-Kubernetes Secrets are base64-encoded by default, not encrypted. Etcd at-rest encryption should be enabled on self-managed clusters, but even then it relies on a locally managed key. The robust approach uses an external KMS provider.
+The Pod Security Admission (PSA) controller, stable since Kubernetes 1.25, replaces the deprecated PodSecurityPolicy. It enforces one of three built-in profiles — `privileged`, `baseline`, or `restricted` — at the namespace level using labels.
 
-- **EKS**: Enable envelope encryption with AWS KMS. Configure via `--encryption-provider-config` or through the EKS console/API at cluster creation.
-- **GKE**: Application-layer secrets encryption with Cloud KMS is available on all cluster tiers.
-- **AKS**: Etcd encryption with Azure Key Vault-managed keys using the KMS plugin.
+The `restricted` profile enforces:
 
-Beyond etcd encryption, prefer externalising secrets entirely using the Secrets Store CSI Driver with provider plugins for AWS Secrets Manager, Azure Key Vault, or GCP Secret Manager. This mounts secrets as ephemeral volumes and supports automatic rotation without redeploying pods.
+- Non-root user and group
+- Read-only root filesystem (recommended, not required)
+- Dropped all capabilities, optionally add specific ones back
+- No privilege escalation
+- Seccomp profile set to `RuntimeDefault` or `Localhost`
 
-Avoid injecting secrets as environment variables where possible — they are visible in `kubectl describe pod` output and process listings. Volume mounts reduce exposure surface.
+Apply it:
+
+```bash
+kubectl label namespace production \
+  pod-security.kubernetes.io/enforce=restricted \
+  pod-security.kubernetes.io/enforce-version=latest
+```
+
+For brownfield clusters, use `warn` and `audit` modes first to surface violations without blocking deployments. GKE Autopilot enforces `restricted` by default, which is worth factoring into architectural decisions.
+
+OPA/Gatekeeper or Kyverno can extend this further with custom policies — for example, enforcing that all images come from a specific registry, or that resource limits are always set.
 
 ---
 
-## Image Security: Shifting Left and Enforcing at Admission
+## Secrets Management: Don't Store Secrets in etcd
 
-Container security begins in CI/CD, not at runtime. Integrate image scanning into your pipeline using Trivy, Grype, or managed services like AWS Inspector (ECR), GCP Artifact Analysis, or Microsoft Defender for Containers.
+Kubernetes Secrets are base64-encoded, not encrypted, by default in etcd. Anyone with read access to etcd — or an overly permissive RBAC role — can retrieve plaintext credentials.
 
-Enforce image policies at admission:
+**Encryption at rest** is table stakes. On managed platforms this is typically enabled by default (GKE, AKS) but verify it. On EKS, configure envelope encryption with a KMS key at cluster creation:
 
-- Use admission webhooks (via Kyverno or Gatekeeper) to block images not pulled from approved registries or lacking a valid cosign signature.
-- Implement image signing with Sigstore/cosign and enforce signature verification using policy engines. GKE Binary Authorization and AWS Signer provide managed signing workflows.
-- Set `imagePullPolicy: Always` for mutable tags (though preferring immutable digests — `image: myapp@sha256:abc123` — is the correct long-term approach).
-- Minimise base image attack surface: use distroless or scratch-based images. An image without a shell eliminates an entire class of post-exploitation techniques.
+```bash
+aws eks create-cluster \
+  --encryption-config '[{"resources":["secrets"],"provider":{"keyArn":"arn:aws:kms:..."}}]'
+```
+
+**External secrets are better than native secrets for sensitive material.** The External Secrets Operator (ESO) syncs secrets from AWS Secrets Manager, Azure Key Vault, or GCP Secret Manager into Kubernetes Secrets while keeping the source of truth outside the cluster. This means secret rotation happens in one place, and audit trails are cleaner.
+
+For the most sensitive credentials, consider using the Secrets Store CSI Driver to mount secrets directly as volumes from the vault, bypassing Kubernetes Secrets entirely. Combined with Workload Identity, no persistent credential touches the cluster.
+
+**Never commit Kubernetes manifests with Secret values to Git** — use Sealed Secrets, SOPS, or ESO alongside GitOps pipelines to manage this safely.
 
 ---
 
-## Runtime Security: Detecting Threats in Running Workloads
+## Image Security: Shift Left and Enforce at Admission
 
-Static policies and pre-deployment scanning cannot catch everything. Runtime security monitors syscall behaviour and detects anomalies indicative of exploitation, cryptomining, or data exfiltration.
+Container security starts before runtime. A secure base image and a clean build pipeline prevent entire classes of vulnerability.
 
-**Falco** is the de facto standard for Kubernetes runtime security. It uses eBPF or a kernel module to capture syscall events and evaluate them against rules. Default rules flag shell spawning inside containers, sensitive file reads (`/etc/shadow`, `/proc/*/mem`), unexpected outbound connections, and privilege escalation attempts.
+**Build-time:**
 
-Deploy Falco as a DaemonSet, ship alerts to your SIEM (Elastic, Splunk, or a managed service like Amazon Security Lake), and integrate with incident response workflows via Falcosidekick.
+- Use distroless or minimal base images (Google distroless, Chainguard images) to reduce attack surface
+- Pin image digests (`image@sha256:...`) in production manifests rather than mutable tags
+- Scan images in CI with Trivy, Grype, or Snyk — fail builds on critical CVEs
 
-Managed equivalents include GKE Threat Detection, Microsoft Defender for Containers, and Amazon GuardDuty for EKS (which analyses EKS audit logs and runtime agent telemetry).
+**Admission-time enforcement:**
 
-Complement Falco with audit log analysis. Kubernetes audit logs capture every API server interaction — ensure they are enabled with an appropriate policy, shipped off-cluster immediately, and monitored for patterns such as anonymous requests, high-frequency secret reads, or `exec` into pods.
+Use an admission controller to prevent unsigned or unscanned images from reaching the cluster. Cosign with Sigstore enables keyless signing in CI. Policy engines like Kyverno can verify signatures at admission:
+
+```yaml
+verifyImages:
+  - imageReferences: ["registry.example.com/*"]
+    attestors:
+      - entries:
+          - keyless:
+              issuer: "https://accounts.google.com"
+              subject: "ci@project.iam.gserviceaccount.com"
+```
+
+On GKE, Binary Authorization provides a managed equivalent with audit and enforcement modes. AKS supports similar controls via Azure Policy and Defender for Containers.
+
+---
+
+## Runtime Security: Detect What Slips Through
+
+Even with everything above in place, assume breach. Runtime security tooling monitors for anomalous behaviour inside running containers — unexpected processes, suspicious syscalls, file writes to sensitive paths.
+
+**Falco** is the de facto open-source runtime security tool for Kubernetes. It uses eBPF or a kernel module to detect threats based on configurable rules — for example, alerting when a shell is spawned inside a container or when credentials are read from `/proc`. Deploy it as a DaemonSet and route alerts to your SIEM.
+
+Commercial options like Aqua Security, Sysdig Secure, and Prisma Cloud provide richer policy management, compliance reporting, and deeper integrations with managed cluster platforms.
+
+**Audit logging** at the API server level is equally critical. Enable audit logs on all managed clusters and forward them to a centralised SIEM. Look for:
+
+- `exec` into pods (legitimate debugging or active intrusion?)
+- Secrets access outside expected service accounts
+- ClusterRoleBinding creation events
 
 ---
 
 ## What Architects Should Do: Practical Checklist
 
-- **RBAC**: Enumerate and remediate wildcard ClusterRoles; disable service account token auto-mounting cluster-wide; implement cloud Workload Identity for pod IAM.
-- **Network policies**: Deploy default-deny in all namespaces; validate CNI enforces policies; consider Cilium for L7 visibility.
-- **Pod security**: Enforce `restricted` PSS on application namespaces; deploy Kyverno for mutation and additional custom policies.
-- **Secrets**: Enable KMS envelope encryption or use Secrets Store CSI; avoid environment variable injection for sensitive values.
-- **Images**: Scan in CI with Trivy; enforce registry allowlisting and cosign verification at admission; pin to immutable digests.
-- **Runtime**: Deploy Falco with eBPF driver; enable Kubernetes audit logging; integrate with your SIEM and alerting pipelines.
-- **CKS preparation**: The exam tests hands-on cluster hardening — practice with `kubeadm` clusters and work through scenarios involving audit policy configuration, AppArmor/Seccomp profiles, and Falco rule writing.
+- **Enable PSA restricted mode** on all non-system namespaces; use warn/audit first in existing clusters
+- **Audit RBAC** quarterly; automate detection of over-privileged bindings with rbac-police or OPA
+- **Deploy default-deny NetworkPolicies** in all namespaces as a baseline; use Cilium for L7 visibility
+- **Use External Secrets Operator or CSI driver** rather than native secrets for any credential that rotates or is shared
+- **Enable KMS envelope encryption** for etcd on all clusters where you control the option
+- **Scan images in CI and enforce signatures** at admission with Kyverno or Binary Authorization
+- **Run Falco** as a DaemonSet and integrate with your SOC alerting pipeline
+- **Forward API audit logs** to your SIEM and define detection rules for privileged escalation paths
+- **Pin image digests** in production Helm values and automate digest updates via Renovate or Dependabot
 
 ---
 
 ## Key Takeaways
 
-Kubernetes security is not a product you buy — it is a series of deliberate controls applied at every layer of the stack. RBAC and network policies limit blast radius; pod security standards and admission controllers prevent misconfigured workloads reaching production; secrets management protects credentials at rest and in use; image scanning and signing enforce supply chain integrity; and runtime security provides the detection capability when preventive controls fail. Managed services like EKS, GKE, and AKS reduce operational overhead for many of these controls, but the architectural decisions — least privilege, default-deny, zero-trust — remain your responsibility regardless of where the cluster runs.
+Kubernetes security is not a single control — it's a stack of overlapping defences that collectively reduce blast radius at each layer. RBAC and pod security standards address configuration risk; network policies limit lateral movement; proper secrets management protects credentials even if the cluster is breached; image scanning and admission control stop vulnerable workloads reaching production; and runtime tooling catches what everything else misses. For teams preparing for the CKS exam, this maps directly to the exam domains — but more importantly, each of these controls addresses a real attack vector seen in production incidents. Managed platforms like EKS, GKE, and AKS handle some of this by default, but never all of it: responsibility for RBAC, network policy, and runtime detection remains firmly with the platform team.

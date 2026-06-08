@@ -1,105 +1,130 @@
 +++
 title = "AWS IAM Security Best Practices"
-date = "2026-06-07T14:18:57Z"
+date = "2026-06-08T09:26:19Z"
 slug = "aws-iam-security-best-practices"
 description = "AWS IAM Security Best Practices — a practical guide for cloud security architects."
 keywords = ["AWS IAM", "least privilege", "roles", "policies", "MFA"]
+type = "guides"
 draft = false
 +++
 
-Robust AWS IAM configuration is the single most consequential security decision you make in any AWS environment. Misconfigured identities and overly permissive policies account for the majority of cloud breaches — getting IAM right means controlling blast radius, enforcing accountability, and ensuring your AWS estate remains auditable. The practices below represent the operational baseline expected of any production-grade AWS environment.
+AWS IAM is the control plane for everything you do in AWS — misconfigured policies and poorly scoped permissions are consistently the root cause of serious cloud breaches. Securing IAM correctly means enforcing least privilege at every layer, eliminating long-lived credentials where possible, and building preventive controls that survive organisational change. The practices below are applicable at any scale, from a single-account startup to a multi-account enterprise estate.
 
 ---
 
-## Enforce Least Privilege Rigorously and Continuously
+## Least Privilege: More Than a Slogan
 
-Least privilege is not a one-time policy decision — it is an ongoing operational discipline. The challenge in AWS IAM is that permissions are easy to grant and rarely revisited. Engineers request broad access during development, and those permissions persist indefinitely into production.
+Most engineers understand the principle; fewer apply it rigorously. Least privilege in AWS IAM means granting only the permissions required for a specific task, scoped to the narrowest possible set of resources, for the shortest necessary duration.
 
-Start by using **IAM Access Analyzer** to identify unused permissions across your accounts. Access Analyzer evaluates CloudTrail activity over a configurable window (up to 90 days) and surfaces actions that were granted but never invoked. This gives you concrete, evidence-based data to drive permission reduction, rather than guesswork.
+In practice this requires deliberate effort:
 
-When writing policies, avoid the temptation to use wildcard resources (`"Resource": "*"`) except where the AWS service genuinely requires it. Scope every policy to the minimum set of resources required. For S3, that means specific bucket ARNs and prefixes. For KMS, specific key ARNs. For DynamoDB, individual table ARNs. Over-scoped resource blocks are the primary vector through which a compromised credential becomes a data breach.
+- **Start from deny.** Build policies from scratch using only what the workload actually calls, rather than starting from broad managed policies and trimming. Tools like IAM Access Analyzer's policy generation feature can bootstrap this by analysing CloudTrail logs to identify what a principal actually used over a given period.
+- **Scope resources explicitly.** Avoid `"Resource": "*"` in action-specific statements. An EC2 instance that stops and starts itself should reference only its own instance ID, not all instances in the account.
+- **Use conditions aggressively.** Condition keys like `aws:RequestedRegion`, `aws:SourceVpc`, `aws:PrincipalTag`, and `s3:prefix` dramatically narrow the blast radius of any policy without adding operational complexity once they are templated.
 
-**Condition keys** are underused and high-value. Adding conditions such as `aws:RequestedRegion`, `aws:SourceVpc`, `aws:PrincipalTag`, or `aws:MultiFactorAuthPresent` can dramatically reduce the exploitability of any given policy, even if the actions themselves are broad.
-
----
-
-## Prefer IAM Roles Over Long-Lived IAM Users
-
-IAM users generate static, long-lived access keys — the most dangerous credential type in the AWS ecosystem. A leaked key with broad permissions and no MFA enforcement is trivially exploitable, and keys frequently end up in source repositories, container images, and CI/CD logs.
-
-**IAM roles** issue short-lived credentials via AWS STS (typically valid for 1–12 hours), dramatically reducing the window of exploitation for any leaked credential. The role assumption model also provides a complete audit trail via CloudTrail — every `sts:AssumeRole` call is logged with the identity of who assumed it, when, and from where.
-
-Architect your workloads to consume roles wherever possible:
-
-- **EC2 instances**: Attach instance profiles rather than distributing access keys.
-- **Lambda functions**: Assign execution roles with scoped permissions.
-- **ECS/EKS workloads**: Use task roles (ECS) or IRSA — IAM Roles for Service Accounts (EKS) — to provide pod-level credential isolation.
-- **Cross-account access**: Use role assumption with explicit trust policies rather than creating IAM users in target accounts.
-- **Human access**: Use AWS IAM Identity Centre (formerly SSO) to federate identities from your corporate directory. Engineers assume roles for the duration of a session; no long-lived keys are issued.
-
-If you have existing IAM users with access keys, audit them using `aws iam generate-credential-report`. Any key older than 90 days that hasn't been rotated should be treated as a risk item. Keys older than 180 days with no recent activity should be disabled immediately.
+The cost of over-permissioning compounds over time. An IAM role created for a proof-of-concept with `AdministratorAccess` attached will, in many organisations, still exist three years later with production workloads relying on it.
 
 ---
 
-## Require MFA Everywhere It Can Be Applied
+## Roles Over Users, Always
 
-MFA is non-negotiable for any human identity accessing the AWS Console or calling sensitive APIs. A common mistake is treating MFA as an IAM user concern only — in practice, you need to enforce it at the policy level for role assumption as well.
+IAM users with long-lived access keys remain one of the most exploited attack vectors in AWS. A key committed to a public repository, leaked via a container image, or exfiltrated from a CI/CD system gives an attacker persistent, programmatic access with no expiry.
 
-Use the `aws:MultiFactorAuthPresent` and `aws:MultiFactorAuthAge` condition keys to enforce MFA on sensitive operations even when accessed via assumed roles. A typical pattern is to deny access to privileged actions unless MFA was satisfied within the last 3600 seconds — this prevents session token reuse long after an MFA event.
+The mitigation is architectural: **replace IAM users with roles wherever possible.**
 
-For root account access, enable MFA unconditionally. AWS now supports passkeys and hardware security keys (FIDO2) for root MFA — use a hardware token, not a virtual TOTP app, given the elevated sensitivity of root credentials. Root access keys should not exist at all; disable them and rely on role escalation patterns for emergency access.
+- **Workloads on AWS compute** (EC2, Lambda, ECS, EKS) should authenticate via instance profiles or execution roles. These deliver short-lived credentials through the Instance Metadata Service, rotated automatically by the STS service.
+- **Human access** should flow through a centralised identity provider — AWS IAM Identity Center (formerly SSO) federated to your corporate IdP (Entra ID, Okta, Google Workspace) is the recommended pattern. Users assume roles with time-limited sessions rather than holding static credentials.
+- **CI/CD pipelines** should use OIDC federation. GitHub Actions, GitLab, and most modern CI platforms support OIDC tokens that can be exchanged for temporary AWS credentials via `sts:AssumeRoleWithWebIdentity`, with no long-lived secrets stored anywhere.
 
----
-
-## Use Permission Boundaries to Delegate Safely
-
-Permission boundaries are an IAM mechanism that receives less attention than it deserves. A permission boundary is an IAM managed policy attached to a role or user that defines the **maximum permissions** that entity can ever receive — even if a more permissive identity-based policy is attached later.
-
-This is particularly powerful in delegated administration scenarios. If you allow a developer team to create their own IAM roles (for example, to manage Lambda execution roles for their service), you can attach a permission boundary to those roles that prevents them from ever granting themselves — or any resource they control — permissions beyond a defined ceiling. This breaks the common privilege escalation path where a developer creates a role with broader permissions than their own and then assumes it.
-
-Define permission boundaries as managed policies in a central location, version-control them, and reference them in your AWS Service Control Policies (SCPs) or IAM policies to require their use when roles are created programmatically.
+Where IAM users genuinely cannot be avoided — some legacy tooling or external partner integrations — treat them as exceptions, enforce MFA, and enforce credential rotation via AWS Config rules. Audit them in every access review.
 
 ---
 
-## Implement Service Control Policies at the Organisation Level
+## MFA: Enforce It, Don't Just Enable It
 
-If you are operating a multi-account AWS environment (and you should be), **Service Control Policies** applied via AWS Organizations are your most powerful preventative control. SCPs operate as guardrails on the maximum permissions available within an account — they cannot grant permissions, only restrict them, and they override even Administrator access.
+Enabling MFA is insufficient. You must enforce it. An IAM user with MFA registered but not required can authenticate without it via the API using their access key alone — MFA only gates the console login.
+
+**For console access via federation**, MFA enforcement is handled at the IdP layer. Ensure your IdP enforces MFA for all AWS-bound SAML or OIDC assertions, ideally with phishing-resistant methods (hardware keys, passkeys).
+
+**For IAM users that still exist**, attach an inline policy or use a permissions boundary that denies all actions unless `aws:MultiFactorAuthPresent` is true. The classic pattern uses a `Deny` statement with a `BoolIfExists` condition:
+
+```json
+{
+  "Effect": "Deny",
+  "Action": "*",
+  "Resource": "*",
+  "Condition": {
+    "BoolIfExists": {
+      "aws:MultiFactorAuthPresent": "false"
+    }
+  }
+}
+```
+
+Note the `IfExists` variant — without it, API calls using access keys (which carry no MFA context) would be incorrectly denied.
+
+For privileged roles in sensitive accounts, consider requiring MFA at assume-role time using the `aws:MultiFactorAuthPresent` condition on the role's trust policy.
+
+---
+
+## Permission Boundaries: Guardrails for Delegation
+
+Permission boundaries are an underused IAM feature that become critical once you delegate IAM management — to platform teams, to automation, or to application teams who self-service their own roles.
+
+A permission boundary is an IAM managed policy attached to a principal that sets the **maximum** permissions that principal can be granted. Effective permissions are the intersection of the identity-based policy and the boundary — even if someone grants `AdministratorAccess`, the boundary caps what can actually be done.
+
+Practical use cases:
+
+- A platform team creates a boundary that prevents application teams from creating policies with `iam:*` or accessing other teams' S3 buckets, then grants application teams `iam:CreateRole` and `iam:AttachRolePolicy` so they can manage their own roles within those guardrails.
+- An infrastructure-as-code pipeline is given permission to create and manage IAM roles, but the boundary ensures it cannot grant permissions it does not itself hold (preventing privilege escalation via automation).
+
+The key design principle: the boundary should be maintained by a higher-trust principal than the one it constrains.
+
+---
+
+## Service Control Policies: Account-Level Preventive Controls
+
+In a multi-account AWS environment, SCPs applied through AWS Organizations are the most powerful preventive control available. They set a permission ceiling across entire OUs or accounts, regardless of what IAM policies inside those accounts allow.
 
 High-value SCPs to implement:
 
-- **Deny root account usage** in all member accounts.
-- **Restrict AWS regions** to only those you operate in — this prevents data exfiltration to unmonitored regions.
-- **Deny creation of IAM users** or IAM access keys in workload accounts, forcing all access through federated roles.
-- **Protect security tooling** — deny modification of CloudTrail, Config, GuardDuty, and Security Hub in member accounts so that a compromised developer role cannot disable your detective controls.
-- **Enforce tagging** on IAM roles at creation time to support cost attribution and access control via `aws:PrincipalTag`.
+- **Deny leaving the organisation** — prevents an account from being detached and used outside governance controls.
+- **Restrict to approved regions** — deny all actions where `aws:RequestedRegion` is not in an approved list, reducing the blast radius of a compromised credential.
+- **Prevent disabling security services** — deny `cloudtrail:StopLogging`, `guardduty:DeleteDetector`, `securityhub:DisableSecurityHub`, and similar destructive actions to protect your detective controls.
+- **Require encryption** — deny S3 PutObject without server-side encryption, deny creation of unencrypted RDS instances.
+- **Protect root** — while you cannot fully constrain root via SCPs (root is exempt from them), you can enforce that no IAM users are created with root-equivalent policies.
 
-SCPs pair naturally with AWS Config rules and CloudFormation Guard to detect and prevent drift from your security baseline.
-
----
-
-## Conduct Regular Access Reviews with IAM Access Analyzer
-
-Access Analyzer provides two complementary capabilities: external access analysis (identifying resources shared outside your AWS Organization) and unused access analysis (identifying over-privileged principals). Use both.
-
-Set up an analyser scoped to your AWS Organization so that cross-account sharing is evaluated against your intended trust boundary. Any finding that shows a resource is accessible from outside the organisation should be treated as a potential data exposure risk and triaged immediately.
-
-Schedule quarterly reviews of unused access findings and build a process to action them — ideally as part of a broader Identity Governance cycle. Integrate Access Analyzer findings into your SIEM or security ticketing platform to ensure they are tracked to closure.
+SCPs do not replace IAM policies — they constrain what is possible. A `Deny` SCP is absolute; an `Allow` SCP only enables, it does not itself grant access.
 
 ---
 
-## What Architects Should Do: Actionable Summary
+## Access Analysis and Continuous Monitoring
 
-- Audit all IAM users and eliminate long-lived access keys; replace with federated roles via IAM Identity Centre.
-- Enable and enforce MFA for all human access, including the `aws:MultiFactorAuthPresent` condition on sensitive role assumptions.
-- Write all new policies with specific resource ARNs and relevant condition keys — never `"Resource": "*"` without documented justification.
-- Implement permission boundaries for any delegated role creation patterns.
-- Deploy a baseline set of SCPs across your AWS Organization covering region restriction, root account denial, and security tooling protection.
-- Enable IAM Access Analyzer at the organisation level and integrate findings into your security operations workflow.
-- Run credential reports monthly; treat any access key older than 90 days as a remediation item.
-- Use CloudTrail Lake or a SIEM to alert on anomalous `sts:AssumeRole` patterns and console sign-in events without MFA.
+Preventive controls degrade without continuous visibility. AWS IAM Access Analyzer provides two essential capabilities:
+
+1. **External access analysis** — identifies resources (S3 buckets, KMS keys, Lambda functions, IAM roles) that are accessible from outside your AWS organisation or account. Run this at the organisation level, not account level, to catch cross-account paths you did not intend.
+2. **Unused access analysis** — a newer capability that surfaces unused roles, unused access keys, and unused permissions within roles, helping you right-size over time. Integrate its findings into your regular access review process.
+
+Complement Access Analyzer with:
+
+- **AWS Config rules** — `iam-no-inline-policy`, `iam-user-no-unused-credentials-check`, `access-keys-rotated`, and `mfa-enabled-for-iam-console-access` cover the common hygiene baselines.
+- **CloudTrail + Athena or Security Lake** — for detecting anomalous API patterns, privilege escalation attempts, and use of rarely-invoked permissions.
+- **Regular access reviews** — at minimum quarterly for privileged roles, monthly for service accounts, and triggered on any role change for sensitive resources.
+
+---
+
+## What Architects Should Do
+
+- Model permissions from actual usage, not assumed usage — use Access Analyzer policy generation for existing roles
+- Replace all long-lived access keys with role-based or OIDC-based authentication; track remaining keys via Config
+- Enforce MFA at the IdP for federated access; enforce it via policy condition for any remaining IAM users
+- Implement permission boundaries before delegating IAM creation to any automation or application team
+- Deploy a baseline SCP set to every OU: region restriction, security service protection, and organisation exit prevention
+- Run IAM Access Analyzer at organisation scope and review external-access findings weekly
+- Review unused roles and permissions quarterly and remove anything unused for 90 days
 
 ---
 
 ## Key Takeaways
 
-AWS IAM security is not a deployment-time checkbox — it requires continuous review and deliberate operational hygiene. Eliminating long-lived credentials and enforcing least privilege through scoped policies, permission boundaries, and SCPs dramatically reduces your exposure to both external attackers and insider risk. Roles, MFA, and Access Analyzer form the practical core of a defensible IAM posture; AWS Organizations SCPs provide the organisational guardrails that make that posture enforceable at scale.
+AWS IAM security is not a one-time configuration — it is an ongoing discipline. The architectural fundamentals are consistent: eliminate static credentials, enforce least privilege through policy design and boundaries, apply preventive controls at the organisation layer via SCPs, and maintain visibility through Access Analyzer and CloudTrail. Organisations that treat IAM as a foundational control plane — rather than an administrative afterthought — dramatically reduce their exposure to both external attack and insider threat. Every gap in IAM hygiene is a gap in your entire AWS security posture.

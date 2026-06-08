@@ -1,87 +1,94 @@
 +++
 title = "What is CSPM (Cloud Security Posture Management)?"
-date = "2026-06-07T14:17:23Z"
+date = "2026-06-08T09:24:46Z"
 slug = "what-is-cspm-cloud-security-posture-management"
 description = "What is CSPM (Cloud Security Posture Management)? — a practical guide for cloud security architects."
 keywords = ["CSPM", "cloud security posture management", "misconfiguration", "compliance"]
+type = "guides"
 draft = false
 +++
 
-Cloud Security Posture Management (CSPM) is a category of security tooling that continuously monitors cloud infrastructure for misconfigurations, policy violations, and compliance drift. CSPM platforms compare your actual cloud configuration against security best practices, regulatory frameworks, and your own defined policies, then surface actionable findings before attackers can exploit them. In short, CSPM answers the question: "Is our cloud configured the way it should be?"
+Cloud Security Posture Management (CSPM) is a category of security tooling that continuously monitors cloud environments for misconfigurations, policy violations, and compliance drift. CSPM tools provide automated assessment and remediation of security risks across IaaS, PaaS, and SaaS environments. In an era where the shared responsibility model places configuration squarely in the customer's hands, CSPM has become foundational infrastructure for any serious cloud security programme.
 
 ---
 
-## Why Misconfigurations Dominate Cloud Security Risk
+## Why Misconfiguration Is the Primary Threat Vector
 
-The cloud makes it trivially easy to spin up infrastructure — and equally easy to misconfigure it. An S3 bucket left publicly readable, a storage account with shared-key authentication not disabled, a Kubernetes API server exposed to the internet with no network policy: these are not exotic attack vectors. They are the everyday reality of cloud environments operated at scale.
+The cloud doesn't get breached the way data centres traditionally did. Sophisticated zero-days and nation-state exploits make headlines, but the overwhelming majority of cloud security incidents trace back to something far more mundane: a storage bucket left publicly accessible, an overly permissive IAM policy, a security group open to 0.0.0.0/0, or logging quietly disabled on a critical service.
 
-Gartner has consistently attributed the majority of cloud security failures to misconfigurations rather than to vulnerabilities in cloud provider infrastructure. The 2019 Capital One breach — where a misconfigured WAF allowed an SSRF attack that harvested IAM credentials from the instance metadata service — remains one of the most cited examples, but similar patterns appear repeatedly across sectors. The misconfiguration problem compounds in proportion to your cloud footprint. A team managing hundreds of accounts across AWS, Azure, and GCP, deploying through a combination of Terraform, ARM templates, and console clicks, has an enormous surface area to monitor. Manual review cannot scale here.
+Gartner has consistently projected that through the mid-2020s, nearly all cloud security failures will be the customer's fault — not the provider's. This isn't a criticism; it's a structural consequence of how cloud platforms work. When an engineer provisions an S3 bucket, spins up an RDS instance, or deploys a Kubernetes cluster via Terraform, they make dozens of configuration decisions. At scale, across hundreds of engineers and thousands of resources, the probability of misconfiguration approaches certainty.
 
-### The Specific Failure Modes CSPM Addresses
+Several factors compound the problem:
 
-Misconfigurations take several common forms that CSPM is specifically designed to detect:
+- **Velocity**: Development teams move fast. Security reviews that once happened at deployment gates now need to happen continuously.
+- **Sprawl**: Multi-cloud and multi-account architectures mean security teams may have limited visibility into what's actually running.
+- **Ephemeral infrastructure**: Resources spun up for testing often persist. Temporary permissions become permanent.
+- **Drift**: A resource correctly configured at deployment can drift out of compliance as policies, services, and threat landscapes evolve.
 
-- **Overly permissive IAM**: Wildcard actions in IAM policies, roles with `AdministratorAccess` attached to compute instances, service accounts with owner-level permissions
-- **Exposed management interfaces**: RDP or SSH open to 0.0.0.0/0, unrestricted access to cloud-native admin consoles
-- **Unencrypted storage**: EBS volumes, RDS instances, or Azure Blob containers without encryption at rest enabled
-- **Disabled logging and monitoring**: CloudTrail not enabled in all regions, Azure Monitor Diagnostic Settings absent, GCP Audit Logs not configured for data access events
-- **Public network exposure**: VPCs with overly broad peering, security groups permitting all inbound traffic, publicly accessible database endpoints
-- **Compliance drift**: Resources that were compliant at creation but have drifted through manual changes or policy updates
+The 2019 Capital One breach — caused by a misconfigured WAF and overly permissive EC2 role — remains the canonical example. More recently, exposed Azure Blob containers and misconfigured Elasticsearch clusters have leaked hundreds of millions of records. The pattern is consistent.
 
 ---
 
 ## What CSPM Tools Actually Do
 
-CSPM platforms integrate with cloud provider APIs — typically through read-only roles in AWS, service principals in Azure, and service accounts in GCP — and continuously enumerate your resource configurations. They do not sit in the network path; they are control-plane tools, not data-plane tools.
+At their core, CSPM platforms perform continuous, automated assessment of your cloud configuration against security baselines and compliance frameworks. The core capabilities break down into several distinct functions.
 
-The core capabilities of a mature CSPM solution include:
+### Inventory and Visibility
 
-**Continuous configuration assessment**: Pulling resource configurations at regular intervals (or in near-real-time via event streams like AWS Config, Azure Event Grid, or GCP Asset Inventory) and evaluating them against a rules engine.
+Before you can secure what you have, you need to know what you have. CSPM tools continuously discover resources across accounts, subscriptions, and projects — mapping relationships between services, identities, network paths, and data stores. This asset inventory is the foundation everything else builds on. Tools like Wiz, Orca Security, and Prisma Cloud build rich cloud asset graphs that let you ask questions like "which compute instances have access to S3 buckets containing PII and are reachable from the internet?"
 
-**Policy and compliance frameworks**: Most tools ship with pre-built policy packs mapped to CIS Benchmarks, NIST CSF, ISO 27001, SOC 2, PCI DSS, and UK-specific frameworks like Cyber Essentials. This is where the compliance dimension of CSPM becomes commercially significant — automated evidence generation and continuous control monitoring reduces audit overhead considerably.
+### Configuration Assessment
 
-**Risk prioritisation**: A large AWS Organisation can generate thousands of findings daily. Effective CSPM tools contextualise findings using asset criticality, exploitability, and blast radius — distinguishing a publicly exposed S3 bucket containing customer PII from a misconfigured lifecycle policy on a dev logging bucket.
+CSPM platforms compare your actual configuration state against security benchmarks — typically the CIS Foundations Benchmarks for AWS, Azure, and GCP, NIST CSF, or provider-native frameworks like AWS Security Hub's FSBP. Every deviation from the baseline generates a finding, categorised by severity. This is where CSPM earns its keep: instead of manual audits against a 400-point checklist, you get a continuous, automated feed of configuration gaps.
 
-**Remediation guidance and automation**: Most platforms provide step-by-step remediation instructions, and many offer auto-remediation through Lambda functions, Azure Functions, or native APIs — though auto-remediation requires careful governance to avoid unintended disruption.
+### Compliance Mapping
 
-**Drift detection**: Tracking configuration changes over time to identify when a previously compliant resource is modified in a way that introduces risk.
+Most organisations operate under multiple regulatory regimes simultaneously — PCI DSS, ISO 27001, SOC 2, GDPR, and for UK organisations increasingly Cyber Essentials Plus. CSPM tools map configuration findings to specific control requirements, giving you audit-ready reports that demonstrate compliance posture at a point in time and track it over time. This matters enormously when a QSA or external auditor asks for evidence.
 
-Notable platforms in this space include Wiz, Palo Alto Prisma Cloud, Orca Security, Lacework, and cloud-native options such as Microsoft Defender for Cloud, AWS Security Hub (with Config rules), and GCP Security Command Center. Each has different strengths around multi-cloud depth, agentless coverage, and integration with developer workflows.
+### Threat Detection and Contextual Risk
+
+Modern CSPM platforms go beyond static configuration checks. They correlate configuration state with runtime signals — CloudTrail events, VPC Flow Logs, Azure Activity Logs — to detect anomalous behaviour in context. Wiz's Security Graph, for example, can identify a critical risk path: an internet-exposed VM with a known CVE, running with an overprivileged role, with network access to a database containing sensitive data. This contextual risk scoring prevents alert fatigue by surfacing the issues that actually matter.
+
+### Remediation
+
+CSPM tools offer remediation guidance ranging from human-readable descriptions of what's wrong and how to fix it, through to one-click automated remediation and Infrastructure as Code fixes that can be submitted as pull requests. The degree of automated remediation you enable should be calibrated carefully — automated changes in production carry their own risks.
 
 ---
 
-## Multi-Cloud Posture Management: Where the Complexity Lives
+## Native Tooling vs. Third-Party CSPM
 
-Most CSPM conversations start with a single cloud provider. The harder problem is maintaining consistent posture visibility across AWS, Azure, and GCP simultaneously, often with differing naming conventions, security primitives, and service models.
+Every major cloud provider offers native posture management capabilities: AWS Security Hub with Config Rules, Microsoft Defender for Cloud, and Google Security Command Center. These are worth enabling regardless of what else you deploy — they're deeply integrated, reasonably priced, and often a licensing requirement for certain compliance frameworks.
 
-A few architectural considerations that matter in multi-cloud deployments:
+The case for third-party CSPM platforms rests primarily on multi-cloud normalisation and depth. If you operate across AWS and Azure — or AWS and GCP — you'll want a single pane of glass with consistent severity scoring, unified compliance reporting, and a single workflow for triage and remediation. Native tools don't provide this cross-cloud visibility. Third-party platforms also tend to offer richer contextual analysis, better integration with developer workflows, and more sophisticated attack path modelling.
 
-**Normalised policy language**: Cloud providers have fundamentally different configuration models. A meaningful CSPM deployment needs a policy abstraction layer that translates "ensure storage is not publicly accessible" into provider-specific checks without requiring separate rule sets per cloud.
-
-**Account and subscription sprawl**: Enterprise AWS environments commonly have hundreds of accounts; Azure environments have multiple management groups and subscriptions. CSPM needs automated discovery and onboarding of new accounts to avoid blind spots — any account not covered is a potential shadow footprint.
-
-**Identity context**: Misconfigured IAM is the highest-severity finding class, but understanding the actual blast radius requires understanding which identities have access to which resources across providers. The most capable CSPM tools now incorporate cloud infrastructure entitlement management (CIEM) capabilities, mapping effective permissions rather than just assigned policies.
-
-**Developer integration**: Posture management cannot be solely a SecOps function. Shifting CSPM findings left — into CI/CD pipelines, infrastructure-as-code pull request checks, and developer ticketing workflows — is what actually reduces mean time to remediation. Tools like Checkov, Terrascan, and Snyk Infrastructure as Code enable pre-deployment misconfiguration detection before resources are ever provisioned.
+The practical answer for most mature organisations is both: native tooling for deep integration and baseline coverage, a third-party CSPM platform for cross-cloud visibility, enriched context, and developer-facing workflows.
 
 ---
 
 ## What Architects Should Do: Practical Guidance
 
-- **Start with a baseline inventory**: Before tuning any policies, ensure your CSPM has full visibility across all accounts, subscriptions, and projects. Undiscovered resources are your highest-risk blind spot.
-- **Map findings to business risk, not just severity scores**: A critical finding on an internet-facing production workload processing payments is not equivalent to a critical finding on a development sandbox. Implement asset tagging strategies that allow your CSPM to contextualise findings accordingly.
-- **Define your compliance frameworks explicitly**: Choose the regulatory and internal frameworks that matter to your organisation and configure your CSPM to report against them continuously. This becomes your evidence backbone for audits and board-level reporting.
-- **Integrate with your SIEM and ticketing platform**: CSPM findings should flow into your broader detection and response workflow — whether that is Splunk, Microsoft Sentinel, or a SOAR platform. Isolated CSPM dashboards that only SecOps check weekly are not posture management; they are posture reporting.
-- **Govern auto-remediation carefully**: Start with notification-only mode. Graduate specific, low-risk controls to automated remediation only after validating that the action is idempotent and safe. Automatically revoking public access on a bucket containing a legitimate static website will generate an incident of a different kind.
-- **Treat IaC scanning as complementary, not a replacement**: Pre-deployment scanning catches new resources; CSPM catches existing ones and drift. Both are necessary.
-- **Review suppressed findings regularly**: Suppressions and exceptions accumulate. Schedule quarterly reviews to ensure that accepted risks remain genuinely accepted and documented.
+Getting CSPM right requires more than licensing a tool. Here's what effective implementation looks like in practice.
+
+- **Start with a benchmark, not a blank slate.** Pick a well-understood framework — CIS Benchmarks are a sensible default — and configure your CSPM platform against it from day one. Customise later once you understand your noise profile.
+
+- **Integrate CSPM into your CI/CD pipeline.** Shift posture checks left. Tools like Checkov, tfsec, or Snyk Infrastructure as Code can catch misconfigurations in Terraform and CloudFormation before they reach production. CSPM in production is your safety net, not your first line of defence.
+
+- **Normalise findings across clouds.** If your CSPM platform can't give you a consistent severity score for the same misconfiguration in AWS and Azure, you'll struggle to prioritise. Insist on normalised, cross-cloud risk scoring when evaluating platforms.
+
+- **Map findings to business risk, not just technical severity.** A critical finding on a non-production, air-gapped environment is less urgent than a medium finding on a payment-processing account. Build asset classification into your CSPM configuration so severity is contextualised.
+
+- **Establish clear ownership and SLAs for remediation.** CSPM generates findings; humans fix them. Without clear ownership — mapped to cloud accounts, teams, or resource tags — findings age indefinitely. Define escalation paths and track mean-time-to-remediation as a security metric.
+
+- **Review suppressed and accepted findings regularly.** Risk acceptances accumulate. Build a quarterly review cadence to reassess whether exceptions still apply.
+
+- **Include CSPM coverage in your cloud landing zone design.** Accounts, subscriptions, or projects should be enrolled in CSPM tooling automatically as part of provisioning — not as an afterthought.
 
 ---
 
 ## Key Takeaways
 
-- **CSPM provides continuous visibility** into cloud configuration risk — it is the foundational control for any organisation operating cloud infrastructure at scale.
-- **Misconfiguration, not sophisticated exploits**, is the dominant cause of cloud breaches; CSPM directly addresses this attack surface.
-- **Compliance mapping** is a core capability, enabling automated evidence collection against CIS, NIST, PCI DSS, and other frameworks.
-- **Multi-cloud environments** require a CSPM approach that normalises policy across providers and integrates CIEM for identity-level risk.
-- **Effective posture management** requires integration with developer workflows, SIEM platforms, and governance processes — not just a scanning tool generating findings in isolation.
+- **CSPM addresses the leading cause of cloud breaches**: misconfiguration, which is a customer responsibility under the shared responsibility model.
+- **Core capabilities** include continuous asset discovery, configuration assessment against benchmarks, compliance mapping, contextual risk scoring, and remediation guidance.
+- **Native and third-party tools serve different purposes** — use both in mature environments, particularly when operating across multiple cloud providers.
+- **CSPM is not a product you deploy; it's a programme you run.** Tooling without defined ownership, remediation SLAs, and integration into developer workflows generates noise rather than security improvement.
+- **Shift left wherever possible** — catching misconfigurations in code review or CI/CD is faster and cheaper than remediating them in production.
