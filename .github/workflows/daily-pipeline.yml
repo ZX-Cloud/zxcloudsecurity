@@ -70,6 +70,11 @@ jobs:
             --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
             --paths "/*"
 
+      - name: Send daily email digest
+        env:
+          BUTTONDOWN_API_KEY: ${{ secrets.BUTTONDOWN_API_KEY }}
+        run: python src/send_digest.py
+
       # ── Notify on failure ───────────────────────────────────────────────────
       - name: Pipeline summary
         if: always()
