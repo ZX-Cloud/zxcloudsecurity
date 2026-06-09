@@ -164,24 +164,26 @@ def build_full_email_html(items: list, date_str: str) -> str:
     Your daily cloud security digest for <strong>{date_str}</strong>. {total} {'advisory' if total == 1 else 'advisories'} published today across AWS, Azure, GCP and general security sources.
   </p>
 
-  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 1.5rem; text-align: center;">
-    <div style="background: #fef2f2; border-radius: 8px; padding: 0.75rem;">
-      <div style="font-size: 10px; color: #dc2626; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Critical</div>
-      <div style="font-size: 22px; font-weight: 600; color: #dc2626;">{critical}</div>
-    </div>
-    <div style="background: #fffbeb; border-radius: 8px; padding: 0.75rem;">
-      <div style="font-size: 10px; color: #d97706; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">High</div>
-      <div style="font-size: 22px; font-weight: 600; color: #d97706;">{high}</div>
-    </div>
-    <div style="background: #eff6ff; border-radius: 8px; padding: 0.75rem;">
-      <div style="font-size: 10px; color: #2563eb; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Medium</div>
-      <div style="font-size: 22px; font-weight: 600; color: #2563eb;">{medium}</div>
-    </div>
-    <div style="background: #f8f9fa; border-radius: 8px; padding: 0.75rem;">
-      <div style="font-size: 10px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Total</div>
-      <div style="font-size: 22px; font-weight: 600; color: #1a1a1a;">{total}</div>
-    </div>
-  </div>
+ <table width="100%" cellpadding="0" cellspacing="8" style="margin-bottom: 1.5rem;">
+    <tr>
+      <td width="25%" style="background: #fef2f2; border-radius: 8px; padding: 0.75rem; text-align: center;">
+        <div style="font-size: 10px; color: #dc2626; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Critical</div>
+        <div style="font-size: 22px; font-weight: 600; color: #dc2626;">{critical}</div>
+      </td>
+      <td width="25%" style="background: #fffbeb; border-radius: 8px; padding: 0.75rem; text-align: center;">
+        <div style="font-size: 10px; color: #d97706; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">High</div>
+        <div style="font-size: 22px; font-weight: 600; color: #d97706;">{high}</div>
+      </td>
+      <td width="25%" style="background: #eff6ff; border-radius: 8px; padding: 0.75rem; text-align: center;">
+        <div style="font-size: 10px; color: #2563eb; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Medium</div>
+        <div style="font-size: 22px; font-weight: 600; color: #2563eb;">{medium}</div>
+      </td>
+      <td width="25%" style="background: #f8f9fa; border-radius: 8px; padding: 0.75rem; text-align: center;">
+        <div style="font-size: 10px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Total</div>
+        <div style="font-size: 22px; font-weight: 600; color: #1a1a1a;">{total}</div>
+      </td>
+    </tr>
+  </table>
 
   {items_html}
   {remaining_html}
