@@ -23,6 +23,7 @@ buildFuture = false
   ShowCodeCopyButtons = true
   ShowToc = false
   hidemeta = false
+  ShowFullTextinRSS = true
 
   [params.homeInfoParams]
     Title = "Cloud Security Intelligence"
@@ -35,6 +36,9 @@ buildFuture = false
 [taxonomies]
   category = "categories"
   tag = "tags"
+
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
 
 [[menu.main]]
   identifier = "menu-aws"
@@ -62,6 +66,18 @@ buildFuture = false
   name = "Guides"
   url = "/guides/"
   weight = 45
+
+[[menu.main]]
+  identifier = "menu-search"
+  name = "Search"
+  url = "/search/"
+  weight = 55
+
+[[menu.main]]
+  identifier = "menu-archive"
+  name = "Archive"
+  url = "/archive/"
+  weight = 60
 
 [markup]
   [markup.highlight]

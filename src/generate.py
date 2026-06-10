@@ -4,6 +4,8 @@ ZX Cloud Security — Hugo Content Generator
 
 Reads enriched_feed.json produced by enricher.py.
 Creates one Hugo-formatted markdown file per article in the site/content/posts/ directory.
+- Add-only by default: skips slugs that already exist (deduplication)
+- Removes posts older than MAX_AGE_DAYS to keep archive manageable
 Also writes site/data/stats.json for the homepage dashboard.
 """
 
@@ -11,7 +13,7 @@ import json
 import logging
 import re
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -20,6 +22,7 @@ log = logging.getLogger(__name__)
 INPUT_FILE = "enriched_feed.json"
 SITE_CONTENT_DIR = Path("site/content/posts")
 SITE_DATA_DIR = Path("site/data")
+MAX_AGE_DAYS = 180  # 6 months
 
 SEVERITY_EMOJI = {
     "Critical": "🔴",
@@ -70,6 +73,9 @@ def build_frontmatter(item: dict) -> str:
     except Exception:
         date = format_date(item.get("published", ""))
 
+    # Store real published date separately for archive display
+    real_date = format_date(item.get("published", ""))
+
     title = item.get("ai_seo_title") or item.get("title", "Untitled")
     title = title.replace('"', '\\"')
     description = (item.get("ai_seo_description") or "").replace('"', '\\"')
@@ -84,6 +90,7 @@ def build_frontmatter(item: dict) -> str:
     return f"""+++
 title = "{title}"
 date = "{date}"
+publishDate = "{real_date}"
 slug = "{slug}"
 description = "{description}"
 categories = ["{category}"]
@@ -121,11 +128,9 @@ def build_body(item: dict) -> str:
 
 
 def write_stats(items: list) -> None:
-    """Write stats.json for the Hugo homepage dashboard."""
     severity_counts = Counter(i.get("ai_severity", "Medium") for i in items)
     category_counts = Counter(i.get("category", "general") for i in items)
 
-    # Find top critical item
     top_item = None
     for item in items:
         if item.get("ai_severity") == "Critical":
@@ -157,10 +162,31 @@ def write_stats(items: list) -> None:
     }
 
     SITE_DATA_DIR.mkdir(parents=True, exist_ok=True)
-    stats_path = SITE_DATA_DIR / "stats.json"
-    with open(stats_path, "w") as f:
+    with open(SITE_DATA_DIR / "stats.json", "w") as f:
         json.dump(stats, f, indent=2)
-    log.info(f"Wrote stats to {stats_path}")
+    log.info("Wrote stats.json")
+
+
+def prune_old_posts(output_dir: Path, max_age_days: int = MAX_AGE_DAYS) -> int:
+    """Remove posts older than max_age_days. Returns count of removed files."""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=max_age_days)
+    removed = 0
+    for filepath in output_dir.glob("*.md"):
+        try:
+            content = filepath.read_text(encoding="utf-8")
+            # Extract publishDate from front matter
+            match = re.search(r'publishDate = "([^"]+)"', content)
+            if match:
+                pub_date = datetime.fromisoformat(match.group(1))
+                if pub_date.tzinfo is None:
+                    pub_date = pub_date.replace(tzinfo=timezone.utc)
+                if pub_date < cutoff:
+                    filepath.unlink()
+                    removed += 1
+                    log.info(f"  Pruned old post: {filepath.name}")
+        except Exception as e:
+            log.warning(f"  Could not check age of {filepath.name}: {e}")
+    return removed
 
 
 def generate(
@@ -181,12 +207,21 @@ def generate(
         x.get("published", "")
     ))
 
-    # Write stats for homepage
     write_stats(items)
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    # Prune posts older than 6 months
+    pruned = prune_old_posts(output_dir)
+    if pruned:
+        log.info(f"Pruned {pruned} posts older than {MAX_AGE_DAYS} days")
+
+    # Get existing slugs to avoid duplicates
+    existing_slugs = {f.stem for f in output_dir.glob("*.md")}
+    log.info(f"Existing posts in archive: {len(existing_slugs)}")
+
     written = 0
+    skipped = 0
     slugs_seen = set()
 
     for item in items:
@@ -194,6 +229,11 @@ def generate(
         if slug in slugs_seen:
             slug = f"{slug}-{item['id'][:6]}"
         slugs_seen.add(slug)
+
+        # Skip if already in archive (deduplication)
+        if slug in existing_slugs:
+            skipped += 1
+            continue
 
         frontmatter = build_frontmatter(item)
         body = build_body(item)
@@ -206,14 +246,14 @@ def generate(
         log.info(f"  Wrote: {filepath.name}")
         written += 1
 
-    log.info(f"Generated {written} content files in {output_dir}")
+    log.info(f"Written: {written} new, Skipped: {skipped} duplicates, Archive total: {len(existing_slugs) + written}")
     return written
 
 
 if __name__ == "__main__":
     count = generate()
     print(f"\n{'─'*50}")
-    print(f"  Content files generated : {count}")
-    print(f"  Output directory        : {SITE_CONTENT_DIR}")
+    print(f"  New posts written  : {count}")
+    print(f"  Output directory   : {SITE_CONTENT_DIR}")
     print(f"{'─'*50}\n")
-    print("Next step: cd ../site && hugo server")
+    print("Next step: cd site && hugo server")
