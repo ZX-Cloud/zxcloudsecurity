@@ -1,5 +1,5 @@
 +++
-title = "Search Advisories"
+title = "Search Advisories and Guides"
 layout = "search"
 draft = false
 +++
