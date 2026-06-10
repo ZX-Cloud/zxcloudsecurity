@@ -1,0 +1,23 @@
+{{ define "main" }}
+All cloud security advisories published in the last 6 months, sorted by date. Use Search to find specific CVEs or topics.
+
+{{ $allPosts := where .Site.RegularPages "Type" "posts" }} {{ $sortedPosts := $allPosts.ByDate.Reverse }} {{ $currentMonth := "" }} {{ range $sortedPosts }} {{ $month := .Date.Format "January 2006" }} {{ if ne $month $currentMonth }} {{ if ne $currentMonth "" }}{{ end }}
+{{ $month }}
+{{ $currentMonth = $month }} {{ end }}
+{{ .Date.Format "02 Jan" }}
+{{ with .Params.severity }} {{ if eq . "Critical" }}
+🔴 Critical
+{{ end }} {{ if eq . "High" }}
+🟠 High
+{{ end }} {{ if eq . "Medium" }}
+🟡 Medium
+{{ end }} {{ if eq . "Low" }}
+🟢 Low
+{{ end }} {{ end }}
+{{ .Title }}
+{{ .Params.source }}
+{{ end }} {{ if ne $currentMonth "" }}
+{{ end }} {{ if not $sortedPosts }}
+No archived advisories yet — check back tomorrow after the pipeline runs.
+
+{{ end }} {{ end }}

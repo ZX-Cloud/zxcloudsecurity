@@ -1,5 +1,6 @@
 +++
 title = "Advisory Archive"
-description = "Searchable archive of cloud security advisories, CVEs and threat intelligence across AWS, Azure and GCP — last 6 months."
+description = "All cloud security advisories from the last 6 months across AWS, Azure and GCP."
+layout = "archive"
 draft = false
 +++
