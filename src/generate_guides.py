@@ -171,12 +171,13 @@ date = "{date}"
 slug = "{guide['slug']}"
 description = "{description}"
 keywords = [{keywords_toml}]
+type = "guides"
 draft = false
 +++
 """
 
 
-def generate_guides(api_key: str | None = None) -> int:
+def generate_guides(api_key: str | None = None, force: bool = False) -> int:
     if api_key is None:
         api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
@@ -184,8 +185,18 @@ def generate_guides(api_key: str | None = None) -> int:
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     written = 0
+    skipped = 0
 
     for i, guide in enumerate(GUIDES, 1):
+        filepath = OUTPUT_DIR / f"{guide['slug']}.md"
+
+        # Skip guides that already exist (add-only mode) unless --force is passed.
+        # This protects published, indexed content from being regenerated/changed.
+        if filepath.exists() and not force:
+            log.info(f"[{i}/{len(GUIDES)}] Skipping (already exists): {guide['slug']}")
+            skipped += 1
+            continue
+
         log.info(f"[{i}/{len(GUIDES)}] Generating: {guide['title']}")
         body = call_claude(guide, api_key)
         if not body:
@@ -203,15 +214,19 @@ def generate_guides(api_key: str | None = None) -> int:
         written += 1
         time.sleep(1)
 
-    log.info(f"Generated {written} guide pages in {OUTPUT_DIR}")
+    log.info(f"Generated {written} new guide(s), skipped {skipped} existing, in {OUTPUT_DIR}")
     return written
 
 
 if __name__ == "__main__":
-    count = generate_guides()
+    import sys
+    force = "--force" in sys.argv
+    if force:
+        print("⚠️  --force enabled: existing guides WILL be regenerated and overwritten.\n")
+    count = generate_guides(force=force)
     print(f"\n{'─'*50}")
-    print(f"  Guide pages generated : {count}")
-    print(f"  Output directory      : {OUTPUT_DIR}")
+    print(f"  New guide pages generated : {count}")
+    print(f"  Output directory          : {OUTPUT_DIR}")
     print(f"{'─'*50}\n")
     print("Now run: cd site && hugo server  (check /guides/)")
     print("Then commit and push — the daily pipeline will keep them live.")
