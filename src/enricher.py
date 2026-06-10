@@ -3,15 +3,8 @@ enricher.py
 ZX Cloud Security — Claude API Enrichment Pipeline
 
 Reads raw_feed.json produced by feed_scraper.py.
-Calls Claude API for each item to populate:
-  - ai_summary         : 2-3 sentence plain-English summary
-  - ai_architects_take : practical "so what?" for cloud security architects
-  - ai_severity        : Critical | High | Medium | Low
-  - ai_seo_title       : SEO-optimised page title (60 chars max)
-  - ai_seo_description : Meta description (155 chars max)
-  - ai_slug            : clean URL slug
-  - ai_tags            : list of relevant tags
-
+Skips items whose IDs already exist in site/content/posts/ (deduplication).
+Calls Claude API only for genuinely new items.
 Writes enriched_feed.json ready for the Hugo static site generator.
 """
 
@@ -27,24 +20,17 @@ import requests
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Config
-# ---------------------------------------------------------------------------
-
 ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 MODEL = "claude-sonnet-4-6"
 MAX_TOKENS = 1024
 MAX_RETRIES = 3
-RETRY_DELAY = 5          # seconds between retries
-REQUEST_DELAY = 0.5      # seconds between API calls (rate limit courtesy)
+RETRY_DELAY = 5
+REQUEST_DELAY = 0.5
 
 INPUT_FILE = "raw_feed.json"
 OUTPUT_FILE = "enriched_feed.json"
-FAILED_FILE = "enrichment_failures.json"  # items that couldn't be enriched
-
-# ---------------------------------------------------------------------------
-# Prompt
-# ---------------------------------------------------------------------------
+FAILED_FILE = "enrichment_failures.json"
+SEEN_IDS_FILE = "site/data/seen_ids.json"
 
 SYSTEM_PROMPT = """You are a senior cloud security architect writing for zxcloudsecurity.co.uk,
 a UK-based security news site aimed at cloud security architects and engineers.
@@ -54,6 +40,7 @@ Write in clear, professional UK English. Be concise and practical — your reade
 are experienced practitioners, not beginners.
 
 Always respond with valid JSON only. No preamble, no markdown, no explanation."""
+
 
 def build_user_prompt(item: dict) -> str:
     return f"""Enrich this security news item with structured metadata.
@@ -82,15 +69,33 @@ and 2-3 relevant security concepts (e.g. iam, privilege-escalation, ransomware, 
 Maximum 8 tags."""
 
 
-# ---------------------------------------------------------------------------
-# Claude API call
-# ---------------------------------------------------------------------------
+def load_seen_ids(seen_ids_path: str = SEEN_IDS_FILE) -> set:
+    """Load the set of already-published item IDs."""
+    path = Path(seen_ids_path)
+    if not path.exists():
+        return set()
+    try:
+        with open(path) as f:
+            data = json.load(f)
+        return set(data.get("ids", []))
+    except Exception as e:
+        log.warning(f"Could not load seen_ids: {e}")
+        return set()
+
+
+def save_seen_ids(seen_ids: set, seen_ids_path: str = SEEN_IDS_FILE) -> None:
+    """Save the updated set of published item IDs."""
+    path = Path(seen_ids_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with open(path, "w") as f:
+            json.dump({"ids": sorted(seen_ids)}, f, indent=2)
+        log.info(f"Saved {len(seen_ids)} seen IDs to {seen_ids_path}")
+    except Exception as e:
+        log.warning(f"Could not save seen_ids: {e}")
+
 
 def call_claude(item: dict, api_key: str) -> dict | None:
-    """
-    Call Claude API to enrich a single FeedItem dict.
-    Returns the parsed JSON response dict, or None on failure.
-    """
     prompt = build_user_prompt(item)
 
     for attempt in range(1, MAX_RETRIES + 1):
@@ -126,22 +131,18 @@ def call_claude(item: dict, api_key: str) -> dict | None:
             resp.raise_for_status()
             data = resp.json()
 
-            # Extract text from response
             text = ""
             for block in data.get("content", []):
                 if block.get("type") == "text":
                     text += block.get("text", "")
 
-            # Strip any accidental markdown fences
             text = re.sub(r"^```(?:json)?\s*", "", text.strip())
             text = re.sub(r"\s*```$", "", text)
 
-            enrichment = json.loads(text)
-            return enrichment
+            return json.loads(text)
 
         except json.JSONDecodeError as e:
-            log.error(f"  JSON parse error for item '{item['title'][:50]}': {e}")
-            log.debug(f"  Raw response: {text[:200]}")
+            log.error(f"  JSON parse error for '{item['title'][:50]}': {e}")
             return None
 
         except requests.RequestException as e:
@@ -154,12 +155,7 @@ def call_claude(item: dict, api_key: str) -> dict | None:
     return None
 
 
-# ---------------------------------------------------------------------------
-# Apply enrichment to item
-# ---------------------------------------------------------------------------
-
 def apply_enrichment(item: dict, enrichment: dict) -> dict:
-    """Merge Claude's enrichment fields into the item dict."""
     item["ai_summary"] = enrichment.get("ai_summary", "")
     item["ai_architects_take"] = enrichment.get("ai_architects_take", "")
     item["ai_severity"] = enrichment.get("ai_severity", item["priority"].capitalize())
@@ -170,26 +166,17 @@ def apply_enrichment(item: dict, enrichment: dict) -> dict:
     return item
 
 
-# ---------------------------------------------------------------------------
-# Main enrichment loop
-# ---------------------------------------------------------------------------
-
 def enrich_all(
     input_path: str = INPUT_FILE,
     output_path: str = OUTPUT_FILE,
     failed_path: str = FAILED_FILE,
     api_key: str | None = None,
 ) -> tuple[int, int]:
-    """
-    Enrich all items in input_path and write to output_path.
-    Returns (success_count, failure_count).
-    """
     if api_key is None:
         api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
-        raise ValueError("ANTHROPIC_API_KEY not set — export it or pass api_key= directly")
+        raise ValueError("ANTHROPIC_API_KEY not set")
 
-    # Load raw items
     raw_path = Path(input_path)
     if not raw_path.exists():
         raise FileNotFoundError(f"Input file not found: {input_path}")
@@ -199,11 +186,20 @@ def enrich_all(
 
     log.info(f"Loaded {len(items)} items from {input_path}")
 
+    # Load already-seen IDs to skip items already in the archive
+    seen_ids = load_seen_ids()
+    log.info(f"Already seen IDs in archive: {len(seen_ids)}")
+
+    # Filter to only new items
+    new_items = [i for i in items if i.get("id") not in seen_ids]
+    skipped_count = len(items) - len(new_items)
+    log.info(f"New items to enrich: {len(new_items)} (skipped {skipped_count} already archived)")
+
     enriched = []
     failed = []
 
-    for i, item in enumerate(items, 1):
-        log.info(f"[{i}/{len(items)}] Enriching: {item['title'][:70]}")
+    for i, item in enumerate(new_items, 1):
+        log.info(f"[{i}/{len(new_items)}] Enriching: {item['title'][:70]}")
 
         enrichment = call_claude(item, api_key)
 
@@ -214,13 +210,12 @@ def enrich_all(
         else:
             log.warning(f"  ✗ Enrichment failed — keeping raw item")
             failed.append(item)
-            enriched.append(item)  # include unenriched so site still builds
+            enriched.append(item)
 
-        # Polite delay between API calls
-        if i < len(items):
+        if i < len(new_items):
             time.sleep(REQUEST_DELAY)
 
-    # Filter out Low severity items and cap at 50
+    # Filter out Low severity and cap at 50
     before_filter = len(enriched)
     enriched = [i for i in enriched if i.get("ai_severity", "Medium") != "Low"]
     severity_order = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
@@ -228,7 +223,11 @@ def enrich_all(
     enriched = enriched[:50]
     log.info(f"After filter: {before_filter} → {len(enriched)} items (Lows removed, capped at 50)")
 
-    # Write outputs
+    # Update seen_ids with newly enriched items
+    for item in enriched:
+        seen_ids.add(item.get("id", ""))
+    save_seen_ids(seen_ids)
+
     with open(output_path, "w") as f:
         json.dump(enriched, f, indent=2, default=str)
     log.info(f"Wrote {len(enriched)} enriched items to {output_path}")
@@ -240,10 +239,6 @@ def enrich_all(
 
     return len(enriched) - len(failed), len(failed)
 
-
-# ---------------------------------------------------------------------------
-# CLI entry point
-# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     success, failures = enrich_all()
