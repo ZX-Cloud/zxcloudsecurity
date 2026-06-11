@@ -2,7 +2,7 @@ name: Daily Security Feed Pipeline
 
 on:
   schedule:
-    - cron: '45 9 * * *'   # 9:45am UTC (10:45am BST) daily
+    - cron: '49 9 * * *'   # 9:45am UTC (10:45am BST) daily
   workflow_dispatch:        # allow manual trigger from GitHub UI
 
 jobs:
