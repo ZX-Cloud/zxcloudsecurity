@@ -2,7 +2,7 @@ name: Daily Security Feed Pipeline
 
 on:
   schedule:
-    - cron: '0 8 * * *'   # 6am UTC Summer Daily
+    - cron: '0 5 * * *'   # 6am UTC Summer Daily
   workflow_dispatch:        # allow manual trigger from GitHub UI
 
 jobs:
@@ -43,6 +43,13 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python src/enricher.py
 
+      - name: Commit seen IDs back to repo
+        run: |
+          git config user.email "github-actions@github.com"
+          git config user.name "GitHub Actions"
+          git add site/data/seen_ids.json
+          git diff --staged --quiet || git commit -m "update seen_ids [skip ci]"
+          git push
       
       - name: Generate Hugo content
         run: python src/generate.py
