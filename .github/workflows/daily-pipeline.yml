@@ -79,6 +79,8 @@ jobs:
             --paths "/*"
 
       - name: Send daily email digest
+        env:
+          AWS_DEFAULT_REGION: eu-west-1
         run: |
           aws lambda invoke \
             --function-name zxcloudsecurity-send-digest \
