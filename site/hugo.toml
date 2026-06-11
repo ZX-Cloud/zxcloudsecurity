@@ -24,6 +24,7 @@ buildFuture = false
   ShowToc = false
   hidemeta = false
   ShowFullTextinRSS = true
+  googleAnalytics = "G-V7188QRTVW"
 
   [params.homeInfoParams]
     Title = "Cloud Security Intelligence"
