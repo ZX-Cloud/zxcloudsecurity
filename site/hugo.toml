@@ -74,6 +74,12 @@ buildFuture = false
   weight = 55
 
 [[menu.main]]
+  identifier = "menu-subscribe"
+  name = "Subscribe"
+  url = "/subscribe/"
+  weight = 50
+
+[[menu.main]]
   identifier = "menu-archive"
   name = "Archive"
   url = "/archive/"
