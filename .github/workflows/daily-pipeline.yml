@@ -2,7 +2,7 @@ name: Daily Security Feed Pipeline
 
 on:
   schedule:
-    - cron: '0 4 * * *'   # 0400 UTC (0400 BST) daily
+    - cron: '0 4 * * *'   # 4am UTC daily (allows for GitHub Actions delay)
   workflow_dispatch:        # allow manual trigger from GitHub UI
 
 jobs:
@@ -50,7 +50,7 @@ jobs:
           git add site/data/seen_ids.json
           git diff --staged --quiet || git commit -m "update seen_ids [skip ci]"
           git push
-      
+
       - name: Generate Hugo content
         run: python src/generate.py
 
@@ -66,6 +66,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-2
 
+      - name: Upload enriched feed to S3
+        run: aws s3 cp src/enriched_feed.json s3://zxcloudsecurity-site/enriched_feed.json
+
       - name: Deploy to S3
         run: aws s3 sync site/public/ s3://zxcloudsecurity-site --delete
 
@@ -74,6 +77,15 @@ jobs:
           aws cloudfront create-invalidation \
             --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
             --paths "/*"
+
+      - name: Send daily email digest
+        run: |
+          aws lambda invoke \
+            --function-name zxcloudsecurity-send-digest \
+            --region eu-west-1 \
+            --payload '{}' \
+            response.json
+          cat response.json
 
       # ── Notify on failure ───────────────────────────────────────────────────
       - name: Pipeline summary
