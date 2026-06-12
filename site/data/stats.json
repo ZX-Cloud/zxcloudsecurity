@@ -1,0 +1,23 @@
+{
+  "updated": "12 Jun 2026 07:32 UTC",
+  "total": 4,
+  "severity": {
+    "critical": 1,
+    "high": 3,
+    "medium": 0
+  },
+  "categories": {
+    "aws": 0,
+    "azure": 3,
+    "gcp": 0,
+    "general": 1
+  },
+  "top_critical": {
+    "title": "Oracle PeopleSoft Zero-Day CVE-2026-35273 Exploited",
+    "summary": "The ShinyHunters threat group exploited a zero-day vulnerability (CVE-2026-35273) in Oracle PeopleSoft to breach enterprise systems and steal data, primarily targeting universities, between 27 May and",
+    "architects_take": "Apply Oracle's patch for CVE-2026-35273 immediately and audit PeopleSoft access logs for activity between 27 May and 10 June 2026. Review network segmentation to ensure PeopleSoft instances are not directly internet-facing, and validate that data exfiltration controls such as DLP and egress monitoring are in place for systems hosting sensitive records.",
+    "slug": "shinyhunters-oracle-peoplesoft-zero-day-cve-2026-35273",
+    "source": "The Hacker News",
+    "category": "general"
+  }
+}
