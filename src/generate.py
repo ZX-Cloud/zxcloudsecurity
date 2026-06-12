@@ -6,7 +6,7 @@ Reads enriched_feed.json produced by enricher.py.
 Creates one Hugo-formatted markdown file per article in the site/content/posts/ directory.
 - Add-only by default: skips slugs that already exist (deduplication)
 - Removes posts older than MAX_AGE_DAYS to keep archive manageable
-Also writes site/data/stats.json for the homepage dashboard.
+- Writes stats.json based on ALL posts in archive for accurate homepage counts
 """
 
 import json
@@ -33,6 +33,9 @@ SEVERITY_EMOJI = {
 
 SEVERITY_ORDER = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
 WEIGHT_MAP = {"Critical": 10, "High": 20, "Medium": 30, "Low": 40}
+
+# Severity year encoding — Critical gets highest year so Hugo sorts it first
+SEVERITY_YEAR = {"Critical": 2026, "High": 2025, "Medium": 2024, "Low": 2023}
 
 
 def safe_slug(item: dict) -> str:
@@ -64,18 +67,16 @@ def build_frontmatter(item: dict) -> str:
     slug = safe_slug(item)
     severity = item.get("ai_severity", "Medium")
 
-    severity_year = {"Critical": 2026, "High": 2025, "Medium": 2024, "Low": 2023}
+    # Encode severity into year so Hugo sorts Critical first
     try:
         raw_dt = datetime.fromisoformat(item.get("published", ""))
-        year = severity_year.get(severity, 2023)
+        year = SEVERITY_YEAR.get(severity, 2023)
         dt = raw_dt.replace(year=year)
         date = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
     except Exception:
         date = format_date(item.get("published", ""))
 
-    # Store real published date separately for archive display
     real_date = format_date(item.get("published", ""))
-
     title = item.get("ai_seo_title") or item.get("title", "Untitled")
     title = title.replace('"', '\\"')
     description = (item.get("ai_seo_description") or "").replace('"', '\\"')
@@ -127,22 +128,46 @@ def build_body(item: dict) -> str:
     return "\n".join(lines)
 
 
-def write_stats(items: list) -> None:
+def read_archive_stats(output_dir: Path) -> list:
+    """Read severity and category from all existing archive posts."""
+    archive_items = []
+    for filepath in output_dir.glob("*.md"):
+        try:
+            content = filepath.read_text(encoding="utf-8")
+            severity_match = re.search(r'severity = "([^"]+)"', content)
+            category_match = re.search(r'categories = \["([^"]+)"\]', content)
+            title_match = re.search(r'title = "([^"]+)"', content)
+            slug_match = re.search(r'slug = "([^"]+)"', content)
+            summary_match = re.search(r'\n\n(.+?)(?:\n|$)', content[content.find('+++\n', 3)+4:])
+            if severity_match and category_match:
+                archive_items.append({
+                    "ai_severity": severity_match.group(1),
+                    "category": category_match.group(1),
+                    "ai_seo_title": title_match.group(1) if title_match else "",
+                    "ai_slug": slug_match.group(1) if slug_match else filepath.stem,
+                    "ai_summary": "",
+                    "ai_architects_take": "",
+                })
+        except Exception as e:
+            log.warning(f"Could not read stats from {filepath.name}: {e}")
+    return archive_items
+
+
+def write_stats(items: list, top_item_full: dict = None) -> None:
+    """Write stats.json for the Hugo homepage dashboard."""
     severity_counts = Counter(i.get("ai_severity", "Medium") for i in items)
     category_counts = Counter(i.get("category", "general") for i in items)
 
     top_item = None
-    for item in items:
-        if item.get("ai_severity") == "Critical":
-            top_item = {
-                "title": item.get("ai_seo_title") or item.get("title", ""),
-                "summary": item.get("ai_summary", "")[:200],
-                "architects_take": item.get("ai_architects_take", ""),
-                "slug": safe_slug(item),
-                "source": item.get("source_name", ""),
-                "category": item.get("category", "general"),
-            }
-            break
+    if top_item_full:
+        top_item = {
+            "title": top_item_full.get("ai_seo_title") or top_item_full.get("title", ""),
+            "summary": top_item_full.get("ai_summary", "")[:200],
+            "architects_take": top_item_full.get("ai_architects_take", ""),
+            "slug": safe_slug(top_item_full),
+            "source": top_item_full.get("source_name", ""),
+            "category": top_item_full.get("category", "general"),
+        }
 
     stats = {
         "updated": datetime.now(timezone.utc).strftime("%d %b %Y %H:%M UTC"),
@@ -164,17 +189,16 @@ def write_stats(items: list) -> None:
     SITE_DATA_DIR.mkdir(parents=True, exist_ok=True)
     with open(SITE_DATA_DIR / "stats.json", "w") as f:
         json.dump(stats, f, indent=2)
-    log.info("Wrote stats.json")
+    log.info(f"Wrote stats.json — {len(items)} total posts, {severity_counts.get('Critical',0)} critical")
 
 
 def prune_old_posts(output_dir: Path, max_age_days: int = MAX_AGE_DAYS) -> int:
-    """Remove posts older than max_age_days. Returns count of removed files."""
+    """Remove posts older than max_age_days."""
     cutoff = datetime.now(timezone.utc) - timedelta(days=max_age_days)
     removed = 0
     for filepath in output_dir.glob("*.md"):
         try:
             content = filepath.read_text(encoding="utf-8")
-            # Extract publishDate from front matter
             match = re.search(r'publishDate = "([^"]+)"', content)
             if match:
                 pub_date = datetime.fromisoformat(match.group(1))
@@ -202,12 +226,11 @@ def generate(
 
     log.info(f"Loaded {len(items)} items from {input_path}")
 
+    # Sort today's new items by severity
     items.sort(key=lambda x: (
         SEVERITY_ORDER.get(x.get("ai_severity", ""), 4),
         x.get("published", "")
     ))
-
-    write_stats(items)
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -223,6 +246,7 @@ def generate(
     written = 0
     skipped = 0
     slugs_seen = set()
+    top_critical = None
 
     for item in items:
         slug = safe_slug(item)
@@ -230,7 +254,11 @@ def generate(
             slug = f"{slug}-{item['id'][:6]}"
         slugs_seen.add(slug)
 
-        # Skip if already in archive (deduplication)
+        # Track top critical for homepage featured item
+        if top_critical is None and item.get("ai_severity") == "Critical":
+            top_critical = item
+
+        # Skip if already in archive
         if slug in existing_slugs:
             skipped += 1
             continue
@@ -246,7 +274,13 @@ def generate(
         log.info(f"  Wrote: {filepath.name}")
         written += 1
 
-    log.info(f"Written: {written} new, Skipped: {skipped} duplicates, Archive total: {len(existing_slugs) + written}")
+    log.info(f"Written: {written} new, Skipped: {skipped} duplicates")
+
+    # Write stats based on ALL posts in archive (not just today's new ones)
+    all_archive = read_archive_stats(output_dir)
+    log.info(f"Archive total for stats: {len(all_archive)} posts")
+    write_stats(all_archive, top_critical)
+
     return written
 
 

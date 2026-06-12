@@ -46,12 +46,12 @@ jobs:
       - name: Generate Hugo content
         run: python src/generate.py
 
-      - name: Commit data files back to repo
+      - name: Commit data files and posts back to repo
         run: |
           git config user.email "github-actions@github.com"
           git config user.name "GitHub Actions"
-          git add site/data/seen_ids.json site/data/stats.json
-          git diff --staged --quiet || git commit -m "update data files [skip ci]"
+          git add site/data/seen_ids.json site/data/stats.json site/content/posts/
+          git diff --staged --quiet || git commit -m "update data files and posts [skip ci]"
           git push
 
       - name: Build Hugo site
