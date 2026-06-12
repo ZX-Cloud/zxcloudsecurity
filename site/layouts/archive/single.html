@@ -1,23 +1,53 @@
 {{ define "main" }}
-All cloud security advisories published in the last 6 months, sorted by date. Use Search to find specific CVEs or topics.
 
-{{ $allPosts := where .Site.RegularPages "Type" "posts" }} {{ $sortedPosts := $allPosts.ByDate.Reverse }} {{ $currentMonth := "" }} {{ range $sortedPosts }} {{ $month := .Date.Format "January 2006" }} {{ if ne $month $currentMonth }} {{ if ne $currentMonth "" }}{{ end }}
-{{ $month }}
-{{ $currentMonth = $month }} {{ end }}
-{{ .Date.Format "02 Jan" }}
-{{ with .Params.severity }} {{ if eq . "Critical" }}
-🔴 Critical
-{{ end }} {{ if eq . "High" }}
-🟠 High
-{{ end }} {{ if eq . "Medium" }}
-🟡 Medium
-{{ end }} {{ if eq . "Low" }}
-🟢 Low
-{{ end }} {{ end }}
-{{ .Title }}
-{{ .Params.source }}
-{{ end }} {{ if ne $currentMonth "" }}
-{{ end }} {{ if not $sortedPosts }}
-No archived advisories yet — check back tomorrow after the pipeline runs.
+<div style="margin-bottom: 2rem;">
+  <p style="color: var(--secondary); font-size: 14px;">
+    All cloud security advisories published in the last 6 months, sorted by date. Use
+    <a href="/search/" style="color: var(--primary);">Search</a> to find specific CVEs or topics.
+  </p>
+</div>
 
-{{ end }} {{ end }}
+{{ $allPosts := where .Site.RegularPages "Type" "posts" }}
+{{ $sortedPosts := $allPosts.ByDate.Reverse }}
+
+{{ $currentMonth := "" }}
+
+{{ range $sortedPosts }}
+  {{ $month := .Date.Format "January 2006" }}
+  {{ if ne $month $currentMonth }}
+    {{ if ne $currentMonth "" }}</div>{{ end }}
+    <h2 style="font-size: 16px; font-weight: 600; color: var(--secondary); text-transform: uppercase; letter-spacing: 0.08em; margin: 2rem 0 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+      {{ $month }}
+    </h2>
+    <div>
+    {{ $currentMonth = $month }}
+  {{ end }}
+
+  <div style="display: flex; align-items: baseline; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 0.5px solid var(--border);">
+    <span style="font-size: 12px; color: var(--secondary); white-space: nowrap; min-width: 80px;">
+      {{ .Date.Format "02 Jan" }}
+    </span>
+    {{ with .Params.severity }}
+      {{ if eq . "Critical" }}<span style="font-size: 11px; color: #dc2626; white-space: nowrap;">🔴 Critical</span>{{ end }}
+      {{ if eq . "High" }}<span style="font-size: 11px; color: #d97706; white-space: nowrap;">🟠 High</span>{{ end }}
+      {{ if eq . "Medium" }}<span style="font-size: 11px; color: #2563eb; white-space: nowrap;">🟡 Medium</span>{{ end }}
+      {{ if eq . "Low" }}<span style="font-size: 11px; white-space: nowrap;">🟢 Low</span>{{ end }}
+    {{ end }}
+    <a href="{{ .Permalink }}" style="font-size: 14px; color: var(--primary); text-decoration: none; flex: 1;">
+      {{ .Title }}
+    </a>
+    <span style="font-size: 11px; color: var(--secondary); white-space: nowrap;">
+      {{ .Params.source }}
+    </span>
+  </div>
+
+{{ end }}
+{{ if ne $currentMonth "" }}</div>{{ end }}
+
+{{ if not $sortedPosts }}
+<p style="color: var(--secondary); text-align: center; padding: 3rem 0;">
+  No archived advisories yet — check back tomorrow after the pipeline runs.
+</p>
+{{ end }}
+
+{{ end }}
