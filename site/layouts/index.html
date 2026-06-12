@@ -75,7 +75,11 @@
 {{ end }}
 
 {{ $pages := where .Site.RegularPages "Type" "posts" }}
-{{ $pages = $pages.ByParam "weight" }}
+{{ $critical := where $pages ".Params.severity" "Critical" }}
+{{ $high := where $pages ".Params.severity" "High" }}
+{{ $medium := where $pages ".Params.severity" "Medium" }}
+{{ $low := where $pages ".Params.severity" "Low" }}
+{{ $pages = $critical | append $high | append $medium | append $low }}
 
 {{ range $pages }}
 <article style="border: 0.5px solid var(--border); border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem;">
