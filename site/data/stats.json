@@ -1,16 +1,23 @@
 {
-  "updated": "12 Jun 2026 13:56 UTC",
-  "total": 99,
+  "updated": "12 Jun 2026 17:46 UTC",
+  "total": 101,
   "severity": {
-    "critical": 7,
-    "high": 51,
+    "critical": 8,
+    "high": 52,
     "medium": 20
   },
   "categories": {
     "aws": 18,
     "azure": 20,
     "gcp": 0,
-    "general": 61
+    "general": 63
   },
-  "top_critical": null
+  "top_critical": {
+    "title": "CVE-2026-35273: Oracle PeopleSoft Auth Bypass Flaw",
+    "summary": "A critical vulnerability in Oracle PeopleSoft Enterprise PeopleTools allows an unauthenticated attacker to take full control of the system due to a missing authentication check on a critical function.",
+    "architects_take": "Immediately apply Oracle's patch or mitigation guidance, and in the interim restrict network access to PeopleSoft PeopleTools interfaces via firewall rules or VPN \u2014 ensuring the application is not exposed to untrusted networks. Audit your environment for any signs of unauthorised access or anomalous activity in PeopleSoft logs since exposure without authentication controls is high-impact.",
+    "slug": "cve-2026-35273-oracle-peoplesoft-peopletools-missing-authentication-takeover",
+    "source": "CISA Known Exploited Vulnerabilities",
+    "category": "general"
+  }
 }
