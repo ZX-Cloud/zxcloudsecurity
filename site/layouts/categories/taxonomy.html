@@ -1,0 +1,41 @@
+{{ define "main" }}
+
+{{ $pages := .Pages }}
+
+{{ $critical := where $pages ".Params.severity" "Critical" }}
+{{ $high := where $pages ".Params.severity" "High" }}
+{{ $medium := where $pages ".Params.severity" "Medium" }}
+{{ $low := where $pages ".Params.severity" "Low" }}
+{{ $sorted := $critical | append $high | append $medium | append $low }}
+
+{{ with .Content }}
+<div style="margin-bottom: 1.5rem; color: var(--secondary); font-size: 14px;">{{ . }}</div>
+{{ end }}
+
+{{ if not $sorted }}
+<p style="color: var(--secondary); padding: 2rem 0;">
+  No advisories in the last 48 hours — check back tomorrow.
+  Our pipeline runs daily and publishes new items automatically.
+</p>
+{{ else }}
+{{ range $sorted }}
+<article style="border: 0.5px solid var(--border); border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem;">
+  <a href="{{ .Permalink }}" style="text-decoration: none;">
+    <h2 style="font-size: 16px; font-weight: 500; margin: 0 0 0.4rem; color: var(--primary);">{{ .Title }}</h2>
+    <p style="font-size: 13px; color: var(--secondary); margin: 0 0 0.5rem;">{{ .Description }}</p>
+    <div style="font-size: 12px; color: var(--secondary);">
+      {{ with .Params.severity }}
+        {{ if eq . "Critical" }}<span style="color: #A32D2D;">🔴 Critical</span>{{ end }}
+        {{ if eq . "High" }}<span style="color: #854F0B;">🟠 High</span>{{ end }}
+        {{ if eq . "Medium" }}<span style="color: #185FA5;">🟡 Medium</span>{{ end }}
+        {{ if eq . "Low" }}<span>🟢 Low</span>{{ end }}
+      {{ end }}
+      &nbsp;|&nbsp; {{ .Params.source }}
+      &nbsp;|&nbsp; {{ .Date.Format "2 Jan 2006" }}
+    </div>
+  </a>
+</article>
+{{ end }}
+{{ end }}
+
+{{ end }}
