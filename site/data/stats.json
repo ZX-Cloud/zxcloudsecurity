@@ -1,23 +1,16 @@
 {
-  "updated": "12 Jun 2026 10:10 UTC",
-  "total": 94,
+  "updated": "12 Jun 2026 12:53 UTC",
+  "total": 97,
   "severity": {
     "critical": 7,
-    "high": 48,
-    "medium": 18
+    "high": 49,
+    "medium": 20
   },
   "categories": {
     "aws": 18,
     "azure": 20,
     "gcp": 0,
-    "general": 56
+    "general": 59
   },
-  "top_critical": {
-    "title": "LangGraph RCE Flaw Chain: SQL Injection Risk for AI Agents",
-    "summary": "Three now-patched security vulnerabilities have been disclosed in LangGraph, an open-source framework used to build multi-agent AI applications. The most serious is a critical chain involving SQL inje",
-    "architects_take": "Audit all self-hosted LangGraph deployments and apply the latest patches immediately. Additionally, enforce network-level controls to restrict access to LangGraph API endpoints, and review whether untrusted input can reach any SQL-handling functions within your AI agent pipelines.",
-    "slug": "langgraph-sql-injection-rce-vulnerability-chain-self-hosted-ai-agents",
-    "source": "The Hacker News",
-    "category": "general"
-  }
+  "top_critical": null
 }
