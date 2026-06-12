@@ -1,0 +1,67 @@
+<div id="cookie-notice" style="
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--code-bg);
+  border-top: 1px solid var(--border);
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  z-index: 9999;
+  font-size: 13px;
+  color: var(--secondary);
+">
+  <p style="margin: 0; flex: 1; min-width: 200px;">
+    🍪 We use Google Analytics to understand how visitors use this site.
+    No personal data is sold or shared. See our
+    <a href="/privacy/" style="color: var(--primary);">privacy policy</a> for details.
+  </p>
+  <div style="display: flex; gap: 0.75rem; flex-shrink: 0;">
+    <button onclick="acceptCookies()" style="
+      padding: 0.5rem 1.25rem;
+      border-radius: 6px;
+      background: var(--primary);
+      color: var(--theme);
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+    ">Accept</button>
+    <button onclick="declineCookies()" style="
+      padding: 0.5rem 1.25rem;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--secondary);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 13px;
+    ">Decline</button>
+  </div>
+</div>
+
+<script>
+  // Check if user has already made a choice
+  const cookieChoice = localStorage.getItem('cookie-consent');
+  if (cookieChoice) {
+    document.getElementById('cookie-notice').style.display = 'none';
+    if (cookieChoice === 'declined') {
+      // Disable GA if declined
+      window['ga-disable-G-V7188QRTVW'] = true;
+    }
+  }
+
+  function acceptCookies() {
+    localStorage.setItem('cookie-consent', 'accepted');
+    document.getElementById('cookie-notice').style.display = 'none';
+  }
+
+  function declineCookies() {
+    localStorage.setItem('cookie-consent', 'declined');
+    window['ga-disable-G-V7188QRTVW'] = true;
+    document.getElementById('cookie-notice').style.display = 'none';
+  }
+</script>
