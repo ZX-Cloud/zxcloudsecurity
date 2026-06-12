@@ -43,16 +43,16 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python src/enricher.py
 
-      - name: Commit seen IDs back to repo
+      - name: Generate Hugo content
+        run: python src/generate.py
+
+      - name: Commit data files back to repo
         run: |
           git config user.email "github-actions@github.com"
           git config user.name "GitHub Actions"
-          git add site/data/seen_ids.json
-          git diff --staged --quiet || git commit -m "update seen_ids [skip ci]"
+          git add site/data/seen_ids.json site/data/stats.json
+          git diff --staged --quiet || git commit -m "update data files [skip ci]"
           git push
-
-      - name: Generate Hugo content
-        run: python src/generate.py
 
       - name: Build Hugo site
         run: hugo --minify
@@ -65,7 +65,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-2
-   
+
       - name: Deploy to S3
         run: aws s3 sync site/public/ s3://zxcloudsecurity-site --delete
 
