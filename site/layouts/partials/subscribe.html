@@ -1,0 +1,50 @@
+<div style="text-align: center; padding: 2rem 1rem; border-top: 1px solid var(--border); margin-top: 2rem;">
+  <h3 style="margin-bottom: 0.5rem;">📬 Stay Informed</h3>
+  <p style="margin-bottom: 1rem;">Get daily cloud security advisories delivered to your inbox.</p>
+  <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+    <input type="email" id="footer-email" placeholder="your@email.com"
+      style="padding: 0.5rem 1rem; border-radius: 4px; border: 1px solid var(--border); background: var(--entry); color: var(--primary); width: 250px; font-size: 14px;" />
+    <button onclick="footerSubscribe()"
+      style="padding: 0.5rem 1.5rem; border-radius: 4px; background: var(--primary); color: var(--theme); border: none; cursor: pointer; font-size: 14px;">
+      Subscribe
+    </button>
+  </div>
+  <div id="footer-subscribe-msg" style="font-size: 13px; margin-top: 0.75rem; display: none;"></div>
+  <p style="font-size: 0.8em; margin-top: 0.75rem; color: var(--secondary);">
+    Free. No spam. Unsubscribe anytime. <a href="/subscribe/" style="color: var(--secondary);">Learn more</a>
+  </p>
+</div>
+
+<script>
+async function footerSubscribe() {
+  const email = document.getElementById('footer-email').value.trim();
+  const msg = document.getElementById('footer-subscribe-msg');
+  if (!email || !email.includes('@')) {
+    msg.style.display = 'block';
+    msg.style.color = '#dc2626';
+    msg.textContent = 'Please enter a valid email address.';
+    return;
+  }
+  try {
+    const resp = await fetch('https://3525nbuoej.execute-api.eu-west-1.amazonaws.com/prod/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, categories: ['all'] })
+    });
+    const data = await resp.json();
+    msg.style.display = 'block';
+    if (resp.ok) {
+      msg.style.color = '#16a34a';
+      msg.textContent = '✅ Check your inbox to confirm your subscription.';
+      document.getElementById('footer-email').value = '';
+    } else {
+      msg.style.color = '#dc2626';
+      msg.textContent = data.error || 'Something went wrong. Please try again.';
+    }
+  } catch (e) {
+    msg.style.display = 'block';
+    msg.style.color = '#dc2626';
+    msg.textContent = 'Something went wrong. Please try again.';
+  }
+}
+</script>
