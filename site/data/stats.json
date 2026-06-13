@@ -1,5 +1,5 @@
 {
-  "updated": "13 Jun 2026 18:01 UTC",
+  "updated": "13 Jun 2026 20:13 UTC",
   "total": 128,
   "severity": {
     "critical": 11,
@@ -12,12 +12,5 @@
     "gcp": 0,
     "general": 70
   },
-  "top_critical": {
-    "title": "CVE-2026-20253: Critical Splunk RCE Flaw",
-    "summary": "A critical vulnerability (CVE-2026-20253, CVSS 9.8) in Splunk Enterprise allows unauthenticated attackers to perform arbitrary file operations and execute remote code. Affected versions are Splunk Ent",
-    "architects_take": "Patch Splunk Enterprise to version 10.2.4 or 10.0.7 immediately. Until patching is complete, restrict network access to Splunk management interfaces and ingestion endpoints using firewall rules or security group policies to limit exposure to trusted IP ranges only.",
-    "slug": "splunk-enterprise-unauthenticated-rce-cve-2026-20253",
-    "source": "The Hacker News",
-    "category": "general"
-  }
+  "top_critical": null
 }
