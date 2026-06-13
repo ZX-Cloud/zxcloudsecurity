@@ -1,23 +1,23 @@
 {
-  "updated": "12 Jun 2026 17:46 UTC",
-  "total": 101,
+  "updated": "13 Jun 2026 06:03 UTC",
+  "total": 107,
   "severity": {
-    "critical": 8,
-    "high": 52,
-    "medium": 20
+    "critical": 10,
+    "high": 54,
+    "medium": 22
   },
   "categories": {
-    "aws": 18,
+    "aws": 19,
     "azure": 20,
     "gcp": 0,
-    "general": 63
+    "general": 68
   },
   "top_critical": {
-    "title": "CVE-2026-35273: Oracle PeopleSoft Auth Bypass Flaw",
-    "summary": "A critical vulnerability in Oracle PeopleSoft Enterprise PeopleTools allows an unauthenticated attacker to take full control of the system due to a missing authentication check on a critical function.",
-    "architects_take": "Immediately apply Oracle's patch or mitigation guidance, and in the interim restrict network access to PeopleSoft PeopleTools interfaces via firewall rules or VPN \u2014 ensuring the application is not exposed to untrusted networks. Audit your environment for any signs of unauthorised access or anomalous activity in PeopleSoft logs since exposure without authentication controls is high-impact.",
-    "slug": "cve-2026-35273-oracle-peoplesoft-peopletools-missing-authentication-takeover",
-    "source": "CISA Known Exploited Vulnerabilities",
+    "title": "Velvet Ant Backdoors Linux PAM & OpenSSH for 10 Years",
+    "summary": "A China-linked threat actor tracked as Velvet Ant spent nearly a decade maintaining persistent access to a targeted network by backdooring PAM (Pluggable Authentication Modules) and OpenSSH \u2014 the core",
+    "architects_take": "Audit the integrity of PAM configuration files and OpenSSH binaries across all Linux hosts using file integrity monitoring or a trusted read-only baseline \u2014 pay particular attention to shared services and jump hosts where a single compromise yields the broadest access. Consider deploying centralised SSH certificate authorities (e.g. HashiCorp Vault SSH, AWS EC2 Instance Connect) to reduce reliance on static authorised_keys files and make backdoored local auth paths easier to detect.",
+    "slug": "velvet-ant-china-linux-pam-openssh-backdoor-persistent-access",
+    "source": "The Hacker News",
     "category": "general"
   }
 }
