@@ -1,23 +1,16 @@
 {
-  "updated": "13 Jun 2026 06:03 UTC",
-  "total": 107,
+  "updated": "13 Jun 2026 11:21 UTC",
+  "total": 127,
   "severity": {
     "critical": 10,
-    "high": 54,
-    "medium": 22
+    "high": 72,
+    "medium": 24
   },
   "categories": {
     "aws": 19,
-    "azure": 20,
+    "azure": 39,
     "gcp": 0,
-    "general": 68
+    "general": 69
   },
-  "top_critical": {
-    "title": "Velvet Ant Backdoors Linux PAM & OpenSSH for 10 Years",
-    "summary": "A China-linked threat actor tracked as Velvet Ant spent nearly a decade maintaining persistent access to a targeted network by backdooring PAM (Pluggable Authentication Modules) and OpenSSH \u2014 the core",
-    "architects_take": "Audit the integrity of PAM configuration files and OpenSSH binaries across all Linux hosts using file integrity monitoring or a trusted read-only baseline \u2014 pay particular attention to shared services and jump hosts where a single compromise yields the broadest access. Consider deploying centralised SSH certificate authorities (e.g. HashiCorp Vault SSH, AWS EC2 Instance Connect) to reduce reliance on static authorised_keys files and make backdoored local auth paths easier to detect.",
-    "slug": "velvet-ant-china-linux-pam-openssh-backdoor-persistent-access",
-    "source": "The Hacker News",
-    "category": "general"
-  }
+  "top_critical": null
 }
