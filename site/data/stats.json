@@ -1,16 +1,16 @@
 {
-  "updated": "15 Jun 2026 10:18 UTC",
-  "total": 136,
+  "updated": "15 Jun 2026 11:08 UTC",
+  "total": 137,
   "severity": {
     "critical": 11,
     "high": 78,
-    "medium": 26
+    "medium": 27
   },
   "categories": {
     "aws": 19,
     "azure": 44,
     "gcp": 0,
-    "general": 73
+    "general": 74
   },
   "top_critical": null
 }
