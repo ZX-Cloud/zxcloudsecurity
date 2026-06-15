@@ -57,9 +57,7 @@ if aws lambda get-function \
 
   # Wait for update to complete before configuring
   echo "  → Waiting for update to propagate ..."
-  aws lambda wait function-updated \
-    --function-name "${FUNCTION_NAME}" \
-    --region "${REGION}"
+  sleep 5
 
   echo "  → Updating environment variables ..."
   aws lambda update-function-configuration \
@@ -97,9 +95,7 @@ else
     --output text
 
   echo "  → Waiting for function to become active ..."
-  aws lambda wait function-active \
-    --function-name "${FUNCTION_NAME}" \
-    --region "${REGION}"
+  sleep 10
 
   # 3. Create Function URL (public HTTPS, no auth — secured by token)
   echo "[3/4] Creating Function URL ..."
