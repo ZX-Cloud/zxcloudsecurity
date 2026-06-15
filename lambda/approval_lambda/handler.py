@@ -12,23 +12,25 @@ Routes:
   POST /reject?id=<guide_id>&token=<token>    → delete draft from branch
 
 Environment variables (set on the Lambda function):
-  DYNAMODB_TABLE    e.g. guide-approval-tokens
-  GITHUB_PAT        PAT with workflow + contents scope
-  GITHUB_REPO       e.g. steveharrison/zxcloudsecurity
-  SES_FROM_ADDRESS  Verified SES sender
-  SES_TO_ADDRESS    Steve's email
-  AWS_REGION        e.g. eu-west-2 (set automatically by Lambda runtime)
+  DYNAMODB_TABLE      e.g. guide-approval-tokens
+  GITHUB_PAT_SECRET   Secrets Manager secret name for GitHub PAT
+                      (default: zxcloudsecurity/github-pat)
+  GITHUB_REPO         e.g. ZX-Cloud/zxcloudsecurity  (not sensitive, plain env var)
+  SES_FROM_ADDRESS    Verified SES sender
+  SES_TO_ADDRESS      Steve's email
+  AWS_REGION          e.g. eu-west-2 (set automatically by Lambda runtime)
 """
 
 import json
 import logging
 import os
+import urllib.error
+import urllib.parse
+import urllib.request
 from datetime import datetime, timezone
-from urllib.parse import parse_qs, urlparse
+from functools import lru_cache
 
 import boto3
-import urllib.request
-import urllib.error
 
 log = logging.getLogger()
 log.setLevel(logging.INFO)
@@ -37,13 +39,36 @@ log.setLevel(logging.INFO)
 # Environment
 # ---------------------------------------------------------------------------
 
-DYNAMODB_TABLE   = os.environ["DYNAMODB_TABLE"]
-GITHUB_PAT       = os.environ["GITHUB_PAT"]
-GITHUB_REPO      = os.environ["GITHUB_REPO"]
-SES_FROM_ADDRESS = os.environ["SES_FROM_ADDRESS"]
-SES_TO_ADDRESS   = os.environ["SES_TO_ADDRESS"]
-DRAFTS_BRANCH    = "drafts"
-PUBLISH_WORKFLOW = "publish-guide.yml"
+DYNAMODB_TABLE     = os.environ["DYNAMODB_TABLE"]
+GITHUB_REPO        = os.environ["GITHUB_REPO"]
+SES_FROM_ADDRESS   = os.environ["SES_FROM_ADDRESS"]
+SES_TO_ADDRESS     = os.environ["SES_TO_ADDRESS"]
+GITHUB_PAT_SECRET  = os.environ.get("GITHUB_PAT_SECRET", "zxcloudsecurity/github-pat")
+DRAFTS_BRANCH      = "drafts"
+PUBLISH_WORKFLOW   = "publish-guide.yml"
+
+# ---------------------------------------------------------------------------
+# Secrets Manager — fetch PAT at runtime, cache for Lambda lifetime
+# ---------------------------------------------------------------------------
+
+@lru_cache(maxsize=1)
+def _get_github_pat() -> str:
+    """
+    Fetch the GitHub PAT from Secrets Manager.
+    Result is cached so subsequent invocations in the same Lambda instance
+    don't make repeated API calls.
+    """
+    log.info(f"Fetching GitHub PAT from Secrets Manager: {GITHUB_PAT_SECRET}")
+    client = boto3.client("secretsmanager")
+    resp = client.get_secret_value(SecretId=GITHUB_PAT_SECRET)
+    secret = resp.get("SecretString", "")
+    # Support both plain string and JSON {"token": "ghp_..."} formats
+    try:
+        parsed = json.loads(secret)
+        return parsed.get("token", parsed.get("GITHUB_PAT", secret))
+    except (json.JSONDecodeError, AttributeError):
+        return secret.strip()
+
 
 # ---------------------------------------------------------------------------
 # Colours (matches publisher.py palette for visual consistency)
@@ -130,7 +155,7 @@ def _github_request(method: str, path: str, body: dict = None) -> tuple:
     """
     url = f"https://api.github.com{path}"
     headers = {
-        "Authorization": f"Bearer {GITHUB_PAT}",
+        "Authorization": f"Bearer {_get_github_pat()}",
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
         "Content-Type": "application/json",
@@ -204,18 +229,18 @@ def _delete_draft_from_branch(filename: str) -> bool:
 def _send_confirmation_email(title: str, action: str, site_url: str = "") -> None:
     """Send a brief confirmation email after approve or reject."""
     if action == "approve":
-        subject = f"✅ Published: {title}"
+        subject = f"Published: {title}"
         body_html = f"""<html><body style="font-family:sans-serif;color:#e2e8f0;background:#0f1117;padding:32px;">
-<h2 style="color:#22c55e;">✅ Guide published</h2>
+<h2 style="color:#22c55e;">Guide published</h2>
 <p style="font-size:16px;"><b>{title}</b> is now live on zxcloudsecurity.co.uk.</p>
 {f'<p><a href="{site_url}" style="color:#3b82f6;">{site_url}</a></p>' if site_url else ''}
-<p style="color:#94a3b8;font-size:13px;">GitHub Actions is building and deploying now — allow 2–3 minutes.</p>
+<p style="color:#94a3b8;font-size:13px;">GitHub Actions is building and deploying now - allow 2-3 minutes.</p>
 </body></html>"""
         body_text = f"Published: {title}\nLive on zxcloudsecurity.co.uk\nGitHub Actions is deploying now."
     else:
-        subject = f"🗑️ Rejected: {title}"
+        subject = f"Rejected: {title}"
         body_html = f"""<html><body style="font-family:sans-serif;color:#e2e8f0;background:#0f1117;padding:32px;">
-<h2 style="color:#ef4444;">🗑️ Draft rejected</h2>
+<h2 style="color:#ef4444;">Draft rejected</h2>
 <p style="font-size:16px;"><b>{title}</b> has been removed from the drafts branch.</p>
 <p style="color:#94a3b8;font-size:13px;">The guide agent will regenerate a replacement on the next run.</p>
 </body></html>"""
@@ -249,7 +274,7 @@ def _page(title: str, body: str) -> str:
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>{title} — ZX Cloud Security</title>
+  <title>{title} - ZX Cloud Security</title>
   <style>
     *{{box-sizing:border-box;margin:0;padding:0}}
     body{{background:{_C['bg']};color:{_C['text']};font-family:-apple-system,BlinkMacSystemFont,
@@ -286,13 +311,11 @@ def _page(title: str, body: str) -> str:
 def _confirmation_page(action: str, guide_title: str, guide_id: str, token: str) -> str:
     if action == "approve":
         heading   = "Publish this guide?"
-        btn_label = "✅ Yes, publish it"
-        btn_class = "btn btn-yes"
-        meta      = "This will trigger a GitHub Actions build and deploy. Allow 2–3 minutes to go live."
+        btn_label = "Yes, publish it"
+        meta      = "This will trigger a GitHub Actions build and deploy. Allow 2-3 minutes to go live."
     else:
         heading   = "Remove this draft?"
-        btn_label = "🗑️ Yes, remove it"
-        btn_class = "btn btn-yes"
+        btn_label = "Yes, remove it"
         meta      = "The draft will be deleted from the drafts branch. The agent will regenerate a replacement."
 
     body = f"""
@@ -302,7 +325,7 @@ def _confirmation_page(action: str, guide_title: str, guide_id: str, token: str)
     </div>
     <form method="POST">
       <input type="hidden" name="confirmed" value="1">
-      <button type="submit" class="{btn_class}">{btn_label}</button>
+      <button type="submit" class="btn btn-yes">{btn_label}</button>
     </form>
     <a href="javascript:history.back()" class="btn btn-no">Cancel</a>"""
     return _page(heading, body)
@@ -310,18 +333,16 @@ def _confirmation_page(action: str, guide_title: str, guide_id: str, token: str)
 
 def _success_page(action: str, guide_title: str) -> str:
     if action == "approve":
-        icon = "✅"
-        msg  = f"<b>{guide_title}</b> has been queued for publishing.<br>GitHub Actions is building now — allow 2–3 minutes."
-        cls  = "ok"
+        icon = "Done"
+        msg  = f"<b>{guide_title}</b> has been queued for publishing.<br>GitHub Actions is building now - allow 2-3 minutes."
     else:
-        icon = "🗑️"
+        icon = "Done"
         msg  = f"<b>{guide_title}</b> has been removed from the drafts branch."
-        cls  = "ok"
 
     body = f"""
     <div class="msg">
       <div class="msg-icon">{icon}</div>
-      <p class="{cls}">{msg}</p>
+      <p class="ok">{msg}</p>
     </div>"""
     return _page("Done", body)
 
@@ -329,7 +350,7 @@ def _success_page(action: str, guide_title: str) -> str:
 def _error_page(message: str) -> str:
     body = f"""
     <div class="msg">
-      <div class="msg-icon">⚠️</div>
+      <div class="msg-icon">Error</div>
       <p class="err">{message}</p>
     </div>"""
     return _page("Error", body)
@@ -364,10 +385,6 @@ def _parse_body(event: dict) -> dict:
     return params
 
 
-# Need urllib.parse for unquote_plus above
-import urllib.parse
-
-
 # ---------------------------------------------------------------------------
 # Route handlers
 # ---------------------------------------------------------------------------
@@ -394,17 +411,13 @@ def handle_approve_post(qs: dict, body: dict) -> dict:
     filename    = record["filename"]
     guide_title = record["guide_title"]
 
-    # Trigger publish workflow
     ok = _trigger_publish_workflow(filename, token)
     if not ok:
         return _html_response(_error_page(
             "Failed to trigger the publish workflow. Please check GitHub Actions and try again."
         ), 500)
 
-    # Mark token used
     _mark_token_used(token)
-
-    # Send confirmation email
     _send_confirmation_email(guide_title, "approve")
 
     log.info(f"APPROVED: {guide_title} ({filename})")
@@ -433,17 +446,13 @@ def handle_reject_post(qs: dict, body: dict) -> dict:
     filename    = record["filename"]
     guide_title = record["guide_title"]
 
-    # Delete draft from branch
     ok = _delete_draft_from_branch(filename)
     if not ok:
         return _html_response(_error_page(
             "Failed to delete the draft from GitHub. Please remove it manually from the drafts branch."
         ), 500)
 
-    # Mark token used
     _mark_token_used(token)
-
-    # Send confirmation email
     _send_confirmation_email(guide_title, "reject")
 
     log.info(f"REJECTED: {guide_title} ({filename})")
