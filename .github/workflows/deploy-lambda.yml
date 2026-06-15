@@ -11,10 +11,10 @@
 #   LAMBDA_FUNCTION_NAME      e.g. zxcloudsecurity-approval
 #   LAMBDA_ROLE_ARN           IAM execution role ARN (only needed on first deploy)
 #   DYNAMODB_TABLE            e.g. guide-approval-tokens
-#   GITHUB_PAT                PAT with workflow + contents scope
-#   GITHUB_REPO               e.g. steveharrison/zxcloudsecurity
+#   GH_REPO                   e.g. ZX-Cloud/zxcloudsecurity
 #   SES_FROM_ADDRESS          Verified SES sender
 #   SES_TO_ADDRESS            Steve's email
+#   Note: GitHub PAT is stored in AWS Secrets Manager, not here
 
 name: Deploy Approval Lambda
 
@@ -58,7 +58,7 @@ jobs:
           LAMBDA_FUNCTION_NAME: ${{ secrets.LAMBDA_FUNCTION_NAME }}
           LAMBDA_ROLE_ARN:      ${{ secrets.LAMBDA_ROLE_ARN }}
           DYNAMODB_TABLE:       ${{ secrets.DYNAMODB_TABLE }}
-          GITHUB_PAT:           ${{ secrets.GH_PAT }}
+          GITHUB_PAT_SECRET:    zxcloudsecurity/github-pat
           GITHUB_REPO:          ${{ secrets.GH_REPO }}
           SES_FROM_ADDRESS:     ${{ secrets.SES_FROM_ADDRESS }}
           SES_TO_ADDRESS:       ${{ secrets.SES_TO_ADDRESS }}

@@ -13,8 +13,8 @@
 #   LAMBDA_FUNCTION_NAME  e.g. zxcloudsecurity-approval
 #   LAMBDA_ROLE_ARN       IAM role ARN for the Lambda execution role
 #   DYNAMODB_TABLE        e.g. guide-approval-tokens
-#   GITHUB_PAT            PAT with workflow + contents scope
-#   GITHUB_REPO           e.g. steveharrison/zxcloudsecurity
+#   GITHUB_PAT_SECRET     Secrets Manager secret name (zxcloudsecurity/github-pat)
+#   GITHUB_REPO           e.g. ZX-Cloud/zxcloudsecurity
 #   SES_FROM_ADDRESS      Verified SES sender
 #   SES_TO_ADDRESS        Steve's email
 
@@ -63,13 +63,7 @@ if aws lambda get-function \
   aws lambda update-function-configuration \
     --function-name "${FUNCTION_NAME}" \
     --region "${REGION}" \
-    --environment "Variables={
-      DYNAMODB_TABLE=${DYNAMODB_TABLE},
-      GITHUB_PAT=${GITHUB_PAT},
-      GITHUB_REPO=${GITHUB_REPO},
-      SES_FROM_ADDRESS=${SES_FROM_ADDRESS},
-      SES_TO_ADDRESS=${SES_TO_ADDRESS}
-    }" \
+    --environment "Variables={DYNAMODB_TABLE=${DYNAMODB_TABLE},GITHUB_REPO=${GITHUB_REPO},GITHUB_PAT_SECRET=${GITHUB_PAT_SECRET},SES_FROM_ADDRESS=${SES_FROM_ADDRESS},SES_TO_ADDRESS=${SES_TO_ADDRESS}}" \
     --query 'FunctionArn' \
     --output text
 
@@ -84,13 +78,7 @@ else
     --region "${REGION}" \
     --timeout 15 \
     --memory-size 128 \
-    --environment "Variables={
-      DYNAMODB_TABLE=${DYNAMODB_TABLE},
-      GITHUB_PAT=${GITHUB_PAT},
-      GITHUB_REPO=${GITHUB_REPO},
-      SES_FROM_ADDRESS=${SES_FROM_ADDRESS},
-      SES_TO_ADDRESS=${SES_TO_ADDRESS}
-    }" \
+    --environment "Variables={DYNAMODB_TABLE=${DYNAMODB_TABLE},GITHUB_REPO=${GITHUB_REPO},GITHUB_PAT_SECRET=${GITHUB_PAT_SECRET},SES_FROM_ADDRESS=${SES_FROM_ADDRESS},SES_TO_ADDRESS=${SES_TO_ADDRESS}}" \
     --query 'FunctionArn' \
     --output text
 
@@ -102,11 +90,7 @@ else
   FUNCTION_URL=$(aws lambda create-function-url-config \
     --function-name "${FUNCTION_NAME}" \
     --auth-type NONE \
-    --cors '{
-      "AllowOrigins": ["*"],
-      "AllowMethods": ["GET", "POST"],
-      "AllowHeaders": ["content-type"]
-    }' \
+    --cors '{"AllowOrigins":["*"],"AllowMethods":["GET","POST"],"AllowHeaders":["content-type"]}' \
     --region "${REGION}" \
     --query 'FunctionUrl' \
     --output text)
