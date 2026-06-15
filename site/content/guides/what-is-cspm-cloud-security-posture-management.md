@@ -92,3 +92,13 @@ Getting CSPM right requires more than licensing a tool. Here's what effective im
 - **Native and third-party tools serve different purposes** — use both in mature environments, particularly when operating across multiple cloud providers.
 - **CSPM is not a product you deploy; it's a programme you run.** Tooling without defined ownership, remediation SLAs, and integration into developer workflows generates noise rather than security improvement.
 - **Shift left wherever possible** — catching misconfigurations in code review or CI/CD is faster and cheaper than remediating them in production.
+
+
+## Related Guides
+
+- [Zero Trust Architecture](/guides/what-is-zero-trust-architecture/) — CSPM provides the continuous verification layer that underpins a Zero Trust posture in cloud environments.
+- [Data Security Posture Management (DSPM)](/guides/what-is-dspm-data-security-posture-management/) — Where CSPM focuses on infrastructure configuration, DSPM focuses on data risk. The two disciplines are increasingly deployed together.
+- [Cloud Infrastructure Entitlement Management (CIEM)](/guides/what-is-ciem-cloud-infrastructure-entitlement-management/) — CIEM extends CSPM into the identity layer, surfacing over-privileged roles and toxic permission combinations that CSPM alone may miss.
+- [AWS IAM Security Best Practices](/guides/aws-iam-security-best-practices/) — The IAM misconfigurations that CSPM tools most frequently flag, and how to remediate them.
+- [The Shared Responsibility Model in Cloud Security](/guides/shared-responsibility-model-cloud-security/) — Understanding which posture controls are your responsibility versus the cloud provider's.
+- [Cross-Cloud Security Services Comparison](/guides/cross-cloud-security-services-comparison/) — Compare AWS Security Hub, Microsoft Defender for Cloud, and Google Security Command Center as native CSPM solutions.

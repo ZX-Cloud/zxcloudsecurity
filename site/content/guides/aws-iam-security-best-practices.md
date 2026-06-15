@@ -128,3 +128,13 @@ Complement Access Analyzer with:
 ## Key Takeaways
 
 AWS IAM security is not a one-time configuration — it is an ongoing discipline. The architectural fundamentals are consistent: eliminate static credentials, enforce least privilege through policy design and boundaries, apply preventive controls at the organisation layer via SCPs, and maintain visibility through Access Analyzer and CloudTrail. Organisations that treat IAM as a foundational control plane — rather than an administrative afterthought — dramatically reduce their exposure to both external attack and insider threat. Every gap in IAM hygiene is a gap in your entire AWS security posture.
+
+
+## Related Guides
+
+- [Zero Trust Architecture](/guides/what-is-zero-trust-architecture/) — IAM is the foundation of Zero Trust on AWS. This guide explains the broader architectural principles your IAM configuration should support.
+- [Cloud Infrastructure Entitlement Management (CIEM)](/guides/what-is-ciem-cloud-infrastructure-entitlement-management/) — CIEM tools provide the visibility layer for discovering and remediating IAM entitlement risks at scale across AWS accounts.
+- [Cloud Security Posture Management (CSPM)](/guides/what-is-cspm-cloud-security-posture-management/) — CSPM platforms continuously monitor IAM configuration for policy violations and misconfigurations.
+- [Kubernetes Security Best Practices](/guides/kubernetes-security-best-practices/) — IAM roles for service accounts (IRSA) and workload identity federation connect AWS IAM controls into Kubernetes workloads.
+- [The Shared Responsibility Model in Cloud Security](/guides/shared-responsibility-model-cloud-security/) — AWS manages the security of IAM as a service; you are responsible for how you configure and use it.
+- [Cross-Cloud Security Services Comparison](/guides/cross-cloud-security-services-comparison/) — Compare AWS IAM with Azure Entra ID and Google Cloud IAM to understand capability differences across providers.

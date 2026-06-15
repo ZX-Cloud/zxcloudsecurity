@@ -224,3 +224,13 @@ A few principles to carry forward:
 - **Start with the OWASP LLM Top 10.** It is the most practical framework currently available and is updated to reflect real-world incidents.
 
 The field is moving fast. MITRE ATLAS, NIST AI RMF, and the EU AI Act are all evolving frameworks worth tracking as the governance picture matures. For now, the OWASP LLM Top 10 and a solid grounding in how these systems actually work are the most practical starting points.
+
+
+## Related Guides
+
+- [Can You Phish an AI? Social Engineering Attacks Against AI Agents](/guides/social-engineering-ai-agents/) — The next step after understanding how LLMs work — a technical and boardroom guide to the specific attack techniques used against AI agents, with real CVEs.
+- [Securing AI Agents in Cloud Infrastructure](/guides/securing-ai-agents-cloud-infrastructure/) — Practical security controls for deploying AI agents in cloud environments, covering IAM, network security, and monitoring.
+- [Zero Trust Architecture](/guides/what-is-zero-trust-architecture/) — Zero Trust principles apply directly to AI agent deployments — verify every request, enforce least privilege, assume breach.
+- [Cloud Infrastructure Entitlement Management (CIEM)](/guides/what-is-ciem-cloud-infrastructure-entitlement-management/) — AI agent service accounts are a new category of non-human identity requiring the same entitlement controls as human identities.
+- [AWS IAM Security Best Practices](/guides/aws-iam-security-best-practices/) — How to scope the IAM permissions granted to AI workloads and agent service accounts running on AWS.
+- [Kubernetes Security Best Practices](/guides/kubernetes-security-best-practices/) — Many AI workloads run as containerised services. The security controls in this guide are directly applicable to AI deployments.

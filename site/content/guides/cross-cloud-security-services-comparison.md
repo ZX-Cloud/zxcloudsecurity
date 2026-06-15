@@ -177,3 +177,13 @@ The caveat: this is the fastest-moving area in cloud security and the mappings w
 - **AI security is the new frontier:** Model Armor (GCP), Entra Agent ID (Azure) and Bedrock Guardrails (AWS) are all young and evolving fast — verify current state before designing.
 
 For practical, daily intelligence on vulnerabilities and advisories affecting these services across all three clouds, the [ZX Cloud Security](/) homepage tracks them continuously.
+
+
+## Related Guides
+
+- [Cloud Security Posture Management (CSPM)](/guides/what-is-cspm-cloud-security-posture-management/) — Understand the discipline behind the native CSPM tools compared in this guide — AWS Security Hub, Microsoft Defender for Cloud, and Google Security Command Center.
+- [Zero Trust Architecture](/guides/what-is-zero-trust-architecture/) — Each cloud provider offers a different set of native tools for implementing Zero Trust. This comparison guide helps you understand the capability landscape.
+- [AWS IAM Security Best Practices](/guides/aws-iam-security-best-practices/) — A deep dive into the AWS identity and access management controls summarised in the comparison guide.
+- [Cloud Infrastructure Entitlement Management (CIEM)](/guides/what-is-ciem-cloud-infrastructure-entitlement-management/) — Compare entitlement management capabilities across AWS IAM Access Analyzer, Azure Entra ID Governance, and Google Cloud Policy Intelligence.
+- [Data Security Posture Management (DSPM)](/guides/what-is-dspm-data-security-posture-management/) — Compare data discovery and classification capabilities across AWS Macie, Microsoft Purview, and Google Cloud DLP.
+- [Kubernetes Security Best Practices](/guides/kubernetes-security-best-practices/) — Compare the managed Kubernetes security posture of EKS, AKS, and GKE.

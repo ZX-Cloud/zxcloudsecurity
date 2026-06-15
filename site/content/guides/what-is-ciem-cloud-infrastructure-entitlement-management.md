@@ -81,3 +81,13 @@ Even with automated tooling, schedule quarterly entitlement reviews for high-pri
 - Native cloud IAM tools are necessary but not sufficient for enterprise-scale governance; CIEM adds cross-cloud correlation, usage analytics, and automated remediation.
 - CIEM is increasingly delivered as part of broader CNAPP platforms, enabling entitlement risk to be correlated with vulnerability and exposure data for more intelligent prioritisation.
 - Effective least-privilege enforcement requires both reactive remediation (cleaning up existing excess) and proactive controls (guardrails and pipeline checks that prevent future drift).
+
+
+## Related Guides
+
+- [AWS IAM Security Best Practices](/guides/aws-iam-security-best-practices/) — The IAM configuration practices that CIEM tools analyse and enforce — covering least privilege, permission boundaries, and role hygiene.
+- [Zero Trust Architecture](/guides/what-is-zero-trust-architecture/) — CIEM is the operational implementation of Zero Trust's least-privilege principle across cloud identities and entitlements.
+- [Cloud Security Posture Management (CSPM)](/guides/what-is-cspm-cloud-security-posture-management/) — CIEM extends CSPM into the identity layer. Many modern CSPM platforms now incorporate CIEM capabilities.
+- [Data Security Posture Management (DSPM)](/guides/what-is-dspm-data-security-posture-management/) — Effective data protection requires understanding which identities have access to sensitive data. CIEM and DSPM are increasingly deployed together.
+- [Kubernetes Security Best Practices](/guides/kubernetes-security-best-practices/) — Kubernetes service accounts and RBAC policies are a significant entitlement management challenge that CIEM tooling increasingly addresses.
+- [Cross-Cloud Security Services Comparison](/guides/cross-cloud-security-services-comparison/) — Compare native entitlement management capabilities across AWS IAM Access Analyzer, Azure Entra ID Governance, and Google Cloud Policy Intelligence.

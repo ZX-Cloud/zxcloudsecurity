@@ -109,3 +109,13 @@ Mature Zero Trust deployments use continuous validation — not just point-in-ti
 - Least privilege and assume-breach are the two principles that most directly reduce real-world risk.
 - Cloud adoption makes Zero Trust more urgent, not less — and cloud-native tooling makes many Zero Trust controls more achievable than ever.
 - Adoption is a journey: prioritise identity foundations, then device trust, then network micro-segmentation, then data-layer controls.
+
+
+## Related Guides
+
+- [Cloud Security Posture Management (CSPM)](/guides/what-is-cspm-cloud-security-posture-management/) — CSPM tools are a core enforcement mechanism for Zero Trust in cloud environments, providing continuous visibility into misconfigurations and policy violations.
+- [Cloud Infrastructure Entitlement Management (CIEM)](/guides/what-is-ciem-cloud-infrastructure-entitlement-management/) — Zero Trust's least-privilege principle depends on granular identity controls. CIEM provides the tooling to discover and enforce entitlement boundaries across cloud identities.
+- [AWS IAM Security Best Practices](/guides/aws-iam-security-best-practices/) — Implementing Zero Trust on AWS begins with a hardened IAM configuration. This guide covers the specific controls and policies required.
+- [Kubernetes Security Best Practices](/guides/kubernetes-security-best-practices/) — Applying Zero Trust principles within Kubernetes clusters, including network policy enforcement and workload identity.
+- [The Shared Responsibility Model in Cloud Security](/guides/shared-responsibility-model-cloud-security/) — Understanding where your Zero Trust responsibilities begin and where the cloud provider's end.
+- [Cross-Cloud Security Services Comparison](/guides/cross-cloud-security-services-comparison/) — Compare the native Zero Trust and identity enforcement tools available across AWS, Azure, and GCP.

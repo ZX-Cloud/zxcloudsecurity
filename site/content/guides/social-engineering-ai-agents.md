@@ -187,3 +187,13 @@ The controls exist. Least privilege, output validation, human oversight for high
 For boards: AI agents are not just a productivity tool — they are a new category of privileged actor in your environment. They deserve the governance attention you would give any other system with broad data access and the ability to take consequential actions on behalf of your organisation.
 
 The question is not whether your AI agents can be phished. Based on the 2025 and 2026 CVE record, the answer to that is already known. The question is what you are going to do about it.
+
+
+## Related Guides
+
+- [A Beginner's Guide to AI and Large Language Models](/guides/beginners-guide-ai-llm-security/) — Understand how LLMs work and why they are inherently susceptible to manipulation before diving into the attack techniques covered in this guide.
+- [Securing AI Agents in Cloud Infrastructure](/guides/securing-ai-agents-cloud-infrastructure/) — The defensive controls that mitigate the social engineering attacks described in this guide — from least-privilege IAM to output validation and human oversight.
+- [Zero Trust Architecture](/guides/what-is-zero-trust-architecture/) — Zero Trust's core principles — verify explicitly, least privilege, assume breach — are the most effective architectural response to AI agent manipulation.
+- [Cloud Infrastructure Entitlement Management (CIEM)](/guides/what-is-ciem-cloud-infrastructure-entitlement-management/) — AI agent service accounts represent a new category of non-human identity. CIEM tooling must now extend to cover agentic workloads.
+- [AWS IAM Security Best Practices](/guides/aws-iam-security-best-practices/) — Correctly scoped IAM permissions limit the blast radius when an AI agent is successfully manipulated.
+- [Cloud Security Posture Management (CSPM)](/guides/what-is-cspm-cloud-security-posture-management/) — CSPM tools increasingly incorporate AI-specific security checks as agentic deployments become mainstream.

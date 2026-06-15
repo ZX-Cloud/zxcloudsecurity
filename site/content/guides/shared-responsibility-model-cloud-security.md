@@ -79,3 +79,13 @@ AWS, Azure, and GCP hold certifications such as ISO 27001, SOC 2, and PCI-DSS fo
 - AWS, Azure, and GCP follow the same core framework, with differences in scope and terminology that matter in multi-cloud environments.
 - The most frequent cloud security failures — exposed storage, misconfigured IAM, unpatched workloads — occur entirely within the customer's area of responsibility.
 - Compliance certifications held by providers do not transfer to customer workloads. You must independently evidence controls for the layers you own.
+
+
+## Related Guides
+
+- [Cloud Security Posture Management (CSPM)](/guides/what-is-cspm-cloud-security-posture-management/) — CSPM tools help you continuously verify that you are fulfilling your side of the shared responsibility model across your cloud estate.
+- [Zero Trust Architecture](/guides/what-is-zero-trust-architecture/) — Zero Trust provides the architectural framework for securing the components of cloud infrastructure that fall under your responsibility.
+- [AWS IAM Security Best Practices](/guides/aws-iam-security-best-practices/) — IAM configuration is one of the clearest examples of customer responsibility in AWS. This guide covers what you need to get right.
+- [Data Security Posture Management (DSPM)](/guides/what-is-dspm-data-security-posture-management/) — Data protection is almost entirely a customer responsibility in cloud environments. DSPM provides the tooling to fulfil that obligation.
+- [Cloud Infrastructure Entitlement Management (CIEM)](/guides/what-is-ciem-cloud-infrastructure-entitlement-management/) — Identity and access management is a core customer responsibility. CIEM tooling helps enforce least privilege across your cloud identities.
+- [Cross-Cloud Security Services Comparison](/guides/cross-cloud-security-services-comparison/) — Compare how AWS, Azure, and GCP divide security responsibilities and what native tools each provider offers to support your obligations.

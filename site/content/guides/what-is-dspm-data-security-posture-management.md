@@ -81,3 +81,13 @@ The practical implication: CSPM and DSPM should be used together. CSPM reduces t
 - **DSPM and CSPM are complementary**, not interchangeable. CSPM identifies infrastructure misconfigurations; DSPM reveals whether those misconfigurations expose sensitive data and how severe the risk actually is.
 - **Shadow data and entitlement sprawl** are the dominant real-world problems DSPM addresses — not just obvious public-exposure misconfigurations.
 - **Practical impact** requires connecting DSPM findings to remediation workflows, regulatory obligations, and access reviews — not treating the platform as a reporting tool.
+
+
+## Related Guides
+
+- [Cloud Security Posture Management (CSPM)](/guides/what-is-cspm-cloud-security-posture-management/) — CSPM and DSPM are complementary disciplines. CSPM secures infrastructure configuration; DSPM secures the data that lives within it.
+- [Cloud Infrastructure Entitlement Management (CIEM)](/guides/what-is-ciem-cloud-infrastructure-entitlement-management/) — Effective data protection requires understanding who has access to sensitive data stores. CIEM provides the entitlement visibility that DSPM depends on.
+- [Zero Trust Architecture](/guides/what-is-zero-trust-architecture/) — Zero Trust treats data as the ultimate resource to protect. DSPM provides the data-centric controls that give Zero Trust its teeth.
+- [AWS IAM Security Best Practices](/guides/aws-iam-security-best-practices/) — Controlling access to data in S3, RDS, and other AWS data stores begins with a well-configured IAM layer.
+- [The Shared Responsibility Model in Cloud Security](/guides/shared-responsibility-model-cloud-security/) — In cloud environments, data protection responsibilities are split between you and the provider. This guide clarifies the boundary.
+- [Cross-Cloud Security Services Comparison](/guides/cross-cloud-security-services-comparison/) — Compare data protection and classification capabilities across AWS Macie, Microsoft Purview, and Google Cloud DLP.

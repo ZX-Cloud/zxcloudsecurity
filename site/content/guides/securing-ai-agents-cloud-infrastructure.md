@@ -99,3 +99,13 @@ Mitigation requires treating your agent stack as you would any third-party softw
 - **Least privilege for agents** requires explicit tool inventories, per-agent IAM roles, and human-in-the-loop gates for destructive operations.
 - **The agentic AI supply chain** — frameworks, plugins, model APIs — carries significant model security and data exposure risks that require the same rigour as traditional software dependencies.
 - Effective cloud security for agentic workloads combines identity controls, runtime guardrails, and continuous monitoring — no single layer is sufficient on its own.
+
+
+## Related Guides
+
+- [Can You Phish an AI? Social Engineering Attacks Against AI Agents](/guides/social-engineering-ai-agents/) — A deep dive into the specific manipulation techniques attackers use against AI agents, with real-world CVEs and board-level risk framing.
+- [A Beginner's Guide to AI and Large Language Models](/guides/beginners-guide-ai-llm-security/) — Understand how LLMs work and the security risks they introduce before deploying AI agents in your cloud environment.
+- [Kubernetes Security Best Practices](/guides/kubernetes-security-best-practices/) — AI agents frequently run as containerised workloads. The container and cluster security controls in this guide are directly applicable.
+- [AWS IAM Security Best Practices](/guides/aws-iam-security-best-practices/) — How to scope the IAM permissions granted to AI workloads and agent service accounts running on AWS.
+- [Zero Trust Architecture](/guides/what-is-zero-trust-architecture/) — Zero Trust principles — verify explicitly, least privilege, assume breach — map directly onto AI agent security architecture.
+- [Cloud Infrastructure Entitlement Management (CIEM)](/guides/what-is-ciem-cloud-infrastructure-entitlement-management/) — AI agent service accounts are a new category of non-human identity that CIEM tooling must now cover.

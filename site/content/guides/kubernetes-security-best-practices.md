@@ -168,3 +168,13 @@ Commercial options like Aqua Security, Sysdig Secure, and Prisma Cloud provide r
 ## Key Takeaways
 
 Kubernetes security is not a single control — it's a stack of overlapping defences that collectively reduce blast radius at each layer. RBAC and pod security standards address configuration risk; network policies limit lateral movement; proper secrets management protects credentials even if the cluster is breached; image scanning and admission control stop vulnerable workloads reaching production; and runtime tooling catches what everything else misses. For teams preparing for the CKS exam, this maps directly to the exam domains — but more importantly, each of these controls addresses a real attack vector seen in production incidents. Managed platforms like EKS, GKE, and AKS handle some of this by default, but never all of it: responsibility for RBAC, network policy, and runtime detection remains firmly with the platform team.
+
+
+## Related Guides
+
+- [Zero Trust Architecture](/guides/what-is-zero-trust-architecture/) — Kubernetes is one of the most complex environments in which to implement Zero Trust. This guide explains the principles; the Kubernetes guide explains the practice.
+- [AWS IAM Security Best Practices](/guides/aws-iam-security-best-practices/) — IAM Roles for Service Accounts (IRSA) and EKS Pod Identity connect AWS IAM controls directly into Kubernetes workload security.
+- [Cloud Security Posture Management (CSPM)](/guides/what-is-cspm-cloud-security-posture-management/) — CSPM tools with Kubernetes support continuously assess cluster configuration against CIS benchmarks and cloud provider best practices.
+- [Cloud Infrastructure Entitlement Management (CIEM)](/guides/what-is-ciem-cloud-infrastructure-entitlement-management/) — Kubernetes RBAC and service account entitlements are a growing focus for CIEM tooling.
+- [Securing AI Agents in Cloud Infrastructure](/guides/securing-ai-agents-cloud-infrastructure/) — AI agents increasingly run as containerised workloads in Kubernetes. The security controls in this guide apply directly to agentic deployments.
+- [Cross-Cloud Security Services Comparison](/guides/cross-cloud-security-services-comparison/) — Compare AKS, EKS, and GKE security capabilities including built-in admission controllers, network policy, and workload identity.
