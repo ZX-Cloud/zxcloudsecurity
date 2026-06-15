@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /index.xml
+Disallow: /tags/*/index.xml
+Disallow: /categories/*/index.xml
+Disallow: /posts/*/index.xml
