@@ -58,8 +58,8 @@ jobs:
           LAMBDA_FUNCTION_NAME: ${{ secrets.LAMBDA_FUNCTION_NAME }}
           LAMBDA_ROLE_ARN:      ${{ secrets.LAMBDA_ROLE_ARN }}
           DYNAMODB_TABLE:       ${{ secrets.DYNAMODB_TABLE }}
-          GITHUB_PAT:           ${{ secrets.GITHUB_PAT }}
-          GITHUB_REPO:          ${{ secrets.GITHUB_REPO }}
+          GITHUB_PAT:           ${{ secrets.GH_PAT }}
+          GITHUB_REPO:          ${{ secrets.GH_REPO }}
           SES_FROM_ADDRESS:     ${{ secrets.SES_FROM_ADDRESS }}
           SES_TO_ADDRESS:       ${{ secrets.SES_TO_ADDRESS }}
         run: ./lambda/approval_lambda/deploy.sh
