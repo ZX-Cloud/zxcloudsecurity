@@ -1,0 +1,65 @@
+# .github/workflows/deploy-lambda.yml
+# ZX Cloud Security — Approval Lambda Deploy
+#
+# Deploys the approval Lambda whenever handler.py or deploy.sh changes.
+# Also supports manual trigger for first-time setup.
+#
+# Required GitHub Actions secrets:
+#   AWS_ACCESS_KEY_ID         IAM user with Lambda + IAM PassRole permissions
+#   AWS_SECRET_ACCESS_KEY
+#   AWS_REGION                e.g. eu-west-2
+#   LAMBDA_FUNCTION_NAME      e.g. zxcloudsecurity-approval
+#   LAMBDA_ROLE_ARN           IAM execution role ARN (only needed on first deploy)
+#   DYNAMODB_TABLE            e.g. guide-approval-tokens
+#   GITHUB_PAT                PAT with workflow + contents scope
+#   GITHUB_REPO               e.g. steveharrison/zxcloudsecurity
+#   SES_FROM_ADDRESS          Verified SES sender
+#   SES_TO_ADDRESS            Steve's email
+
+name: Deploy Approval Lambda
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'lambda/approval_lambda/handler.py'
+      - 'lambda/approval_lambda/deploy.sh'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual deploy'
+        required: false
+        default: 'Manual trigger'
+
+jobs:
+  deploy:
+    name: Deploy Lambda
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ secrets.AWS_REGION }}
+
+      - name: Make deploy script executable
+        run: chmod +x lambda/approval_lambda/deploy.sh
+
+      - name: Deploy Lambda
+        env:
+          AWS_REGION:           ${{ secrets.AWS_REGION }}
+          LAMBDA_FUNCTION_NAME: ${{ secrets.LAMBDA_FUNCTION_NAME }}
+          LAMBDA_ROLE_ARN:      ${{ secrets.LAMBDA_ROLE_ARN }}
+          DYNAMODB_TABLE:       ${{ secrets.DYNAMODB_TABLE }}
+          GITHUB_PAT:           ${{ secrets.GITHUB_PAT }}
+          GITHUB_REPO:          ${{ secrets.GITHUB_REPO }}
+          SES_FROM_ADDRESS:     ${{ secrets.SES_FROM_ADDRESS }}
+          SES_TO_ADDRESS:       ${{ secrets.SES_TO_ADDRESS }}
+        run: ./lambda/approval_lambda/deploy.sh
