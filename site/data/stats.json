@@ -1,16 +1,23 @@
 {
-  "updated": "15 Jun 2026 12:56 UTC",
-  "total": 140,
+  "updated": "16 Jun 2026 06:07 UTC",
+  "total": 171,
   "severity": {
-    "critical": 11,
-    "high": 79,
-    "medium": 29
+    "critical": 13,
+    "high": 107,
+    "medium": 30
   },
   "categories": {
-    "aws": 19,
-    "azure": 44,
+    "aws": 20,
+    "azure": 64,
     "gcp": 0,
-    "general": 77
+    "general": 87
   },
-  "top_critical": null
+  "top_critical": {
+    "title": "LiteLLM Vuln Chain: Low-Privilege to Full Server Takeover",
+    "summary": "A chain of three vulnerabilities in LiteLLM, a popular open-source AI gateway, allows a low-privilege user to escalate to full admin and execute arbitrary code on the server. Because LiteLLM proxies r",
+    "architects_take": "Audit all LiteLLM deployments immediately \u2014 restrict network access to the proxy admin interface, rotate any provider API keys stored on affected instances, and apply the patched version as soon as it is available. Consider placing LiteLLM behind a zero-trust gateway and enforcing least-privilege at the network layer until a patch is confirmed.",
+    "slug": "litellm-vulnerability-chain-privilege-escalation-rce-ai-gateway",
+    "source": "The Hacker News",
+    "category": "general"
+  }
 }
