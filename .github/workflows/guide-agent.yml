@@ -1,0 +1,73 @@
+# .github/workflows/guide-agent.yml
+# ZX Cloud Security — Daily Guide Agent
+
+name: Guide Agent
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual run'
+        required: false
+        default: 'Manual trigger'
+
+jobs:
+  generate:
+    name: Generate guide drafts
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r src/requirements.txt
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ secrets.AWS_REGION }}
+
+      - name: Scrape feeds
+        run: python src/feed_scraper.py
+
+      - name: Score topics
+        run: python src/topic_scorer.py --guides-dir content/guides
+
+      - name: Generate guides
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python src/guide_generator.py
+
+      - name: Humanise guides
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python src/humaniser.py
+
+      - name: Quality check
+        run: python src/quality_checker.py --guides-dir content/guides
+
+      - name: Publish drafts and email digest
+        env:
+          GH_REPO:             ${{ secrets.GH_REPO }}
+          GITHUB_REPO:         ${{ secrets.GH_REPO }}
+          SES_FROM_ADDRESS:    ${{ secrets.SES_FROM_ADDRESS }}
+          SES_TO_ADDRESS:      ${{ secrets.SES_TO_ADDRESS }}
+          APPROVAL_LAMBDA_URL: ${{ secrets.APPROVAL_LAMBDA_URL }}
+          DYNAMODB_TABLE:      ${{ secrets.DYNAMODB_TABLE }}
+          AWS_REGION:          ${{ secrets.AWS_REGION }}
+        run: python src/publisher.py
