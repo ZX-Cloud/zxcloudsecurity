@@ -35,3 +35,34 @@ desktop.ini
 .idea/
 *.swp
 *.swo
+
+# ── Guide agent: runtime artifacts (generated, never committed) ──
+raw_feed.json
+topic_queue.json
+generation_report.json
+quality_report.json
+publish_report.json
+enriched_feed.json
+
+# ── Local AWS/debug scratch files ──
+ddb-policy.json
+policy.json
+response.json
+test_lambda_url.py
+lambda/approval_lambda/handler.zip
+*.zip
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# ── OS / editor noise ──
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
