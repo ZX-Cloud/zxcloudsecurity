@@ -1,23 +1,23 @@
 {
-  "updated": "16 Jun 2026 06:07 UTC",
-  "total": 171,
+  "updated": "17 Jun 2026 06:05 UTC",
+  "total": 194,
   "severity": {
-    "critical": 13,
-    "high": 107,
-    "medium": 30
+    "critical": 16,
+    "high": 123,
+    "medium": 34
   },
   "categories": {
-    "aws": 20,
-    "azure": 64,
+    "aws": 21,
+    "azure": 70,
     "gcp": 0,
-    "general": 87
+    "general": 103
   },
   "top_critical": {
-    "title": "LiteLLM Vuln Chain: Low-Privilege to Full Server Takeover",
-    "summary": "A chain of three vulnerabilities in LiteLLM, a popular open-source AI gateway, allows a low-privilege user to escalate to full admin and execute arbitrary code on the server. Because LiteLLM proxies r",
-    "architects_take": "Audit all LiteLLM deployments immediately \u2014 restrict network access to the proxy admin interface, rotate any provider API keys stored on affected instances, and apply the patched version as soon as it is available. Consider placing LiteLLM behind a zero-trust gateway and enforcing least-privilege at the network layer until a patch is confirmed.",
-    "slug": "litellm-vulnerability-chain-privilege-escalation-rce-ai-gateway",
-    "source": "The Hacker News",
+    "title": "CVE-2026-48907: Joomla Plugin RCE via File Upload",
+    "summary": "A critical vulnerability in the Widget Factory Joomla Content Editor plugin allows unauthenticated attackers to upload and execute arbitrary PHP code by creating new editor profiles. This effectively ",
+    "architects_take": "Audit all Joomla deployments across your environment and patch or disable the Widget Factory Content Editor plugin immediately. If Joomla sites are hosted on cloud infrastructure, treat any exposed instance as potentially compromised and review web application firewall rules to block unauthenticated POST requests to editor profile creation endpoints whilst patching is carried out.",
+    "slug": "cve-2026-48907-widget-factory-joomla-content-editor-rce",
+    "source": "CISA Known Exploited Vulnerabilities",
     "category": "general"
   }
 }
