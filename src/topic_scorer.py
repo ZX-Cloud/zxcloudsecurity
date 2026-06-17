@@ -46,12 +46,6 @@ HEADERS = {
     "Accept": "application/json",
 }
 
-# Reddit public JSON API — no auth, ~1 req/sec courtesy limit
-REDDIT_SOURCES = [
-    {"subreddit": "aws",    "sort": "hot", "limit": 25},
-    {"subreddit": "netsec", "sort": "hot", "limit": 25},
-]
-
 HN_ALGOLIA_URL = "https://hn.algolia.com/api/v1/search"
 HN_QUERY_TERMS = [
     "AWS security", "cloud security", "IAM", "GuardDuty", "S3 breach",
@@ -245,49 +239,6 @@ def load_feed_scraper_signals(path: str = "raw_feed.json") -> list:
         log.info(f"  → {len(signals)} signals from feed_scraper ({path})")
     except Exception as e:
         log.error(f"  Error loading {path}: {e}")
-    return signals
-
-
-def fetch_reddit_signals(max_age_hours: int = 48) -> list:
-    """Fetch hot posts from r/aws and r/netsec via public JSON API."""
-    signals = []
-    for source in REDDIT_SOURCES:
-        subreddit = source["subreddit"]
-        url = f"https://www.reddit.com/r/{subreddit}/{source['sort']}.json?limit={source['limit']}"
-        try:
-            log.info(f"  Fetching r/{subreddit} ...")
-            resp = requests.get(url, headers=HEADERS, timeout=20)
-            resp.raise_for_status()
-            data = resp.json()
-            posts = data.get("data", {}).get("children", [])
-            count = 0
-            for post in posts:
-                p = post.get("data", {})
-                created_utc = p.get("created_utc", 0)
-                published = datetime.fromtimestamp(created_utc, tz=timezone.utc).isoformat()
-                if not _is_recent(published, max_age_hours):
-                    continue
-                title = p.get("title", "")
-                selftext = p.get("selftext", "")[:500]
-                keywords = _extract_keywords(title + " " + selftext)
-                if subreddit == "aws" and not keywords:
-                    continue
-                link = p.get("url", "")
-                permalink = f"https://reddit.com{p.get('permalink', '')}"
-                signals.append(RawSignal(
-                    id=_make_id(f"reddit_{subreddit}", p.get("id", link)),
-                    source=f"reddit_{subreddit}",
-                    title=title,
-                    url=link if link.startswith("http") else permalink,
-                    published=published,
-                    score=p.get("score", 0),
-                    text=selftext,
-                ))
-                count += 1
-            log.info(f"    → {count} relevant posts from r/{subreddit}")
-            time.sleep(1)  # Reddit public API courtesy rate limit
-        except Exception as e:
-            log.error(f"  Error fetching r/{subreddit}: {e}")
     return signals
 
 
@@ -797,7 +748,6 @@ def run(
                 all_signals.append(s)
 
     _add_signals(load_feed_scraper_signals(raw_feed_path))
-    _add_signals(fetch_reddit_signals())
     _add_signals(fetch_hn_signals())
     _add_signals(fetch_nvd_signals())
 
