@@ -264,6 +264,14 @@ def _call_claude_api(
         if hasattr(block, "text") and block.text
     ]
     content_text = "\n".join(text_parts).strip()
+
+    # Web search mode can cause Claude to emit preamble text before the
+    # frontmatter despite the system prompt. Seek to the first --- and discard
+    # anything before it so validation is not tripped by stray sentences.
+    fm_start = content_text.find("---")
+    if fm_start > 0:
+        content_text = content_text[fm_start:]
+
     return content_text, response
 
 
