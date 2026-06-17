@@ -382,12 +382,15 @@ def fetch_keyword_data(
             return results
 
         task = tasks[0]
-        if task.get("status_code") != 20000:
+        status_code = task.get("status_code")
+        log.info(f"  DataForSEO task status: {status_code} — {task.get('status_message', '')}")
+        if status_code != 20000:
             log.warning(f"  DataForSEO task error: {task.get('status_message', 'unknown')}")
             return results
 
         task_result = task.get("result") or []
         items = task_result[0].get("items", []) if task_result else []
+        log.info(f"  DataForSEO raw item count: {len(items)}")
 
         for item in items:
             kw = (item.get("keyword") or "").lower().strip()
@@ -767,16 +770,23 @@ def run(
     clusters = cluster_signals(all_signals)
 
     # 4. Fetch keyword data for all cluster labels in one API call
-    # Labels ("AWS IAM Best Practices") have Google Ads data; bare keys ("iam") do not.
+    # Send both labels and cluster keys — labels are descriptive, keys are short.
+    # Google Ads has data for neither "iam" alone nor 6-word titles, but mid-length
+    # phrases like "aws iam best practices" or "privileged access management" hit well.
     log.info("[4/5] Fetching keyword research data ...")
     cluster_labels = {
         key: _derive_topic_label(key, signals)
         for key, signals in clusters.items()
     }
+    # Deduplicated union of labels + keys, all lowercased
+    dfs_phrases = list(dict.fromkeys(
+        p.lower() for p in list(cluster_labels.values()) + list(cluster_labels.keys())
+    ))
     keyword_data: dict = {}
     if dfs_login and dfs_password:
+        log.info(f"  Phrases sent to DataForSEO: {dfs_phrases}")
         keyword_data = fetch_keyword_data(
-            phrases=list(cluster_labels.values()),
+            phrases=dfs_phrases,
             login=dfs_login,
             password=dfs_password,
         )
