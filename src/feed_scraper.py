@@ -220,8 +220,8 @@ if __name__ == "__main__":
     from collections import Counter
     cats = Counter(i.category for i in items)
     priorities = Counter(i.priority for i in items)
-    print(f"\n{'─'*50}")
+    print(f"\n{'-'*50}")
     print(f"  Items by category: {dict(cats)}")
     print(f"  Items by priority: {dict(priorities)}")
     print(f"  Output: raw_feed.json")
-    print(f"{'─'*50}\n")
+    print(f"{'-'*50}\n")

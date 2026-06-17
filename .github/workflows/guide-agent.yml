@@ -46,6 +46,9 @@ jobs:
         run: python src/feed_scraper.py
 
       - name: Score topics
+        env:
+          DATAFORSEO_LOGIN:    ${{ secrets.DATAFORSEO_LOGIN }}
+          DATAFORSEO_PASSWORD: ${{ secrets.DATAFORSEO_PASSWORD }}
         run: python src/topic_scorer.py --guides-dir content/guides
 
       - name: Generate guides

@@ -7,6 +7,16 @@ Reddit, Hacker News, and NVD CVE, clusters items into named topics, scores
 each topic across four dimensions, and outputs a ranked topic queue for
 guide_generator.py.
 
+Scoring dimensions (out of 100):
+  score_trending     0–30  velocity of new mentions: last 12h vs 12–48h ratio
+  score_keyword_api  0–30  DataForSEO search volume + competition (UK, English)
+  score_volume       0–20  cross-source signal count + engagement scores
+  score_coverage_gap 0–20  how uncovered this topic is on the existing site
+
+Secrets required (GitHub Actions secrets / env vars):
+  DATAFORSEO_LOGIN     DataForSEO account email
+  DATAFORSEO_PASSWORD  DataForSEO account password
+
 Output: topic_queue.json
 """
 
@@ -53,6 +63,14 @@ NVD_CVE_URL = "https://services.nvd.nist.gov/rest/json/cves/2.0"
 NVD_MAX_RESULTS = 50
 NVD_MAX_AGE_HOURS = 48
 
+# DataForSEO Keywords Data API
+DATAFORSEO_API_URL = "https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live"
+DATAFORSEO_LOCATION = "United Kingdom"
+DATAFORSEO_LANGUAGE = "English"
+
+# Trending velocity window: signals within this many hours are "recent"
+TRENDING_WINDOW_HOURS = 12
+
 # Minimum score (out of 100) for a topic to be included in the output queue
 MIN_SCORE_THRESHOLD = 35
 
@@ -62,12 +80,11 @@ TOP_N = 3
 # Content directory to scan for existing guides (coverage gap check)
 GUIDES_DIR = Path("content/guides")
 
-# Tier word-count thresholds (determines guide tier assignment)
-PILLAR_SCORE_THRESHOLD = 65  # topics scoring >= this get pillar treatment
+# Topics scoring >= this get pillar treatment
+PILLAR_SCORE_THRESHOLD = 65
 
 # ---------------------------------------------------------------------------
 # Tier 1 seed keywords (from requirements §3.2 + common AWS security terms)
-# Matched against topic label for keyword_potential scoring.
 # ---------------------------------------------------------------------------
 
 TIER1_KEYWORDS = [
@@ -106,6 +123,14 @@ TIER1_KEYWORDS = [
     "threat detection",
 ]
 
+# Seeds that qualify for partial-credit fallback when DataForSEO data is absent
+_TIER1_SEEDS = {
+    "cloud security architect", "day rate", "aws scp", "service control policy",
+    "guardduty", "landing zone", "control tower", "iam identity centre",
+    "iam identity center", "security hub", "post-quantum", "cyberark", "pam",
+    "ncsc", "kms", "key management",
+}
+
 # ---------------------------------------------------------------------------
 # Dataclasses
 # ---------------------------------------------------------------------------
@@ -129,11 +154,14 @@ class ScoredTopic:
     slug: str                           # kebab-case, used as filename hint
     tier: str                           # "pillar" | "supporting"
     total_score: int                    # 0–100
-    score_recency: int                  # 0–25
-    score_volume: int                   # 0–25
-    score_coverage_gap: int             # 0–25
-    score_keyword_potential: int        # 0–25
+    score_trending: int                 # 0–30  velocity of mentions in last 12h
+    score_keyword_api: int              # 0–30  DataForSEO search volume + competition
+    score_volume: int                   # 0–20  signal count + source diversity
+    score_coverage_gap: int             # 0–20  gap in existing site coverage
     signal_count: int                   # Number of raw signals in cluster
+    recent_signal_count: int            # Signals within last TRENDING_WINDOW_HOURS
+    keyword_search_volume: int          # Raw DataForSEO search_volume (0 = no data)
+    keyword_competition: float          # Raw DataForSEO competition (0.0–1.0)
     source_urls: list = field(default_factory=list)   # Up to 5 representative URLs
     matched_keywords: list = field(default_factory=list)
     newest_signal: str = ""             # ISO 8601 of most recent signal
@@ -239,7 +267,6 @@ def fetch_reddit_signals(max_age_hours: int = 48) -> list:
                 published = datetime.fromtimestamp(created_utc, tz=timezone.utc).isoformat()
                 if not _is_recent(published, max_age_hours):
                     continue
-                # Filter out non-security posts from r/aws
                 title = p.get("title", "")
                 selftext = p.get("selftext", "")[:500]
                 keywords = _extract_keywords(title + " " + selftext)
@@ -334,10 +361,8 @@ def fetch_nvd_signals(max_age_hours: int = NVD_MAX_AGE_HOURS) -> list:
             descriptions = cve.get("descriptions", [])
             desc = next((d["value"] for d in descriptions if d.get("lang") == "en"), "")
             published = cve.get("published", _now_utc().isoformat())
-            # Filter to cloud-relevant CVEs only
             if not any(kw in desc.lower() for kw in CLOUD_KEYWORDS):
                 continue
-            # CVSS score for native scoring
             metrics = cve.get("metrics", {})
             cvss_score = 0.0
             for key in ("cvssMetricV31", "cvssMetricV30", "cvssMetricV2"):
@@ -362,6 +387,78 @@ def fetch_nvd_signals(max_age_hours: int = NVD_MAX_AGE_HOURS) -> list:
 
 
 # ---------------------------------------------------------------------------
+# DataForSEO keyword research
+# ---------------------------------------------------------------------------
+
+def fetch_keyword_data(
+    phrases: list,
+    login: str,
+    password: str,
+) -> dict:
+    """
+    Fetch monthly search volume and competition for a batch of keyword phrases
+    from the DataForSEO Google Ads Keywords Data API (live endpoint).
+
+    Returns dict: phrase_lower -> {"search_volume": int, "competition": float, "cpc": float}
+    All phrases are batched into a single API call to minimise cost.
+    Phrases that return no data are absent from the result dict.
+    """
+    results: dict = {}
+    if not phrases:
+        return results
+
+    # DataForSEO allows up to 700 keywords per task; our cluster count is well below that
+    payload = [{
+        "keywords": phrases,
+        "location_name": DATAFORSEO_LOCATION,
+        "language_name": DATAFORSEO_LANGUAGE,
+    }]
+
+    try:
+        log.info(f"  Querying DataForSEO for {len(phrases)} keyword(s) ...")
+        resp = requests.post(
+            DATAFORSEO_API_URL,
+            auth=(login, password),
+            json=payload,
+            timeout=30,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+
+        tasks = data.get("tasks", [])
+        if not tasks:
+            log.warning("  DataForSEO returned no tasks")
+            return results
+
+        task = tasks[0]
+        if task.get("status_code") != 20000:
+            log.warning(f"  DataForSEO task error: {task.get('status_message', 'unknown')}")
+            return results
+
+        task_result = task.get("result") or []
+        items = task_result[0].get("items", []) if task_result else []
+
+        for item in items:
+            kw = (item.get("keyword") or "").lower().strip()
+            if not kw:
+                continue
+            results[kw] = {
+                "search_volume": int(item.get("search_volume") or 0),
+                "competition": float(item.get("competition") or 0.0),
+                "cpc": float(item.get("cpc") or 0.0),
+            }
+
+        log.info(f"  → DataForSEO returned data for {len(results)}/{len(phrases)} phrase(s)")
+
+    except requests.RequestException as e:
+        log.error(f"  DataForSEO request error: {e}")
+    except Exception as e:
+        log.error(f"  DataForSEO unexpected error: {e}")
+
+    return results
+
+
+# ---------------------------------------------------------------------------
 # Coverage gap: scan content/guides/ for existing guide slugs/titles
 # ---------------------------------------------------------------------------
 
@@ -375,9 +472,7 @@ def load_existing_guide_index(guides_dir: Path = GUIDES_DIR) -> list:
         log.warning(f"  {guides_dir} not found — coverage gap check will score all topics as uncovered")
         return terms
     for md_file in guides_dir.glob("**/*.md"):
-        # Use filename stem as slug signal
         terms.append(md_file.stem.lower().replace("-", " "))
-        # Also extract title from frontmatter if present
         try:
             content = md_file.read_text(encoding="utf-8", errors="ignore")
             match = re.search(r"^title:\s*['\"]?(.+?)['\"]?\s*$", content, re.MULTILINE | re.IGNORECASE)
@@ -396,22 +491,17 @@ def load_existing_guide_index(guides_dir: Path = GUIDES_DIR) -> list:
 def _topic_key_for_signal(signal: RawSignal) -> Optional[str]:
     """
     Map a signal to its primary topic key based on TIER1_KEYWORDS.
-    Returns the first matched keyword cluster key, or None if no match.
+    Returns the longest (most specific) matched keyword, or None.
     """
     text = (signal.title + " " + signal.text).lower()
-    # Check keyword matches; return the most specific (longest) match
     matched = [kw for kw in TIER1_KEYWORDS if kw in text]
     if not matched:
         return None
-    # Use longest match as cluster anchor (avoids "iam" swallowing everything)
     return max(matched, key=len)
 
 
 def _derive_topic_label(cluster_key: str, signals: list) -> str:
-    """
-    Produce a human-readable topic label from the cluster key.
-    Prefer the most common title words that match the cluster key.
-    """
+    """Produce a human-readable topic label from the cluster key."""
     label_map = {
         "aws scp": "AWS SCP Best Practices",
         "service control policy": "AWS Service Control Policies",
@@ -485,139 +575,170 @@ def cluster_signals(signals: list) -> dict:
 # Scoring
 # ---------------------------------------------------------------------------
 
-def _score_recency(signals: list) -> tuple:
+def _score_trending(signals: list) -> tuple:
     """
-    0–25 based on the most recent signal in the cluster.
-    < 6h  → 25 | < 12h → 22 | < 24h → 18 | < 36h → 12 | < 48h → 6 | older → 0
-    Returns (score, newest_iso)
+    0–30 based on velocity: signals appearing in the last TRENDING_WINDOW_HOURS
+    vs. signals in the prior window (TRENDING_WINDOW_HOURS–48h).
+
+    Returns (score, newest_iso, recent_count).
     """
     if not signals:
-        return 0, ""
-    newest_dt = max(
-        (_parse_iso(s.published) or _now_utc()) for s in signals
-    )
+        return 0, "", 0
+
+    now = _now_utc()
+    recent = [s for s in signals if _hours_ago(s.published) < TRENDING_WINDOW_HOURS]
+    older  = [s for s in signals if TRENDING_WINDOW_HOURS <= _hours_ago(s.published) < 48]
+
+    newest_dt = max((_parse_iso(s.published) or now) for s in signals)
     newest_iso = newest_dt.isoformat()
-    age_h = (_now_utc() - newest_dt).total_seconds() / 3600
-    if age_h < 6:
-        return 25, newest_iso
-    elif age_h < 12:
-        return 22, newest_iso
-    elif age_h < 24:
-        return 18, newest_iso
-    elif age_h < 36:
-        return 12, newest_iso
-    elif age_h < 48:
-        return 6, newest_iso
-    return 0, newest_iso
+
+    recent_count = len(recent)
+    older_count  = len(older)
+    ratio = recent_count / max(older_count, 1)
+
+    if recent_count >= 3 and ratio >= 2.0:
+        score = 30   # Strong surge: many recent, accelerating
+    elif recent_count >= 2 and ratio >= 1.5:
+        score = 25   # Clear acceleration
+    elif recent_count >= 2:
+        score = 20   # Multiple recent signals, flat trend
+    elif recent_count >= 1 and ratio >= 1.0:
+        score = 18   # Single recent signal, holding pace
+    elif recent_count >= 1:
+        score = 14   # Single recent signal, slowing
+    elif older_count >= 3:
+        score = 8    # No recent activity but solid older base
+    elif older_count >= 1:
+        score = 4    # Only older signals
+    else:
+        score = 0
+
+    return score, newest_iso, recent_count
 
 
 def _score_volume(signals: list) -> int:
     """
-    0–25 based on number of signals in the cluster and source diversity.
+    0–20 based on total signal count and source diversity.
     Also weights native engagement scores (Reddit upvotes, HN points).
     """
     n = len(signals)
     source_types = len({s.source.split("_")[0] for s in signals})  # feed/reddit/hn/nvd
-    engagement_bonus = min(5, sum(min(s.score, 100) for s in signals) // 200)
+    engagement_bonus = min(4, sum(min(s.score, 100) for s in signals) // 200)
 
     if n >= 8:
-        base = 20
-    elif n >= 5:
-        base = 16
-    elif n >= 3:
         base = 12
+    elif n >= 5:
+        base = 10
+    elif n >= 3:
+        base = 7
     elif n == 2:
-        base = 8
-    else:
         base = 4
+    else:
+        base = 2
 
-    diversity_bonus = min(5, (source_types - 1) * 2)
-    return min(25, base + diversity_bonus + engagement_bonus)
+    diversity_bonus = min(4, (source_types - 1) * 2)
+    return min(20, base + diversity_bonus + engagement_bonus)
 
 
 def _score_coverage_gap(cluster_key: str, label: str, existing_terms: list) -> int:
     """
-    0–25: how uncovered this topic is on the existing site.
-    Full 25 if no existing guide matches; 0 if well-covered; partial otherwise.
+    0–20: how uncovered this topic is on the existing site.
+    Full 20 if no existing guide matches; 0 if well-covered; partial otherwise.
     """
     if not existing_terms:
-        return 25  # No guides exist yet → always a gap
+        return 20
 
     label_lower = label.lower()
-    key_lower = cluster_key.lower()
-    key_words = set(key_lower.split())
+    key_lower   = cluster_key.lower()
+    key_words   = set(key_lower.split())
 
     for term in existing_terms:
-        # Exact or near-exact match: topic already covered
         if key_lower in term or term in key_lower:
             return 0
-        # Partial word overlap: partially covered
         term_words = set(term.split())
         overlap = len(key_words & term_words)
         if overlap >= 2:
-            return 8
+            return 6
         if overlap >= 1 and len(key_words) <= 2:
-            return 12
+            return 10
 
-    return 25  # No meaningful overlap found → full gap score
+    return 20
 
 
-def _score_keyword_potential(cluster_key: str, matched_keywords: list) -> int:
+def _score_keyword_api(
+    cluster_key: str,
+    label: str,
+    keyword_data: dict,
+) -> tuple:
     """
-    0–25 based on match against TIER1_KEYWORDS and keyword specificity.
-    Longer, more specific matches score higher (e.g. 'guardduty tuning' > 'security').
+    0–30 based on DataForSEO search volume and competition.
+    High volume + low competition = maximum score.
+
+    Falls back to static TIER1_KEYWORDS match (capped at 15) when API data
+    is unavailable (DataForSEO not configured or keyword returned no result).
+
+    Returns (score, search_volume, competition).
     """
-    if not matched_keywords:
-        return 0
+    data = keyword_data.get(cluster_key.lower()) or keyword_data.get(label.lower())
 
-    # Score by longest match (most specific keyword wins)
-    best = max(matched_keywords, key=len)
-    specificity = len(best.split())  # word count of the keyword phrase
+    if not data:
+        # Graceful fallback: static keyword match gives partial credit
+        matched = _extract_keywords(cluster_key + " " + label)
+        if not matched:
+            return 0, 0, 0.0
+        is_tier1 = any(seed in cluster_key for seed in _TIER1_SEEDS)
+        return (15 if is_tier1 else 8), 0, 0.0
 
-    # Check if it directly matches a Tier 1 seed topic from the requirements
-    TIER1_SEEDS = [
-        "cloud security architect", "day rate", "aws scp", "service control policy",
-        "guardduty", "landing zone", "control tower", "iam identity centre",
-        "iam identity center", "security hub", "post-quantum", "cyberark", "pam",
-        "ncsc", "kms", "key management",
-    ]
-    is_tier1 = any(seed in cluster_key for seed in TIER1_SEEDS)
+    search_volume = data["search_volume"]
+    competition   = data["competition"]   # 0.0 (none) → 1.0 (high)
 
-    if is_tier1:
-        base = 20
-    elif specificity >= 3:
-        base = 16
-    elif specificity == 2:
-        base = 12
+    # Volume component: 0–20
+    if search_volume >= 10_000:
+        vol_score = 20
+    elif search_volume >= 5_000:
+        vol_score = 17
+    elif search_volume >= 1_000:
+        vol_score = 14
+    elif search_volume >= 500:
+        vol_score = 10
+    elif search_volume >= 100:
+        vol_score = 6
+    elif search_volume > 0:
+        vol_score = 3
     else:
-        base = 8
+        vol_score = 0
 
-    # Bonus for multiple keyword matches within the cluster
-    bonus = min(5, len(matched_keywords) - 1)
-    return min(25, base + bonus)
+    # Competition ease component: 0–10 (lower competition = higher score)
+    ease_score = int((1.0 - competition) * 10)
 
+    return min(30, vol_score + ease_score), search_volume, competition
+
+
+# ---------------------------------------------------------------------------
+# Topic scoring
+# ---------------------------------------------------------------------------
 
 def score_topic(
     cluster_key: str,
     signals: list,
     existing_terms: list,
+    keyword_data: dict,
 ) -> ScoredTopic:
     label = _derive_topic_label(cluster_key, signals)
-    slug = _slugify(label)
+    slug  = _slugify(label)
 
-    score_recency, newest_iso = _score_recency(signals)
-    score_volume = _score_volume(signals)
-    score_coverage_gap = _score_coverage_gap(cluster_key, label, existing_terms)
+    score_trending, newest_iso, recent_count = _score_trending(signals)
+    score_volume    = _score_volume(signals)
+    score_gap       = _score_coverage_gap(cluster_key, label, existing_terms)
+    score_kw, search_volume, competition = _score_keyword_api(cluster_key, label, keyword_data)
 
-    all_text = " ".join(s.title + " " + s.text for s in signals)
-    matched_keywords = list(set(_extract_keywords(all_text)))
-    score_kw = _score_keyword_potential(cluster_key, matched_keywords)
+    total = score_trending + score_volume + score_gap + score_kw
 
-    total = score_recency + score_volume + score_coverage_gap + score_kw
-
-    # Collect up to 5 source URLs, preferring higher-engagement signals
     sorted_signals = sorted(signals, key=lambda s: s.score, reverse=True)
-    source_urls = [s.url for s in sorted_signals[:5] if s.url]
+    source_urls    = [s.url for s in sorted_signals[:5] if s.url]
+
+    all_text         = " ".join(s.title + " " + s.text for s in signals)
+    matched_keywords = list(set(_extract_keywords(all_text)))
 
     tier = "pillar" if total >= PILLAR_SCORE_THRESHOLD else "supporting"
 
@@ -626,11 +747,14 @@ def score_topic(
         slug=slug,
         tier=tier,
         total_score=total,
-        score_recency=score_recency,
+        score_trending=score_trending,
+        score_keyword_api=score_kw,
         score_volume=score_volume,
-        score_coverage_gap=score_coverage_gap,
-        score_keyword_potential=score_kw,
+        score_coverage_gap=score_gap,
         signal_count=len(signals),
+        recent_signal_count=recent_count,
+        keyword_search_volume=search_volume,
+        keyword_competition=competition,
         source_urls=source_urls,
         matched_keywords=matched_keywords,
         newest_signal=newest_iso,
@@ -647,16 +771,22 @@ def run(
     output_path: str = "topic_queue.json",
     top_n: int = TOP_N,
     min_score: int = MIN_SCORE_THRESHOLD,
+    dataforseo_login: Optional[str] = None,
+    dataforseo_password: Optional[str] = None,
 ) -> list:
-    """
-    Full topic scoring pipeline. Returns list of ScoredTopic dicts.
-    """
+    """Full topic scoring pipeline. Returns list of ScoredTopic dicts."""
     log.info("─" * 60)
     log.info("topic_scorer.py — ZX Cloud Security")
     log.info("─" * 60)
 
+    # Resolve DataForSEO credentials
+    dfs_login    = dataforseo_login    or os.environ.get("DATAFORSEO_LOGIN", "")
+    dfs_password = dataforseo_password or os.environ.get("DATAFORSEO_PASSWORD", "")
+    if not (dfs_login and dfs_password):
+        log.warning("  DATAFORSEO_LOGIN / DATAFORSEO_PASSWORD not set — keyword API scores will use static fallback")
+
     # 1. Gather signals from all sources
-    log.info("[1/4] Gathering signals ...")
+    log.info("[1/5] Gathering signals ...")
     all_signals: list = []
     seen_ids: set = set()
 
@@ -679,33 +809,48 @@ def run(
         return []
 
     # 2. Load existing guide index for coverage gap scoring
-    log.info("[2/4] Loading existing guide index ...")
+    log.info("[2/5] Loading existing guide index ...")
     existing_terms = load_existing_guide_index(guides_dir)
 
-    # 3. Cluster signals into topics and score each
-    log.info("[3/4] Clustering and scoring topics ...")
+    # 3. Cluster signals into topics
+    log.info("[3/5] Clustering signals into topics ...")
     clusters = cluster_signals(all_signals)
 
+    # 4. Fetch keyword data for all cluster keys in one API call
+    log.info("[4/5] Fetching keyword research data ...")
+    keyword_data: dict = {}
+    if dfs_login and dfs_password:
+        keyword_data = fetch_keyword_data(
+            phrases=list(clusters.keys()),
+            login=dfs_login,
+            password=dfs_password,
+        )
+    else:
+        log.info("  Skipping DataForSEO — no credentials")
+
+    # 5. Score each cluster and rank
+    log.info("[5/5] Scoring and ranking topics ...")
     scored: list = []
     for cluster_key, signals in clusters.items():
-        topic = score_topic(cluster_key, signals, existing_terms)
+        topic = score_topic(cluster_key, signals, existing_terms, keyword_data)
         scored.append(topic)
         log.info(
             f"  {topic.total_score:3d}/100  [{topic.tier:10s}]  {topic.label}"
-            f"  (n={topic.signal_count}, recency={topic.score_recency},"
-            f" volume={topic.score_volume}, gap={topic.score_coverage_gap},"
-            f" kw={topic.score_keyword_potential})"
+            f"  (trending={topic.score_trending}, kw={topic.score_keyword_api},"
+            f" vol={topic.score_volume}, gap={topic.score_coverage_gap},"
+            f" recent={topic.recent_signal_count}/{topic.signal_count},"
+            f" sv={topic.keyword_search_volume})"
         )
 
-    # 4. Filter and rank
-    log.info("[4/4] Ranking and selecting top topics ...")
     qualified = [t for t in scored if t.total_score >= min_score]
     qualified.sort(key=lambda t: t.total_score, reverse=True)
     selected = qualified[:top_n]
 
     if not selected:
-        log.warning(f"  No topics above minimum score threshold ({min_score}) — "
-                    f"top scorer was {scored[0].total_score if scored else 'N/A'}")
+        log.warning(
+            f"  No topics above minimum score threshold ({min_score}) — "
+            f"top scorer was {scored[0].total_score if scored else 'N/A'}"
+        )
     else:
         log.info(f"  Selected {len(selected)} topic(s) for guide generation:")
         for i, t in enumerate(selected, 1):
@@ -734,11 +879,11 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="ZX Cloud Security — Topic Scorer")
-    parser.add_argument("--raw-feed",   default="raw_feed.json",   help="Path to feed_scraper.py output")
-    parser.add_argument("--guides-dir", default="content/guides",  help="Path to existing Hugo guides directory")
-    parser.add_argument("--output",     default="topic_queue.json", help="Output JSON path")
-    parser.add_argument("--top-n",      type=int, default=TOP_N,    help="Number of topics to select")
-    parser.add_argument("--min-score",  type=int, default=MIN_SCORE_THRESHOLD, help="Minimum score threshold (0–100)")
+    parser.add_argument("--raw-feed",    default="raw_feed.json",   help="Path to feed_scraper.py output")
+    parser.add_argument("--guides-dir",  default="content/guides",  help="Path to existing Hugo guides directory")
+    parser.add_argument("--output",      default="topic_queue.json", help="Output JSON path")
+    parser.add_argument("--top-n",       type=int, default=TOP_N,    help="Number of topics to select")
+    parser.add_argument("--min-score",   type=int, default=MIN_SCORE_THRESHOLD, help="Minimum score threshold (0–100)")
     args = parser.parse_args()
 
     topics = run(
@@ -749,11 +894,15 @@ if __name__ == "__main__":
         min_score=args.min_score,
     )
 
-    print(f"\n{'─'*60}")
+    print(f"\n{'-'*60}")
     print(f"  Topics selected: {len(topics)}")
     for i, t in enumerate(topics, 1):
         print(f"  {i}. [{t.total_score}/100] [{t.tier}] {t.label}")
-        print(f"     Slug:    {t.slug}")
-        print(f"     Sources: {len(t.source_urls)} URL(s)")
+        print(f"     Slug      : {t.slug}")
+        print(f"     Trending  : {t.score_trending}/30  (recent {t.recent_signal_count}/{t.signal_count} signals)")
+        print(f"     Keyword   : {t.score_keyword_api}/30  (sv={t.keyword_search_volume}, comp={t.keyword_competition:.2f})")
+        print(f"     Volume    : {t.score_volume}/20")
+        print(f"     Gap       : {t.score_coverage_gap}/20")
+        print(f"     Sources   : {len(t.source_urls)} URL(s)")
     print(f"  Output: topic_queue.json")
-    print(f"{'─'*60}\n")
+    print(f"{'-'*60}\n")
