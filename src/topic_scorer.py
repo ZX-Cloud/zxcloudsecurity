@@ -816,12 +816,17 @@ def run(
     log.info("[3/5] Clustering signals into topics ...")
     clusters = cluster_signals(all_signals)
 
-    # 4. Fetch keyword data for all cluster keys in one API call
+    # 4. Fetch keyword data for all cluster labels in one API call
+    # Labels ("AWS IAM Best Practices") have Google Ads data; bare keys ("iam") do not.
     log.info("[4/5] Fetching keyword research data ...")
+    cluster_labels = {
+        key: _derive_topic_label(key, signals)
+        for key, signals in clusters.items()
+    }
     keyword_data: dict = {}
     if dfs_login and dfs_password:
         keyword_data = fetch_keyword_data(
-            phrases=list(clusters.keys()),
+            phrases=list(cluster_labels.values()),
             login=dfs_login,
             password=dfs_password,
         )
