@@ -1,23 +1,16 @@
 {
-  "updated": "18 Jun 2026 06:05 UTC",
-  "total": 214,
+  "updated": "18 Jun 2026 14:02 UTC",
+  "total": 235,
   "severity": {
     "critical": 19,
-    "high": 132,
-    "medium": 42
+    "high": 145,
+    "medium": 50
   },
   "categories": {
     "aws": 22,
-    "azure": 74,
+    "azure": 90,
     "gcp": 0,
-    "general": 118
+    "general": 123
   },
-  "top_critical": {
-    "title": "CVE-2026-48907: Joomla JCE RCE Flaw Actively Exploited",
-    "summary": "A critical vulnerability (CVE-2026-48907, CVSS 10.0) in the Joomla Content Editor (JCE) plugin allows attackers to bypass access controls and execute arbitrary PHP code on affected servers. CISA has a",
-    "architects_take": "Immediately audit your estate and cloud-hosted workloads for any Joomla installations running the JCE plugin and apply the vendor patch as an emergency change. If patching cannot be done promptly, take affected instances offline or block public access to the Joomla admin and editor endpoints via WAF or security group rules.",
-    "slug": "joomla-jce-rce-cve-2026-48907-actively-exploited-cisa-kev",
-    "source": "The Hacker News",
-    "category": "general"
-  }
+  "top_critical": null
 }
