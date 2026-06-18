@@ -63,7 +63,7 @@ if aws lambda get-function \
   aws lambda update-function-configuration \
     --function-name "${FUNCTION_NAME}" \
     --region "${REGION}" \
-    --environment "Variables={DYNAMODB_TABLE=${DYNAMODB_TABLE},GITHUB_REPO=${GITHUB_REPO},GITHUB_PAT_SECRET=${GITHUB_PAT_SECRET},SES_FROM_ADDRESS=${SES_FROM_ADDRESS},SES_TO_ADDRESS=${SES_TO_ADDRESS}}" \
+    --environment "Variables={DYNAMODB_TABLE=${DYNAMODB_TABLE},GITHUB_REPO=${GITHUB_REPO},GITHUB_PAT_SECRET=${GITHUB_PAT_SECRET},SES_FROM_ADDRESS=${SES_FROM_ADDRESS},SES_TO_ADDRESS=${SES_TO_ADDRESS},DDB_REGION=eu-west-1}" \_PAT_SECRET=${GITHUB_PAT_SECRET},SES_FROM_ADDRESS=${SES_FROM_ADDRESS},SES_TO_ADDRESS=${SES_TO_ADDRESS}}" \
     --query 'FunctionArn' \
     --output text
 
@@ -78,7 +78,7 @@ else
     --region "${REGION}" \
     --timeout 15 \
     --memory-size 128 \
-    --environment "Variables={DYNAMODB_TABLE=${DYNAMODB_TABLE},GITHUB_REPO=${GITHUB_REPO},GITHUB_PAT_SECRET=${GITHUB_PAT_SECRET},SES_FROM_ADDRESS=${SES_FROM_ADDRESS},SES_TO_ADDRESS=${SES_TO_ADDRESS}}" \
+    --environment "Variables={DYNAMODB_TABLE=${DYNAMODB_TABLE},GITHUB_REPO=${GITHUB_REPO},GITHUB_PAT_SECRET=${GITHUB_PAT_SECRET},SES_FROM_ADDRESS=${SES_FROM_ADDRESS},SES_TO_ADDRESS=${SES_TO_ADDRESS},DDB_REGION=eu-west-1}" \
     --query 'FunctionArn' \
     --output text
 
