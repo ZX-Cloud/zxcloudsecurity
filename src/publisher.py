@@ -140,9 +140,7 @@ def commit_drafts_to_branch(records: list) -> list:
         # Stage draft files and quality report
         for path in files_to_commit:
             _git(["add", path])
-        if Path("quality_report.json").exists():
-            _git(["add", "quality_report.json"])
-
+        
         # Build commit message
         titles = [r.title or r.slug for r in records if r.outcome != "reject"]
         commit_msg = f"chore: add {len(titles)} guide draft(s) for review\n\n"
