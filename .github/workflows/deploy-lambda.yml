@@ -55,11 +55,17 @@ jobs:
       - name: Debug - test get-function directly
         run: aws lambda get-function --function-name zxcloudsecurity-approval --region eu-west-2
 
-      - name: Debug - print function name secret
+      - name: Debug - compare function name secret
         env:
           LAMBDA_FUNCTION_NAME: ${{ secrets.LAMBDA_FUNCTION_NAME }}
-        run: echo "Function name = [${LAMBDA_FUNCTION_NAME}]"
-        
+        run: |
+          echo "Length: ${#LAMBDA_FUNCTION_NAME}"
+          if [ "${LAMBDA_FUNCTION_NAME}" = "zxcloudsecurity-approval" ]; then
+            echo "MATCH: exactly equal to zxcloudsecurity-approval"
+          else
+            echo "MISMATCH: does not equal zxcloudsecurity-approval"
+          fi
+
       - name: Deploy Lambda
         env:
           AWS_REGION:           ${{ secrets.AWS_REGION }}
