@@ -92,7 +92,7 @@ _C = {
 # ---------------------------------------------------------------------------
 
 def _get_token_record(token: str) -> dict | None:
-    dynamodb = boto3.resource("dynamodb")
+    dynamodb = boto3.resource("dynamodb", region_name=os.environ.get("DDB_REGION", "eu-west-1"))
     table = dynamodb.Table(DYNAMODB_TABLE)
     resp = table.get_item(Key={"token": token})
     return resp.get("Item")
@@ -131,7 +131,7 @@ def _validate_token(token: str, guide_id: str) -> tuple:
 
 
 def _mark_token_used(token: str) -> None:
-    dynamodb = boto3.resource("dynamodb")
+    dynamodb = boto3.resource("dynamodb", region_name=os.environ.get("DDB_REGION", "eu-west-1"))
     table = dynamodb.Table(DYNAMODB_TABLE)
     table.update_item(
         Key={"token": token},
