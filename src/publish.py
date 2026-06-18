@@ -26,7 +26,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 log = logging.getLogger(__name__)
 
 DRAFTS_DIR  = Path("drafts/guides")
-CONTENT_DIR = Path("content/guides")
+CONTENT_DIR = Path("site/content/guides")
 DRAFTS_BRANCH = "drafts"
 MAIN_BRANCH   = "main"
 
