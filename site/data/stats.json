@@ -1,23 +1,23 @@
 {
-  "updated": "17 Jun 2026 06:05 UTC",
-  "total": 194,
+  "updated": "18 Jun 2026 06:05 UTC",
+  "total": 214,
   "severity": {
-    "critical": 16,
-    "high": 123,
-    "medium": 34
+    "critical": 19,
+    "high": 132,
+    "medium": 42
   },
   "categories": {
-    "aws": 21,
-    "azure": 70,
+    "aws": 22,
+    "azure": 74,
     "gcp": 0,
-    "general": 103
+    "general": 118
   },
   "top_critical": {
-    "title": "CVE-2026-48907: Joomla Plugin RCE via File Upload",
-    "summary": "A critical vulnerability in the Widget Factory Joomla Content Editor plugin allows unauthenticated attackers to upload and execute arbitrary PHP code by creating new editor profiles. This effectively ",
-    "architects_take": "Audit all Joomla deployments across your environment and patch or disable the Widget Factory Content Editor plugin immediately. If Joomla sites are hosted on cloud infrastructure, treat any exposed instance as potentially compromised and review web application firewall rules to block unauthenticated POST requests to editor profile creation endpoints whilst patching is carried out.",
-    "slug": "cve-2026-48907-widget-factory-joomla-content-editor-rce",
-    "source": "CISA Known Exploited Vulnerabilities",
+    "title": "CVE-2026-48907: Joomla JCE RCE Flaw Actively Exploited",
+    "summary": "A critical vulnerability (CVE-2026-48907, CVSS 10.0) in the Joomla Content Editor (JCE) plugin allows attackers to bypass access controls and execute arbitrary PHP code on affected servers. CISA has a",
+    "architects_take": "Immediately audit your estate and cloud-hosted workloads for any Joomla installations running the JCE plugin and apply the vendor patch as an emergency change. If patching cannot be done promptly, take affected instances offline or block public access to the Joomla admin and editor endpoints via WAF or security group rules.",
+    "slug": "joomla-jce-rce-cve-2026-48907-actively-exploited-cisa-kev",
+    "source": "The Hacker News",
     "category": "general"
   }
 }
