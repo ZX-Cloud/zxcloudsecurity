@@ -55,6 +55,11 @@ jobs:
       - name: Debug - test get-function directly
         run: aws lambda get-function --function-name zxcloudsecurity-approval --region eu-west-2
 
+      - name: Debug - print function name secret
+        env:
+          LAMBDA_FUNCTION_NAME: ${{ secrets.LAMBDA_FUNCTION_NAME }}
+        run: echo "Function name is: [${LAMBDA_FUNCTION_NAME}]"
+
       - name: Deploy Lambda
         env:
           AWS_REGION:           ${{ secrets.AWS_REGION }}
