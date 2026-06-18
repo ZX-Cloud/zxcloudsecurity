@@ -58,8 +58,8 @@ jobs:
       - name: Debug - print function name secret
         env:
           LAMBDA_FUNCTION_NAME: ${{ secrets.LAMBDA_FUNCTION_NAME }}
-        run: echo "Function name is: [${LAMBDA_FUNCTION_NAME}]"
-
+        run: echo "Function name = [${LAMBDA_FUNCTION_NAME}]"
+        
       - name: Deploy Lambda
         env:
           AWS_REGION:           ${{ secrets.AWS_REGION }}
