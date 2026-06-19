@@ -31,7 +31,7 @@ log = logging.getLogger(__name__)
 
 MODEL = "claude-sonnet-4-6"
 MAX_TOKENS = 8000
-AUTHOR = "Steve Harrison - Principal Security Architect"
+AUTHOR = "Steve Harrison & AI - Principal Security Architect"
 
 WORD_COUNT_TARGETS = {
     "pillar":     {"min": 3000, "target": 4500, "max": 6000},
@@ -99,7 +99,7 @@ date: YYYY-MM-DD
 description: "140–160 char meta description including target keyword"
 tags: ["tag1", "tag2", "tag3", "tag4"]
 slug: "kebab-case-slug"
-author: "Steve Harrison - Principal Security Architect"
+author: "Steve Harrison & AI - Principal Security Architect"
 word_count: NNNN
 draft: false
 ---
