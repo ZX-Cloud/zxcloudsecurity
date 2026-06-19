@@ -4,7 +4,7 @@ date: 2026-06-18
 description: "A practitioner's guide to recent cloud security CVEs in 2026, covering active exploits, attacker infrastructure, detection tooling, and remediation playbooks."
 tags: ["cloud security", "CVE", "vulnerability management", "AWS", "Azure", "patch management"]
 slug: "recent-cloud-security-cves"
-author: "Steve Harrison - Principal Security Architect"
+author: "Steve Harrison & AI - Principal Security Architect"
 word_count: 3284
 draft: false
 ---
