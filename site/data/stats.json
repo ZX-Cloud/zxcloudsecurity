@@ -1,23 +1,23 @@
 {
-  "updated": "19 Jun 2026 06:05 UTC",
-  "total": 255,
+  "updated": "19 Jun 2026 09:24 UTC",
+  "total": 266,
   "severity": {
-    "critical": 23,
-    "high": 160,
-    "medium": 51
+    "critical": 24,
+    "high": 167,
+    "medium": 54
   },
   "categories": {
     "aws": 23,
-    "azure": 101,
+    "azure": 110,
     "gcp": 1,
-    "general": 130
+    "general": 132
   },
   "top_critical": {
-    "title": "CVE-2026-20253: Splunk Enterprise Auth Bypass Flaw",
-    "summary": "A critical vulnerability in Splunk Enterprise allows unauthenticated attackers to create or delete arbitrary files via an exposed PostgreSQL sidecar service endpoint that lacks proper authentication c",
-    "architects_take": "Immediately apply Splunk's patch ahead of the 21 June 2026 remediation deadline, and in the interim restrict network access to the PostgreSQL sidecar service endpoint using firewall rules or security group policies so it is not reachable from untrusted networks.",
-    "slug": "splunk-enterprise-missing-authentication-cve-2026-20253",
-    "source": "CISA Known Exploited Vulnerabilities",
-    "category": "general"
+    "title": "CVE-2026-48914: QEMU-KVM Heap Overflow in Azure",
+    "summary": "CVE-2026-48914 is a heap buffer overflow vulnerability in QEMU-KVM's virtio-blk driver, specifically in how it handles SCSI requests. This type of flaw can potentially allow a malicious guest virtual ",
+    "architects_take": "Assess whether your Azure workloads rely on virtualisation layers exposed to untrusted guest workloads; prioritise patching any Azure host infrastructure or self-managed QEMU-KVM deployments. If you operate multi-tenant environments or nested virtualisation, treat this as urgent and monitor Microsoft's patch guidance closely.",
+    "slug": "cve-2026-48914-qemu-kvm-heap-buffer-overflow-virtio-blk-azure",
+    "source": "Microsoft Security Response Center",
+    "category": "azure"
   }
 }
