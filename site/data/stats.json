@@ -1,16 +1,23 @@
 {
-  "updated": "18 Jun 2026 14:02 UTC",
-  "total": 235,
+  "updated": "19 Jun 2026 06:05 UTC",
+  "total": 255,
   "severity": {
-    "critical": 19,
-    "high": 145,
-    "medium": 50
+    "critical": 23,
+    "high": 160,
+    "medium": 51
   },
   "categories": {
-    "aws": 22,
-    "azure": 90,
-    "gcp": 0,
-    "general": 123
+    "aws": 23,
+    "azure": 101,
+    "gcp": 1,
+    "general": 130
   },
-  "top_critical": null
+  "top_critical": {
+    "title": "CVE-2026-20253: Splunk Enterprise Auth Bypass Flaw",
+    "summary": "A critical vulnerability in Splunk Enterprise allows unauthenticated attackers to create or delete arbitrary files via an exposed PostgreSQL sidecar service endpoint that lacks proper authentication c",
+    "architects_take": "Immediately apply Splunk's patch ahead of the 21 June 2026 remediation deadline, and in the interim restrict network access to the PostgreSQL sidecar service endpoint using firewall rules or security group policies so it is not reachable from untrusted networks.",
+    "slug": "splunk-enterprise-missing-authentication-cve-2026-20253",
+    "source": "CISA Known Exploited Vulnerabilities",
+    "category": "general"
+  }
 }
