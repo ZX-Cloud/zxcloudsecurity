@@ -68,7 +68,7 @@ jobs:
         run: aws s3 sync site/public/ s3://zxcloudsecurity-site --delete
 
       - name: Upload enriched feed to S3
-        run: aws s3 cp src/enriched_feed.json s3://zxcloudsecurity-site/enriched_feed.json
+        run: aws s3 cp enriched_feed.json s3://zxcloudsecurity-site/enriched_feed.json
 
       - name: Invalidate CloudFront cache
         run: |
