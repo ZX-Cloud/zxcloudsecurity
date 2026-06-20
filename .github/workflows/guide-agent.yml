@@ -49,7 +49,8 @@ jobs:
         env:
           DATAFORSEO_LOGIN:    ${{ secrets.DATAFORSEO_LOGIN }}
           DATAFORSEO_PASSWORD: ${{ secrets.DATAFORSEO_PASSWORD }}
-        run: python src/topic_scorer.py --guides-dir content/guides
+          NVD_API_KEY:         ${{ secrets.NVD_API_KEY }}
+        run: python src/topic_scorer.py --guides-dir site/content/guides
 
       - name: Generate guides
         env:
@@ -62,7 +63,7 @@ jobs:
         run: python src/humaniser.py
 
       - name: Quality check
-        run: python src/quality_checker.py --guides-dir content/guides
+        run: python src/quality_checker.py --guides-dir site/content/guides
 
       - name: Publish drafts and email digest
         env:
