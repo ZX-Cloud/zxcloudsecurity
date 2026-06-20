@@ -336,6 +336,17 @@ def fetch_nvd_signals(max_age_hours: int = NVD_MAX_AGE_HOURS) -> list:
         log.error(f"  Error fetching NVD: {e}")
     return signals
 
+# New section added 20-06-26
+
+def _competition_to_float(val) -> float:
+    """
+    DataForSEO's google_ads/search_volume/live endpoint returns competition as
+    a string label (LOW/MEDIUM/HIGH), not a numeric score. Map it to a 0.0–1.0
+    float for consistency with how score_keyword_api() expects to use it.
+    """
+    mapping = {"LOW": 0.15, "MEDIUM": 0.5, "HIGH": 0.85}
+    return mapping.get((val or "").upper(), 0.0)
+
 
 # ---------------------------------------------------------------------------
 # DataForSEO keyword research
@@ -388,8 +399,11 @@ def fetch_keyword_data(
             log.warning(f"  DataForSEO task error: {task.get('status_message', 'unknown')}")
             return results
 
-        task_result = task.get("result") or []
-        items = task_result[0].get("items", []) if task_result else []
+        # NOTE: the google_ads/search_volume/live endpoint returns `result` as a
+        # FLAT LIST of per-keyword objects — unlike DataForSEO's Labs/SERP-style
+        # endpoints, there is no wrapping {"items": [...]} object here. Each
+        # element of `result` IS a keyword result directly.
+        items = task.get("result") or []
         log.info(f"  DataForSEO raw item count: {len(items)}")
 
         for item in items:
@@ -398,7 +412,7 @@ def fetch_keyword_data(
                 continue
             results[kw] = {
                 "search_volume": int(item.get("search_volume") or 0),
-                "competition": float(item.get("competition") or 0.0),
+                "competition": _competition_to_float(item.get("competition")),
                 "cpc": float(item.get("cpc") or 0.0),
             }
 
