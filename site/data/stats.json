@@ -1,23 +1,23 @@
 {
-  "updated": "19 Jun 2026 09:24 UTC",
-  "total": 266,
+  "updated": "20 Jun 2026 06:07 UTC",
+  "total": 296,
   "severity": {
-    "critical": 24,
-    "high": 167,
-    "medium": 54
+    "critical": 27,
+    "high": 189,
+    "medium": 59
   },
   "categories": {
     "aws": 23,
-    "azure": 110,
+    "azure": 129,
     "gcp": 1,
-    "general": 132
+    "general": 143
   },
   "top_critical": {
-    "title": "CVE-2026-48914: QEMU-KVM Heap Overflow in Azure",
-    "summary": "CVE-2026-48914 is a heap buffer overflow vulnerability in QEMU-KVM's virtio-blk driver, specifically in how it handles SCSI requests. This type of flaw can potentially allow a malicious guest virtual ",
-    "architects_take": "Assess whether your Azure workloads rely on virtualisation layers exposed to untrusted guest workloads; prioritise patching any Azure host infrastructure or self-managed QEMU-KVM deployments. If you operate multi-tenant environments or nested virtualisation, treat this as urgent and monitor Microsoft's patch guidance closely.",
-    "slug": "cve-2026-48914-qemu-kvm-heap-buffer-overflow-virtio-blk-azure",
-    "source": "Microsoft Security Response Center",
-    "category": "azure"
+    "title": "FortiBleed: 86,644 FortiGate Devices Compromised",
+    "summary": "A large-scale campaign dubbed 'FortiBleed', attributed to Russian-speaking threat actors, has compromised over 86,000 internet-facing Fortinet FortiGate devices. CISA has issued an urgent advisory urg",
+    "architects_take": "Immediately audit all internet-exposed FortiGate appliances, apply the latest firmware patches, and review management interface access \u2014 restricting it to trusted IP ranges or a private network. Check device logs and SSL-VPN session records for indicators of compromise, and consider isolating affected devices pending forensic review.",
+    "slug": "fortibleed-fortinet-fortigate-mass-compromise-cisa-warning",
+    "source": "The Hacker News",
+    "category": "general"
   }
 }
