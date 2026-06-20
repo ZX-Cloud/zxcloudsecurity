@@ -56,6 +56,7 @@ HN_MAX_AGE_HOURS = 48
 NVD_CVE_URL = "https://services.nvd.nist.gov/rest/json/cves/2.0"
 NVD_MAX_RESULTS = 50
 NVD_MAX_AGE_HOURS = 48
+NVD_API_KEY = os.environ.get("NVD_API_KEY", "")
 
 # DataForSEO Keywords Data API
 DATAFORSEO_API_URL = "https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live"
@@ -281,10 +282,11 @@ def fetch_hn_signals(max_age_hours: int = HN_MAX_AGE_HOURS) -> list:
     return signals
 
 
-def fetch_nvd_signals(max_age_hours: int = NVD_MAX_AGE_HOURS) -> list:
+def fetch_nvd_signals(max_age_hours: int = NVD_MAX_AGE_HOURS, max_retries: int = 3) -> list:
     """
     Fetch recent CVEs from NVD 2.0 API, filtered to cloud/AWS-relevant products.
-    NVD API allows ~5 req/30s unauthenticated; we make one request.
+    Uses NVD_API_KEY if set (50 req/30s) else falls back to unauthenticated (5 req/30s).
+    Retries on transient errors (503, timeouts) with exponential backoff.
     """
     signals = []
     CLOUD_KEYWORDS = [
@@ -292,19 +294,44 @@ def fetch_nvd_signals(max_age_hours: int = NVD_MAX_AGE_HOURS) -> list:
         "openssl", "log4j", "spring", "nginx", "apache", "linux kernel",
         "terraform", "ansible", "jenkins", "gitlab", "github",
     ]
+
+    headers = dict(HEADERS)
+    if NVD_API_KEY:
+        headers["apiKey"] = NVD_API_KEY
+    else:
+        log.warning("  NVD_API_KEY not set — using unauthenticated NVD rate limit (5 req/30s)")
+
+    pub_start = (_now_utc() - timedelta(hours=max_age_hours)).strftime("%Y-%m-%dT%H:%M:%S.000")
+    pub_end = _now_utc().strftime("%Y-%m-%dT%H:%M:%S.000")
+    params = {
+        "pubStartDate": pub_start,
+        "pubEndDate": pub_end,
+        "resultsPerPage": NVD_MAX_RESULTS,
+        "startIndex": 0,
+    }
+
+    data = None
+    for attempt in range(1, max_retries + 1):
+        try:
+            log.info(f"  Fetching NVD CVE feed (attempt {attempt}/{max_retries}) ...")
+            resp = requests.get(NVD_CVE_URL, params=params, headers=headers, timeout=30)
+            resp.raise_for_status()
+            data = resp.json()
+            break
+        except requests.RequestException as e:
+            log.warning(f"  NVD fetch attempt {attempt} failed: {e}")
+            if attempt < max_retries:
+                backoff = 2 ** attempt  # 2s, 4s, 8s
+                log.info(f"  Retrying in {backoff}s ...")
+                time.sleep(backoff)
+            else:
+                log.error(f"  NVD fetch failed after {max_retries} attempts — skipping NVD signals")
+                return signals
+
+    if data is None:
+        return signals
+
     try:
-        log.info("  Fetching NVD CVE feed ...")
-        pub_start = (_now_utc() - timedelta(hours=max_age_hours)).strftime("%Y-%m-%dT%H:%M:%S.000")
-        pub_end = _now_utc().strftime("%Y-%m-%dT%H:%M:%S.000")
-        params = {
-            "pubStartDate": pub_start,
-            "pubEndDate": pub_end,
-            "resultsPerPage": NVD_MAX_RESULTS,
-            "startIndex": 0,
-        }
-        resp = requests.get(NVD_CVE_URL, params=params, headers=HEADERS, timeout=30)
-        resp.raise_for_status()
-        data = resp.json()
         count = 0
         for vuln in data.get("vulnerabilities", []):
             cve = vuln.get("cve", {})
@@ -327,13 +354,14 @@ def fetch_nvd_signals(max_age_hours: int = NVD_MAX_AGE_HOURS) -> list:
                 title=f"{cve_id}: {desc[:120]}",
                 url=f"https://nvd.nist.gov/vuln/detail/{cve_id}",
                 published=published,
-                score=int(cvss_score * 10),  # 0–100 proxy
+                score=int(cvss_score * 10),
                 text=desc[:1000],
             ))
             count += 1
         log.info(f"  → {count} cloud-relevant CVEs from NVD")
     except Exception as e:
-        log.error(f"  Error fetching NVD: {e}")
+        log.error(f"  Error parsing NVD response: {e}")
+
     return signals
 
 # New section added 20-06-26
