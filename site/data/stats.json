@@ -1,23 +1,16 @@
 {
-  "updated": "20 Jun 2026 06:07 UTC",
-  "total": 296,
+  "updated": "21 Jun 2026 06:02 UTC",
+  "total": 302,
   "severity": {
     "critical": 27,
-    "high": 189,
-    "medium": 59
+    "high": 194,
+    "medium": 60
   },
   "categories": {
     "aws": 23,
-    "azure": 129,
+    "azure": 134,
     "gcp": 1,
-    "general": 143
+    "general": 144
   },
-  "top_critical": {
-    "title": "FortiBleed: 86,644 FortiGate Devices Compromised",
-    "summary": "A large-scale campaign dubbed 'FortiBleed', attributed to Russian-speaking threat actors, has compromised over 86,000 internet-facing Fortinet FortiGate devices. CISA has issued an urgent advisory urg",
-    "architects_take": "Immediately audit all internet-exposed FortiGate appliances, apply the latest firmware patches, and review management interface access \u2014 restricting it to trusted IP ranges or a private network. Check device logs and SSL-VPN session records for indicators of compromise, and consider isolating affected devices pending forensic review.",
-    "slug": "fortibleed-fortinet-fortigate-mass-compromise-cisa-warning",
-    "source": "The Hacker News",
-    "category": "general"
-  }
+  "top_critical": null
 }
