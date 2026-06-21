@@ -10,7 +10,13 @@
     "pos_11_20": 0,
     "pos_21_30": 0
   },
-  "backlinks": {},
+  "backlinks": {
+    "backlinks": 44,
+    "referring_domains": 41,
+    "referring_main_domains": 38,
+    "rank": 0,
+    "broken_backlinks": 0
+  },
   "keywords": [
     {
       "keyword": "aws scp best practices",
