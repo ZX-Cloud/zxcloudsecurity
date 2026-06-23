@@ -1,116 +1,101 @@
 ---
 title: "Privileged Access Management in AWS: A Practitioner's Guide"
-date: 2026-06-21
-description: "A practical guide to privileged access management in AWS — covering JIT access, SCPs, permissions boundaries, IAM Identity Center, and common pitfalls to avoid."
-tags: ["aws", "iam", "privileged-access-management", "cloud-security", "zero-trust"]
+date: 2026-06-23
+description: "A practical guide to privileged access management in AWS — covering JIT access, SCPs, IAM least privilege, break-glass, and common pitfalls to avoid."
+tags: ["aws", "iam", "privileged-access-management", "cloud-security", "identity"]
 slug: "privileged-access-management-in-aws"
 author: "Steve Harrison & AI - Principal Security Architect"
-word_count: 2417
+word_count: 2318
 draft: false
 ---
 
 # Privileged Access Management in AWS: a practitioner's guide
 
-If there is one area of AWS security where I see mature organisations still making elementary mistakes, it is privileged access management. The threat model has shifted, but the blast radius of a misconfigured privileged role remains as catastrophic as ever. For UK organisations operating under FCA supervision, GDPR obligations, or public sector mandates, getting PAM wrong is not just a security failure. It is a compliance event.
-
-In a typical enterprise AWS deployment you have thousands of privileged identities: IAM users, service accounts, Lambda execution roles, cross-account assume roles, Kubernetes service accounts, and CI/CD pipeline credentials scattered across multiple accounts. The attack surface has grown by an order of magnitude and most organisations' PAM strategies have not kept pace.
-
-This guide focuses on what you actually need to implement, not the theory.
-
-<!-- INTERNAL_LINK: AWS IAM fundamentals | aws-iam-fundamentals -->
-
----
-
-## Why traditional PAM thinking fails in AWS
-
-On-premises PAM was designed around a small, well-defined set of privileged humans: DBAs, domain admins, network engineers. In a typical enterprise cloud deployment, machine identities (service accounts, IAM roles, API keys) outnumber human identities by 10:1 or more. A Kubernetes cluster alone can generate hundreds of service account identities. Traditional PAM tools were not built for that scale.
-
-The second structural problem is Infrastructure as Code. When infrastructure is defined in Terraform or CloudFormation, IAM policies are created by developers in pull requests, not by security teams in a PAM console. Governance has to shift left into the development pipeline, which most PAM vendors still do not handle well.
-
-The NCSC's zero trust architecture guidance reinforces this directly. The Home Office Engineering Guidance mandates access policies based on least privilege and the assumption that all requests are potentially hostile. AWS IAM has grown more granular and more powerful over time, but also considerably more complex. Managing least-privilege access across ephemeral workloads, cross-account roles, and dynamic developer environments requires more than the built-in tooling offers by default.
-
----
-
-## The four pillars of PAM in AWS
-
-### 1. Eliminate standing privilege and federate everything
-
-The single most impactful change you can make is eliminating long-lived IAM user credentials for humans entirely.
-
-AWS's own guidance is unambiguous on this: do not create IAM user access keys for human users. Use AWS IAM Identity Center (formerly SSO) with your corporate IdP (Okta, Azure AD) for federated access. Every human should authenticate through SSO and assume a role. Static credentials are not an acceptable alternative.
-
-Treat static AWS IAM credentials as toxic and prohibit them by default. The NCSC recommends phishing-resistant MFA (FIDO2 security keys or passkeys) for administrative access. If you are running FIDO2 hardware tokens for privileged users, that satisfies both AWS security guidance and NCSC Cloud Security Principle 9 in one go.
+Credential compromise remains the dominant initial access vector in cloud breaches, and the reason most incidents spiral is standing privilege. Engineers and service accounts with `AdministratorAccess` attached permanently, just waiting for an attacker to find them. For UK financial services firms navigating FCA expectations, government departments aligned to the NCSC's 14 Cloud Security Principles, or any enterprise with GDPR obligations, getting privileged access management right in AWS is no longer negotiable. The good news is that AWS now provides a mature toolchain: IAM Identity Center, Service Control Policies (SCPs), IAM Access Analyzer, and the open-source TEAM solution. You don't need to build everything from scratch. You do need to use these tools properly.
 
 <!-- INTERNAL_LINK: AWS IAM Identity Center setup guide | aws-iam-identity-center-setup -->
 
-### 2. Just-in-time access: no more always-on admin
+---
 
-Standing privilege is the problem. Persistent access to production environments gives attackers a ready-made lateral movement path if any credential is compromised. Preventing direct human interaction with systems through automation is the primary way to address this. Where automation is not yet in place, time-bound elevated access is the next best option.
+## Why standing privilege is the real problem
 
-AWS publishes an open-source solution for exactly this: Temporary Elevated Access Management (TEAM). It integrates with AWS IAM Identity Center and lets users request access to an AWS account only when needed and only for a defined period. Approvers review requests before access is granted, and once the time window expires, elevated access is removed automatically.
+Before getting into tooling, it is worth being precise about the threat model. A compromised principal with perpetual access to everything it will ever need is categorically more damaging than a compromised principal with limited access that must request elevation when required.
 
-For organisations already in the Microsoft ecosystem, combining AWS IAM Identity Center with Entra PIM works well. You map Entra security groups to IAM Identity Center permission sets, and Entra PIM handles the approval workflow and time-bounding. Access is provisioned only for the duration required to complete a task.
+In practice, most AWS estates suffer from exactly this. IAM is extremely flexible, and that is precisely the problem. Roles get created in a rush, permissions get copied from other roles, and nobody circles back to audit them. Over time, permissions accumulate and your exposure grows quietly in the background.
 
-A practical JIT workflow in TEAM produces audit records that satisfy FCA SYSC requirements for access logging, which is a useful collateral benefit.
+The NCSC is unambiguous on this. Their guidance on privileged access workstations notes that when designed and implemented correctly, PAWs are an indispensable tool for defending against real-world threats. More directly: a dedicated PAW is one of the most effective controls for protecting administrators from credential theft and malware infection, and the NCSC recommends always using one for high-risk access to cloud services handling sensitive data.
 
-### 3. Permissions boundaries: defence against privilege escalation
-
-Without permissions boundaries, the most common AWS privilege escalation pattern looks like this. A developer has `iam:CreateRole` and `iam:AttachRolePolicy` permissions for self-service role creation. They create a new role, attach the AWS-managed `AdministratorAccess` policy, assume the new role, and are now an administrator. This is exactly the pattern that several real-world AWS breaches have followed.
-
-A permissions boundary is an advanced policy that defines the maximum permissions a role or user can hold, even if their assigned IAM policy is broader. It acts as a ceiling that cannot be exceeded regardless of what identity policies are attached.
-
-Because permissions boundaries are independently controlled, you can use them to enforce conditions that delegates cannot override. Grant developers permission to use IAM, but add a condition requiring that any role they create or modify must have a specific permissions boundary attached. If the boundary is missing, IAM will block the change.
-
-### 4. Service control policies: organisation-wide guardrails
-
-SCPs operate at the AWS Organizations level. An SCP restricts permissions for IAM users and roles in member accounts, including the member account's root user. A principal has only the permissions allowed by every SCP in the hierarchy above it. If a permission is blocked at any level, the principal cannot use it, even if an administrator has attached `AdministratorAccess` with `*/*` permissions directly to the user or role.
-
-Privilege escalation through stealthy permissions is a real and well-documented attack pattern. SCPs let you restrict administrative IAM actions across all workload accounts, permitting them only from specific approved roles such as a delegated IAM admin role. That constraint applies regardless of what identity policies developers or workload automation attach locally.
+For cloud-native AWS estates, a PAW is typically enforced via IAM condition keys that restrict console access to specific source IP ranges or VPC endpoints, which translates the physical PAW concept into a policy control you can audit and version-control.
 
 ---
 
-## Code: an SCP to prevent privilege escalation in workload OUs
+## The foundation: principle of least privilege
 
-The following SCP should be attached to your workload Organisational Units. It denies the most commonly abused IAM write actions and prevents any principal from disabling CloudTrail. Adjust the `aws:PrincipalARN` condition to your actual break-glass and IAM-admin role ARNs before deploying.
+The AWS guidance here is straightforward: grant only the permissions required to perform a task, defined as the actions that can be taken on specific resources under specific conditions.
+
+The honest challenge is that "least privilege" is aspirational at the start of a project. You will likely start with broader permissions while you work out what a role actually needs. That is acceptable, provided you treat it as a temporary state and revisit it as the workload matures.
+
+### Using IAM Access Analyzer to right-size policies
+
+The most practical tool for tightening real-world permissions is IAM Access Analyzer's policy generation feature. It reviews your CloudTrail logs and generates a policy template based on what the entity actually did during a specified date range, up to 90 days back.
+
+I find this genuinely useful in production. The workflow is:
+
+1. Enable an organisation-level CloudTrail trail (multi-region, log file validation on)
+2. Let a role operate for 30 to 90 days under broad permissions
+3. Generate a policy via the IAM console or CLI
+4. Review, trim, and attach
+
+```bash
+# Start policy generation from CloudTrail activity
+aws accessanalyzer start-policy-generation \
+  --policy-generation-details '{
+    "principalArn": "arn:aws:iam::123456789012:role/ops-deploy-role"
+  }' \
+  --cloud-trail-details '{
+    "trails": [
+      {
+        "cloudTrailArn": "arn:aws:cloudtrail:eu-west-2:123456789012:trail/org-trail",
+        "regions": ["eu-west-2", "eu-west-1"],
+        "allRegions": false
+      }
+    ],
+    "accessRole": "arn:aws:iam::123456789012:role/access-analyzer-service-role",
+    "startTime": "2025-03-01T00:00:00Z",
+    "endTime": "2025-06-01T00:00:00Z"
+  }'
+
+# Poll for completion and retrieve the generated policy
+aws accessanalyzer get-generated-policy \
+  --job-id <job-id-from-above>
+```
+
+One important caveat: if a role only runs certain tasks quarterly, a 30-day analysis window will give you an incomplete policy. You will end up breaking the quarterly batch job the first time it runs after you tighten permissions. Use a window that covers your full operational cycle, apply the generated policy in staging first, and monitor CloudTrail for `AccessDenied` events before promoting to production.
+
+<!-- INTERNAL_LINK: AWS CloudTrail logging best practices | aws-cloudtrail-logging-best-practices -->
+
+---
+
+## SCPs as organisational guardrails
+
+IAM policies control what a principal can do within an account. SCPs set the outer boundary: they define what IAM users and roles in your organisation are permitted to do at all, including the root user of each member account. That last point matters more than most teams realise.
+
+For privileged access management in AWS, two SCP patterns matter most.
+
+The first is denying root usage across member accounts:
 
 ```json
 {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "DenyPrivilegeEscalationActions",
+      "Sid": "DenyRootUserActions",
       "Effect": "Deny",
-      "Action": [
-        "iam:CreateUser",
-        "iam:AttachUserPolicy",
-        "iam:PutUserPolicy",
-        "iam:CreateAccessKey",
-        "iam:UpdateAssumeRolePolicy",
-        "iam:CreatePolicyVersion",
-        "iam:SetDefaultPolicyVersion"
-      ],
+      "Action": "*",
       "Resource": "*",
       "Condition": {
-        "ArnNotLike": {
-          "aws:PrincipalARN": [
-            "arn:aws:iam::*:role/IAMAdminRole",
-            "arn:aws:iam::*:role/BreakGlassRole"
-          ]
-        }
-      }
-    },
-    {
-      "Sid": "ProtectCloudTrail",
-      "Effect": "Deny",
-      "Action": [
-        "cloudtrail:StopLogging",
-        "cloudtrail:DeleteTrail",
-        "cloudtrail:UpdateTrail"
-      ],
-      "Resource": "*",
-      "Condition": {
-        "ArnNotLike": {
-          "aws:PrincipalARN": "arn:aws:iam::*:role/SecurityAdminRole"
+        "StringLike": {
+          "aws:PrincipalArn": "arn:aws:iam::*:root"
         }
       }
     }
@@ -118,74 +103,90 @@ The following SCP should be attached to your workload Organisational Units. It d
 }
 ```
 
-> Do not attach SCPs without testing the impact on accounts first. Test in a separate OU that mirrors your production environment, then deploy to progressively broader OUs once you are confident the policy behaves as expected.
+Attach this to every OU except the management account. The root user bypasses all IAM policies and has unrestricted access to all resources, billing, and account closure. This SCP prevents accidental or malicious use of root credentials and forces all activity through IAM principals with proper audit trails.
 
-<!-- INTERNAL_LINK: AWS Organizations and SCP design | aws-organizations-scp-design -->
+The second pattern is protecting your central security role from modification. Your central security team likely has a common administrative role deployed across all member accounts for audit and remediation work. An SCP can prevent any IAM entity in those accounts from modifying that role or its attached permissions, ensuring it remains available when you need it.
 
----
+One important gotcha: SCPs do not affect users or roles in the management account. They apply only to member accounts. Your management account needs its own tight IAM controls because the SCP safety net simply does not exist there.
 
-## Detecting and right-sizing excessive privilege
-
-Privilege creep is inevitable in a fast-moving engineering organisation. AWS managed policies are over-scoped for most use cases, but teams ship on Friday and the planned cleanup never happens. Permissions accumulate during incidents, debugging sessions, and one-off migrations. Few organisations have working processes to remove unused permissions, and IAM Access Analyzer findings sit unactioned for months. I see this on almost every security review I run.
-
-IAM Access Analyzer addresses this directly. Its policy generation feature reads CloudTrail logs and produces a scoped policy matching only the actions and resources actually invoked by a role. It is genuinely useful and widely underutilised. Use it to generate a baseline policy for any role, then use IAM Access Analyzer policy validation in your CI/CD pipeline to catch over-permissive policies before they reach production.
-
-For the root user, which should essentially never be used in day-to-day operations, the person who controls the root password of an AWS account should not also control its MFA token. Those two factors should be held by different people or teams, stored in a trusted PAM solution.
-
-<!-- INTERNAL_LINK: AWS CloudTrail and GuardDuty for identity threat detection | aws-cloudtrail-guardduty-identity-threats -->
+<!-- INTERNAL_LINK: AWS Organizations multi-account security architecture | aws-organizations-multi-account-security -->
 
 ---
 
-## Common pitfalls in AWS PAM
+## Just-in-time access with AWS TEAM
 
-These are the issues I encounter repeatedly on security reviews across financial services and government clients.
+The gold standard for privileged access management in AWS is eliminating standing privilege entirely in favour of just-in-time (JIT) access. The principle is that a user requests access for a specified time period, the request is validated, time-bound access is granted, all activity during that window is monitored, and access can be revoked if conditions change.
 
-### Pitfall 1: confusing SCPs with permission grants
+AWS's open-source Temporary Elevated Access Management (TEAM) solution handles this natively within your AWS estate. It integrates with IAM Identity Center and manages time-bound elevated access across a multi-account environment at scale.
 
-An SCP does not grant permissions. It only limits what can be granted. I regularly see teams deploy a restrictive SCP and then wonder why their roles cannot do anything. You still need IAM identity policies to explicitly permit actions. The SCP caps the ceiling; it does not open any doors.
+The workflow is straightforward. A user requests elevated access, an approver reviews it, and if approved, TEAM activates access with the scope and duration specified. The requester then uses the IAM Identity Center access portal to reach the AWS console or retrieve temporary credentials. Access ends when the duration elapses or is explicitly revoked in the TEAM application.
 
-### Pitfall 2: neglecting machine identities
+TEAM defines four personas that map cleanly to operational reality:
 
-Machine identities outnumber human identities by roughly 82 to 1 according to CyberArk's 2025 Identity Security Landscape report. Organisations that implement JIT for humans but leave Lambda execution roles, ECS task roles, and CI/CD pipeline identities with permanently attached `AdministratorAccess` have addressed perhaps 5% of their PAM problem. Scope your PAM programme to include all identities from the outset.
+- Requester: raises a time-bound access request with justification
+- Approver: reviews and approves or rejects requests, but cannot approve their own
+- Auditor: can view the full history of TEAM sessions, approval decisions, and CloudTrail-backed activity logs for each session
+- Admin: manages eligibility policies and global settings
 
-### Pitfall 3: no break-glass procedure
-
-JIT access workflows are necessary, but they must not become a single point of failure. You need a documented break-glass procedure covering what happens when normal authentication methods are unavailable. Break-glass accounts should have MFA enforced, and every use should trigger an alert to your security team. If nobody is notified when break-glass access is used, it is not a security control.
-
-### Pitfall 4: testing SCPs against the management account
-
-SCPs affect only member accounts. They have no effect on users or roles in the management account. If you test a deny SCP by logging in as a management account principal and find it has no effect, that is expected behaviour, not a bug. Always test SCPs in a dedicated staging OU before applying them to production OUs.
-
-### Pitfall 5: using AWS managed policies indefinitely
-
-AWS managed policies are designed to be usable by all AWS customers, which means they are over-permissive for most specific use cases. Shipping `SecurityAudit` or `PowerUserAccess` as a permanent assignment to a developer is not a PAM strategy. It is a problem deferred until something goes wrong. Define customer managed policies that are scoped to your actual use cases.
-
-### Pitfall 6: no continuous review process
-
-An annual IAM review is a checkbox exercise. Run IAM Access Analyzer continuously to detect external and unused access. Monitor for anomalous IAM API calls via CloudTrail and Amazon GuardDuty. Use AWS Config rules to flag non-compliant IAM configurations automatically. Feed findings into a centralised SIEM or your SOC's alerting pipeline. The goal is to catch privilege creep within days, not discover it twelve months later during an audit.
+All actions performed during an elevated access session are logged as auditable events via CloudTrail. TEAM itself is serverless (Lambda, DynamoDB, Amplify), so running costs are minimal. For organisations already using Microsoft Entra ID, you can map Entra security groups to IAM Identity Center permission sets and integrate with Entra PIM, automating provisioning and deprovisioning based on defined policies and approval workflows.
 
 ---
 
-## Tooling: native vs. third-party
+## Break-glass access: plan for the failure mode
 
-AWS-native tooling (IAM Identity Center, IAM Access Analyzer, TEAM, CloudTrail, GuardDuty) covers the majority of PAM requirements for organisations running AWS-only or AWS-primary environments. The native stack costs nothing at the IAM layer and integrates directly with AWS APIs without the latency or complexity of a third-party agent.
+Every PAM implementation needs a tested break-glass procedure. Root account credentials should be stored securely and only accessed through a well-documented, tightly controlled process.
 
-Add a third-party solution such as CyberArk when you have hybrid infrastructure spanning on-premise and cloud, more than 500 privileged identities, compliance requirements for session recording, or a need for centralised reporting across multiple cloud providers. For FCA-regulated firms that must demonstrate session-level audit trails, third-party PAM tooling often makes the compliance case more directly than assembling equivalent evidence from CloudTrail alone.
+In practice this means:
 
-<!-- INTERNAL_LINK: Multi-account AWS security architecture | aws-multi-account-security-architecture -->
+- Root credentials stored in an offline vault (physical or HSM-backed), not in your day-to-day password manager
+- MFA hardware token stored separately from the password, ideally requiring two-person access
+- A documented runbook tested at least annually
+- A CloudWatch alarm on any root API activity, with PagerDuty or equivalent escalation
+
+For UK public sector and regulated financial services clients: your NCSC CAF assessment and FCA operational resilience framework both require evidence that emergency access procedures exist, are documented, and are tested. "We have a note in Confluence" does not constitute evidence.
+
+---
+
+## Auditing and continuous monitoring
+
+Comprehensive tracking of privileged user activity is what makes detection and response viable when something goes wrong. In AWS, this requires three controls working together.
+
+CloudTrail at organisation scope covers all management events, with S3 log validation enabled and CloudTrail Lake available for correlating TEAM session activity. GuardDuty can detect anomalous usage of powerful IAM credentials, which is worth enabling even if you are already doing everything else right. IAM Access Analyzer continuously surfaces unintended external access findings and flags unused access so you can act on it.
+
+IAM provides last-accessed information to help you identify users, roles, permissions, policies, and credentials that are no longer needed. Use this to build a quarterly access review process: pull last-accessed data, remove roles not used in 90 days, and feed the output to your security team. This is a reasonable control to evidence to FCA supervisors and auditors under GDPR Article 32.
+
+<!-- INTERNAL_LINK: AWS GuardDuty threat detection configuration | aws-guardduty-configuration -->
+
+---
+
+## Common pitfalls
+
+After 15 years doing this across UK financial services and government, these are the mistakes I see repeatedly.
+
+Assuming SCPs protect the management account. They do not. SCPs apply only to member accounts. Management account IAM must be locked down separately, and ideally no workloads run there at all.
+
+Using `AdministratorAccess` for automation roles. CI/CD pipelines do not need it. A pipeline allowed `iam:*` creates unnecessary attack surface. Generate a scoped policy from CloudTrail activity as described above and attach that instead.
+
+Treating TEAM session duration as the same as session token duration. Sessions invoked just before elevated access ends may remain valid beyond the end of that access window. If this concerns you, minimise the session duration configured in your permission sets, for example by setting it to one hour.
+
+Not testing break-glass procedures. A break-glass procedure that has never been tested is not a control, it is a hypothesis. Run an annual tabletop exercise and attempt the actual login with a witnessing security officer present.
+
+Generating policies from too short an analysis window. A 30-day window that misses a quarterly backup job will produce a policy that breaks it the first time it runs. Make sure your analysis window covers the full operational cycle for that role.
+
+Conflating IAM policies with SCPs when debugging access issues. When a user in a member account requests access to a resource, AWS evaluates both SCPs and IAM policies together. For an action to succeed, both must allow it. Teams routinely debug access problems by looking only at IAM and miss an SCP denial entirely.
 
 ---
 
 ## Key takeaways
 
-- Federate all human access through AWS IAM Identity Center and your corporate IdP. Long-lived IAM access keys introduce credential exposure risk that federated access eliminates entirely.
+Eliminate standing privilege. Every human operator should request time-bound access via TEAM or an equivalent JIT solution. Persistent `AdministratorAccess` roles for humans are a liability.
 
-- Deploy JIT access for elevated roles using AWS's open-source TEAM solution or Entra PIM. Temporary elevated access reduces the window of exposure from indefinite to minutes or hours.
+Use SCPs as your outer guardrail. Deny root actions across all member OUs, protect your central security roles from modification, and restrict to approved regions. SCPs set the ceiling that IAM policies cannot exceed.
 
-- Attach permissions boundaries to any role that has `iam:` permissions. Permissions boundaries are the IAM feature most teams should be using but are not. They close the most common privilege escalation path in AWS and cost nothing to implement.
+Use IAM Access Analyzer to operationalise least privilege. Generate policies from CloudTrail activity across a 60 to 90 day window, test in staging, promote to production, and run unused access reviews quarterly.
 
-- Use SCPs as organisation-wide guardrails, not as access grants. Layer them at the OU level, test in a staging OU first, and remember they have no effect on the management account.
+Build and test your break-glass procedure. Root credentials must be offline, MFA-protected, and dual-controlled. Test annually and evidence that testing for FCA and NCSC CAF assessments.
 
-- Extend PAM to machine identities. Lambda roles, ECS task roles, and CI/CD pipeline credentials are part of your privileged access surface. Treat them with the same rigour as human admin accounts.
+Implement phishing-resistant MFA for all privileged access. The NCSC recommends FIDO2 security keys or passkeys for administrative access. TOTP codes are not sufficient for your highest-privilege operators.
 
-- Make review continuous. IAM Access Analyzer can generate scoped policies from CloudTrail activity and flag unused access on an ongoing basis. Automate the findings pipeline into your SIEM rather than running point-in-time reviews.
+Monitor continuously. CloudTrail at organisation scope, GuardDuty for anomalous IAM usage, and Access Analyzer findings reviewed on a defined cadence. Alerting on root login should be in place from day one.
