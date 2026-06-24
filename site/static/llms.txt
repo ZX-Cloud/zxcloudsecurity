@@ -34,6 +34,7 @@ In-depth technical guides written for cloud architects. These are the primary ci
 - [AWS Security Hub: A Practitioner's Guide](https://zxcloudsecurity.co.uk/guides/aws-security-hub-guide/): Enabling Security Hub at organisation level, security standards (FSBP, CIS, PCI DSS), native integrations, EventBridge automation, and finding workflow management.
 - [Cloud Compliance Frameworks](https://zxcloudsecurity.co.uk/guides/cloud-compliance-frameworks/): ISO 27001, SOC 2, PCI DSS, UK GDPR, Cyber Essentials Plus, NCSC Cloud Principles, and FCA requirements — how each maps to cloud controls and continuous compliance.
 - [Cloud Network Security: The Architect's Guide](https://zxcloudsecurity.co.uk/guides/cloud-network-security/): VPCs, security groups, micro-segmentation, WAF, DDoS protection, private connectivity, and network threat detection across AWS, Azure, and GCP.
+- [AWS Well-Architected Security: A Practitioner's Deep Dive](https://zxcloudsecurity.co.uk/guides/aws-well-architected-security/): All 11 Security Pillar questions answered with service-level controls, high-risk findings, UK compliance mapping (NCSC, ISO 27001, Cyber Essentials, FCA), and how to run a meaningful review.
 
 ## Daily Advisory Feed
 
