@@ -27,6 +27,7 @@ In-depth technical guides written for cloud architects. These are the primary ci
 - [What is CIEM (Cloud Infrastructure Entitlement Management)?](https://zxcloudsecurity.co.uk/guides/what-is-ciem-cloud-infrastructure-entitlement-management/): Discovering permission sprawl, governing identities, and enforcing least privilege at cloud scale.
 - [What is DSPM (Data Security Posture Management)?](https://zxcloudsecurity.co.uk/guides/what-is-dspm-data-security-posture-management/): Discovering, classifying, and monitoring sensitive data across multi-cloud storage and data pipelines.
 - [What is the Shared Responsibility Model?](https://zxcloudsecurity.co.uk/guides/shared-responsibility-model-cloud-security/): The provider/customer security boundary explained for AWS, Azure, and GCP with common misconceptions.
+- [Cloud Threat Detection: A Practitioner's Guide](https://zxcloudsecurity.co.uk/guides/cloud-threat-detection/): Signal sources, threat categories, native vs third-party tooling, and detection architecture for AWS, Azure, and GCP environments.
 - [Recent Cloud Security CVEs](https://zxcloudsecurity.co.uk/guides/recent-cloud-security-cves/): Practitioner breakdown of significant recent CVEs and how to respond in cloud environments.
 
 ## Daily Advisory Feed
