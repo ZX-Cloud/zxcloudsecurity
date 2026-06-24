@@ -1,0 +1,44 @@
+# ZX Cloud Security
+
+> Daily threat intelligence feed for cloud security architects and engineers. Tracks CVEs, advisories, and threats across AWS, Azure, and GCP — each enriched with a practical Security Architect's Take on what to do about it. Publishes at 06:00 UTC daily.
+
+## About
+
+- [About ZX Cloud Security](https://zxcloudsecurity.co.uk/about/): Background on the site, author credentials (Steve Harrison, Principal Security Architect), methodology, and source attribution.
+
+## Practitioner Guides
+
+In-depth technical guides written for cloud architects. These are the primary citable resources on this site.
+
+- [AWS IAM Security Best Practices](https://zxcloudsecurity.co.uk/guides/aws-iam-security-best-practices/): Least privilege enforcement, long-lived credential elimination, SCPs, permission boundaries, and preventive IAM guardrails for AWS.
+- [AWS IAM Identity Centre: A Practitioner's Guide](https://zxcloudsecurity.co.uk/guides/aws-iam-identity-centre-guide/): Centralised workforce identity, permission sets, SCIM federation, and common pitfalls for AWS IAM Identity Centre.
+- [AWS KMS Key Management Best Practices](https://zxcloudsecurity.co.uk/guides/aws-kms-key-management-best-practices/): KMS key lifecycle, rotation strategy, policy examples, audit controls, and production pitfalls.
+- [AWS CloudTrail Configuration Best Practices](https://zxcloudsecurity.co.uk/guides/aws-cloudtrail-configuration-best-practices/): Organisation trails, KMS encryption, SCPs, log integrity validation, and incident response with CloudTrail.
+- [Privileged Access Management in AWS](https://zxcloudsecurity.co.uk/guides/privileged-access-management-in-aws/): JIT access, SCPs, IAM least privilege, break-glass controls, and PAM pitfalls in AWS.
+- [AWS Compliance and Governance](https://zxcloudsecurity.co.uk/guides/aws-compliance-and-governance/): Control Tower, SCPs, AWS Config, NCSC alignment, and guardrails for regulated UK environments.
+- [Cloud Security Vulnerability Management](https://zxcloudsecurity.co.uk/guides/cloud-security-vulnerability-management/): Scanning, prioritisation, EPSS scoring, patching workflows, and common pitfalls in AWS vulnerability programmes.
+- [AWS vs Azure vs GCP: Cloud Security Service Comparison](https://zxcloudsecurity.co.uk/guides/aws-azure-gcp-security-service-comparison/): Comprehensive cross-cloud mapping of security services by domain with technical detail and equivalence caveats.
+- [Kubernetes Security Best Practices](https://zxcloudsecurity.co.uk/guides/kubernetes-security-best-practices/): RBAC hardening, network policies, pod security standards, secrets management, and image scanning for EKS, GKE, AKS.
+- [Securing AI Agents with Cloud Infrastructure Access](https://zxcloudsecurity.co.uk/guides/securing-ai-agents-cloud-infrastructure/): Threat model for agentic AI, prompt injection defences, least-privilege scoping, and runtime monitoring.
+- [Social Engineering Attacks Against AI Agents](https://zxcloudsecurity.co.uk/guides/social-engineering-ai-agents/): How attackers use social engineering techniques against AI agents and what architects must do to defend them.
+- [A Beginner's Guide to AI and LLM Security](https://zxcloudsecurity.co.uk/guides/beginners-guide-ai-llm-security/): How LLMs work, how they are built, and the security risks architects need to understand when deploying or integrating AI.
+- [What is Zero Trust Architecture?](https://zxcloudsecurity.co.uk/guides/what-is-zero-trust-architecture/): The Zero Trust model explained for cloud practitioners — identity as the security perimeter, MFA, conditional access, and cloud implementation.
+- [What is CSPM (Cloud Security Posture Management)?](https://zxcloudsecurity.co.uk/guides/what-is-cspm-cloud-security-posture-management/): Continuous misconfiguration detection, compliance drift monitoring, and automated remediation across AWS, Azure, and GCP.
+- [What is CIEM (Cloud Infrastructure Entitlement Management)?](https://zxcloudsecurity.co.uk/guides/what-is-ciem-cloud-infrastructure-entitlement-management/): Discovering permission sprawl, governing identities, and enforcing least privilege at cloud scale.
+- [What is DSPM (Data Security Posture Management)?](https://zxcloudsecurity.co.uk/guides/what-is-dspm-data-security-posture-management/): Discovering, classifying, and monitoring sensitive data across multi-cloud storage and data pipelines.
+- [What is the Shared Responsibility Model?](https://zxcloudsecurity.co.uk/guides/shared-responsibility-model-cloud-security/): The provider/customer security boundary explained for AWS, Azure, and GCP with common misconceptions.
+- [Recent Cloud Security CVEs](https://zxcloudsecurity.co.uk/guides/recent-cloud-security-cves/): Practitioner breakdown of significant recent CVEs and how to respond in cloud environments.
+
+## Daily Advisory Feed
+
+- [All Advisories](https://zxcloudsecurity.co.uk/): Homepage showing the latest daily advisories across all platforms.
+- [AWS Advisories](https://zxcloudsecurity.co.uk/categories/aws/): CVEs and advisories specific to AWS services.
+- [Azure Advisories](https://zxcloudsecurity.co.uk/categories/azure/): CVEs and advisories specific to Microsoft Azure.
+- [GCP Advisories](https://zxcloudsecurity.co.uk/categories/gcp/): CVEs and advisories specific to Google Cloud Platform.
+- [General Advisories](https://zxcloudsecurity.co.uk/categories/general/): Cross-platform CVEs and threat intelligence relevant to cloud architects.
+- [Advisory Archive](https://zxcloudsecurity.co.uk/archive/): Chronological archive of all published advisories.
+
+## Contact and Legal
+
+- [Contact](https://zxcloudsecurity.co.uk/contact/): Editorial enquiries, corrections, and subscription support.
+- [Privacy Policy](https://zxcloudsecurity.co.uk/privacy/): UK GDPR-compliant data handling policy.

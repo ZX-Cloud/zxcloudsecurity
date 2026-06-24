@@ -105,6 +105,17 @@ buildFuture = false
   url = "/contact/"
   weight = 80
 
+[related]
+  includeNewer = false
+  threshold = 60
+  toLower = true
+  [[related.indices]]
+    name = "tags"
+    weight = 100
+  [[related.indices]]
+    name = "keywords"
+    weight = 100
+
 [markup]
   [markup.highlight]
     noClasses = false

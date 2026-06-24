@@ -1,0 +1,16 @@
+{{/* Related guide links for CVE posts, driven by post category */}}
+{{- $cat := "" -}}
+{{- with .Params.categories -}}{{- $cat = index . 0 | lower -}}{{- end -}}
+{{- $guides := index .Site.Data.category_guides $cat -}}
+{{- with $guides -}}
+<div style="margin-top:2.5rem;padding:1.25rem 1.5rem;border:.5px solid var(--border);border-radius:10px;background:var(--code-bg)">
+  <p style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--secondary);margin:0 0 .75rem">Related Guides</p>
+  <ul style="margin:0;padding:0;list-style:none">
+    {{- range . -}}
+    <li style="margin-bottom:.5rem;font-size:14px">
+      <a href="{{ .url }}" style="color:var(--primary);text-decoration:underline">{{ .title }}</a>
+    </li>
+    {{- end -}}
+  </ul>
+</div>
+{{- end -}}

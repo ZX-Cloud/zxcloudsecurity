@@ -2,7 +2,7 @@
 title = "Securing AI Agents with Access to Cloud Infrastructure"
 date = "2026-06-08T09:27:06Z"
 slug = "securing-ai-agents-cloud-infrastructure"
-description = "Securing AI Agents with Access to Cloud Infrastructure — a practical guide for cloud security architects."
+description = "How to secure AI agents with cloud infrastructure access: prompt injection defences, least-privilege scoping for agentic principals, runtime monitoring, and the threat model shift from human-in-loop to autonomous execution."
 keywords = ["AI agents", "agentic AI", "cloud security", "model security", "least privilege"]
 type = "guides"
 draft = false

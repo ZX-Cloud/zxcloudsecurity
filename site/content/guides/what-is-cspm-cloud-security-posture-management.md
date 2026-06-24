@@ -2,7 +2,7 @@
 title = "What is CSPM (Cloud Security Posture Management)?"
 date = "2026-06-08T09:24:46Z"
 slug = "what-is-cspm-cloud-security-posture-management"
-description = "What is CSPM (Cloud Security Posture Management)? — a practical guide for cloud security architects."
+description = "What is CSPM? Cloud Security Posture Management explained — continuous misconfiguration detection, compliance drift monitoring, and automated remediation across AWS, Azure, and GCP environments."
 keywords = ["CSPM", "cloud security posture management", "misconfiguration", "compliance"]
 type = "guides"
 draft = false

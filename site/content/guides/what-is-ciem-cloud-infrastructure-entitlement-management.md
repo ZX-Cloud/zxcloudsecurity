@@ -2,7 +2,7 @@
 title = "What is CIEM (Cloud Infrastructure Entitlement Management)?"
 date = "2026-06-08T09:28:34Z"
 slug = "what-is-ciem-cloud-infrastructure-entitlement-management"
-description = "What is CIEM (Cloud Infrastructure Entitlement Management)? — a practical guide for cloud security architects."
+description = "What is CIEM? A practitioner guide to Cloud Infrastructure Entitlement Management — discovering permission sprawl, governing identities at cloud scale, and enforcing least privilege across AWS, Azure, and GCP."
 keywords = ["CIEM", "entitlements", "permissions", "least privilege", "identity"]
 type = "guides"
 draft = false

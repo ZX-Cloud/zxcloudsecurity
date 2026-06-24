@@ -2,7 +2,7 @@
 title = "Kubernetes Security Best Practices"
 date = "2026-06-08T09:29:27Z"
 slug = "kubernetes-security-best-practices"
-description = "Kubernetes Security Best Practices — a practical guide for cloud security architects."
+description = "Defence-in-depth Kubernetes security for EKS, GKE, and AKS: RBAC hardening, network policies, pod security standards, secrets management, and runtime image scanning aligned with CKS exam domains."
 keywords = ["Kubernetes", "K8s security", "container security", "RBAC", "CKS"]
 type = "guides"
 draft = false

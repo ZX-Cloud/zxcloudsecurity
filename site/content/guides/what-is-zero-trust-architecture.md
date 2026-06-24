@@ -2,7 +2,7 @@
 title = "What is Zero Trust Architecture?"
 date = "2026-06-08T09:25:28Z"
 slug = "what-is-zero-trust-architecture"
-description = "What is Zero Trust Architecture? — a practical guide for cloud security architects."
+description = "Zero Trust Architecture for cloud practitioners: why the perimeter model failed, identity as the new security boundary, MFA, conditional access policies, and practical implementation across AWS, Azure, and GCP."
 keywords = ["zero trust", "identity", "least privilege", "network security"]
 type = "guides"
 draft = false

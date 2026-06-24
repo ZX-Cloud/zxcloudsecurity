@@ -2,7 +2,7 @@
 title = "AWS IAM Security Best Practices"
 date = "2026-06-08T09:26:19Z"
 slug = "aws-iam-security-best-practices"
-description = "AWS IAM Security Best Practices — a practical guide for cloud security architects."
+description = "Practical AWS IAM security for architects: least privilege enforcement, long-lived credential elimination, SCPs, permission boundaries, and preventive guardrails that scale from startup to enterprise."
 keywords = ["AWS IAM", "least privilege", "roles", "policies", "MFA"]
 type = "guides"
 draft = false

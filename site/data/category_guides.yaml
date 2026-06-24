@@ -1,0 +1,31 @@
+aws:
+  - title: "AWS IAM Security Best Practices"
+    url: "/guides/aws-iam-security-best-practices/"
+  - title: "AWS KMS Key Management Best Practices"
+    url: "/guides/aws-kms-key-management-best-practices/"
+  - title: "Privileged Access Management in AWS"
+    url: "/guides/privileged-access-management-in-aws/"
+
+azure:
+  - title: "AWS vs Azure vs GCP: Cloud Security Service Comparison"
+    url: "/guides/aws-azure-gcp-security-service-comparison/"
+  - title: "What is CSPM?"
+    url: "/guides/what-is-cspm-cloud-security-posture-management/"
+  - title: "Zero Trust Architecture"
+    url: "/guides/what-is-zero-trust-architecture/"
+
+gcp:
+  - title: "AWS vs Azure vs GCP: Cloud Security Service Comparison"
+    url: "/guides/aws-azure-gcp-security-service-comparison/"
+  - title: "Kubernetes Security Best Practices"
+    url: "/guides/kubernetes-security-best-practices/"
+  - title: "What is CSPM?"
+    url: "/guides/what-is-cspm-cloud-security-posture-management/"
+
+general:
+  - title: "Cloud Security Vulnerability Management"
+    url: "/guides/cloud-security-vulnerability-management/"
+  - title: "Zero Trust Architecture"
+    url: "/guides/what-is-zero-trust-architecture/"
+  - title: "Shared Responsibility Model in Cloud Security"
+    url: "/guides/shared-responsibility-model-cloud-security/"

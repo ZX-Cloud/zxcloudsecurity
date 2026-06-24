@@ -2,7 +2,7 @@
 title = "What is the Shared Responsibility Model in Cloud Security?"
 date = "2026-06-08T09:24:00Z"
 slug = "shared-responsibility-model-cloud-security"
-description = "What is the Shared Responsibility Model in Cloud Security? — a practical guide for cloud security architects."
+description = "The shared responsibility model explained for AWS, Azure, and GCP — what the provider secures, what the customer owns, and the boundary misunderstandings that cause most cloud security incidents."
 keywords = ["shared responsibility model", "cloud security", "AWS", "Azure", "GCP"]
 type = "guides"
 draft = false

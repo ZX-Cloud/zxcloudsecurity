@@ -1,0 +1,3 @@
+{{- if and (eq .Section "posts") .IsPage -}}
+{{ partial "related-guides.html" . }}
+{{- end -}}
