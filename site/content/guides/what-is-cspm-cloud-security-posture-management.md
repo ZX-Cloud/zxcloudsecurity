@@ -11,6 +11,8 @@ author = "Steve Harrison, Principal Security Architect"
 
 Cloud Security Posture Management (CSPM) is a category of security tooling that continuously monitors cloud environments for misconfigurations, policy violations, and compliance drift. CSPM tools provide automated assessment and remediation of security risks across IaaS, PaaS, and SaaS environments. In an era where the shared responsibility model places configuration squarely in the customer's hands, CSPM has become foundational infrastructure for any serious cloud security programme.
 
+CSPM became a distinct security discipline as cloud adoption scaled beyond what manual configuration review could cover. A single AWS environment can involve hundreds of S3 buckets, security groups, IAM roles, RDS instances, and Lambda functions — each with multiple configuration decisions made by different engineers at different times. Gartner has consistently projected that through the mid-2020s, nearly all cloud security failures would be the customer's fault, not the provider's. The 2019 Capital One breach — 100 million records exposed via a misconfigured WAF and overpermissioned EC2 role — is the canonical example: AWS infrastructure performed exactly as designed; the customer's configuration did not.
+
 ---
 
 ## Why Misconfiguration Is the Primary Threat Vector

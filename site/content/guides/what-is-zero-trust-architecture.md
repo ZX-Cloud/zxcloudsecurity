@@ -11,6 +11,8 @@ author = "Steve Harrison, Principal Security Architect"
 
 Zero Trust is a security model built on the principle of "never trust, always verify" — every user, device, and connection must be authenticated and authorised before accessing any resource, regardless of whether the request originates inside or outside the corporate network. It replaces the outdated assumption that anything behind the firewall is inherently trustworthy. In cloud environments particularly, Zero Trust has become the foundational approach to modern network security.
 
+The model was formalised in NIST Special Publication 800-207 (2020), the authoritative reference recognised by UK NCSC, US CISA, and all three major cloud providers. It addresses a structural problem that perimeter security cannot solve: credential theft, phishing, insider threats, and supply chain compromises all bypass traditional network controls without triggering any perimeter alarm. Zero Trust's response is to eliminate the concept of implicit trust entirely — every session is authenticated, every resource access is authorised against policy, every action is logged, and access is continuously re-evaluated rather than granted once at login.
+
 ---
 
 ## Why the Traditional Perimeter Model Failed
@@ -105,11 +107,11 @@ Mature Zero Trust deployments use continuous validation — not just point-in-ti
 
 ## Key Takeaways
 
-- Zero Trust is a strategic security model, not a single product — "never trust, always verify" applies to every user, device, and workload.
-- Identity has replaced the network boundary as the primary security perimeter; rigorous IAM is non-negotiable.
-- Least privilege and assume-breach are the two principles that most directly reduce real-world risk.
-- Cloud adoption makes Zero Trust more urgent, not less — and cloud-native tooling makes many Zero Trust controls more achievable than ever.
-- Adoption is a journey: prioritise identity foundations, then device trust, then network micro-segmentation, then data-layer controls.
+- **Zero Trust** is a strategic security model, not a single product — "never trust, always verify" applies to every user, device, and workload, regardless of network location. NIST SP 800-207 is the authoritative implementation reference.
+- **Identity** has replaced the network boundary as the primary security perimeter. Rigorous IAM — MFA, least privilege, conditional access, short-lived credentials — is the operational foundation, not an add-on.
+- **Least privilege and assume-breach** are the two principles with the highest direct impact on real-world risk: least privilege limits blast radius; assume-breach drives segmentation, logging, and detection investment.
+- **Cloud adoption makes Zero Trust more achievable**, not less — AWS IAM Identity Centre, Microsoft Entra ID, and GCP Workforce Identity Federation provide the federation and conditional access capabilities that Zero Trust requires.
+- **Adoption is sequential:** identity foundations first (MFA, federation, access reviews), then device trust, then network micro-segmentation, then data-layer controls. Each phase delivers measurable risk reduction independently.
 
 
 ## Related Guides

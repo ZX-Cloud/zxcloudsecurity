@@ -1,18 +1,28 @@
 aws:
+  - title: "Cloud Identity and Access Management"
+    url: "/guides/cloud-identity-and-access-management/"
   - title: "AWS IAM Security Best Practices"
     url: "/guides/aws-iam-security-best-practices/"
+  - title: "AWS Well-Architected Security"
+    url: "/guides/aws-well-architected-security/"
   - title: "AWS KMS Key Management Best Practices"
     url: "/guides/aws-kms-key-management-best-practices/"
   - title: "Privileged Access Management in AWS"
     url: "/guides/privileged-access-management-in-aws/"
+  - title: "Cloud Incident Response"
+    url: "/guides/cloud-incident-response/"
 
 azure:
   - title: "AWS vs Azure vs GCP: Cloud Security Service Comparison"
     url: "/guides/aws-azure-gcp-security-service-comparison/"
+  - title: "Cloud Identity and Access Management"
+    url: "/guides/cloud-identity-and-access-management/"
   - title: "What is CSPM?"
     url: "/guides/what-is-cspm-cloud-security-posture-management/"
   - title: "Zero Trust Architecture"
     url: "/guides/what-is-zero-trust-architecture/"
+  - title: "Cloud Network Security"
+    url: "/guides/cloud-network-security/"
 
 gcp:
   - title: "AWS vs Azure vs GCP: Cloud Security Service Comparison"
@@ -21,10 +31,18 @@ gcp:
     url: "/guides/kubernetes-security-best-practices/"
   - title: "What is CSPM?"
     url: "/guides/what-is-cspm-cloud-security-posture-management/"
+  - title: "Cloud Network Security"
+    url: "/guides/cloud-network-security/"
+  - title: "Cloud Identity and Access Management"
+    url: "/guides/cloud-identity-and-access-management/"
 
 general:
+  - title: "Cloud Incident Response"
+    url: "/guides/cloud-incident-response/"
   - title: "Cloud Security Vulnerability Management"
     url: "/guides/cloud-security-vulnerability-management/"
+  - title: "DevSecOps and Shift-Left Security"
+    url: "/guides/devsecops-shift-left-security/"
   - title: "Zero Trust Architecture"
     url: "/guides/what-is-zero-trust-architecture/"
   - title: "Shared Responsibility Model in Cloud Security"

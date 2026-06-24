@@ -11,6 +11,8 @@ author = "Steve Harrison, Principal Security Architect"
 
 The shared responsibility model is a framework that defines the division of security obligations between a cloud provider and its customers. The provider secures the underlying infrastructure — physical hardware, network fabric, and hypervisor layers — whilst the customer remains responsible for everything they build and configure on top of it. Misunderstanding this boundary is one of the most common root causes of cloud security incidents.
 
+In practice, the boundary shifts with the service model. IaaS customers (EC2, Azure VMs, GCP Compute Engine) own the guest OS, runtime, application code, data, and all network configuration decisions above the hypervisor. SaaS customers (Microsoft 365, Google Workspace) own data governance, identity configuration, and compliance evidence — the provider manages virtually everything else. The most significant practical implication: cloud provider certifications — ISO 27001, SOC 2 Type II, PCI DSS — cover the provider's infrastructure layer only. Customer workloads require independent compliance evidence for the controls within the customer's responsibility boundary. AWS frames it as "security of the cloud versus security in the cloud"; Azure and GCP use equivalent language.
+
 ## How the Model Works Across AWS, Azure, and GCP
 
 All three major providers publish explicit statements of their shared responsibility model, but the precise language and boundaries differ enough to cause confusion when operating across multiple clouds.
@@ -86,11 +88,11 @@ AWS, Azure, and GCP hold certifications such as ISO 27001, SOC 2, and PCI-DSS fo
 
 ## Key Takeaways
 
-- The shared responsibility model divides security obligations between the cloud provider and the customer. The provider secures physical infrastructure and the foundational platform; the customer secures data, identity, configurations, and applications.
-- The customer's security burden is largest under IaaS and progressively smaller under PaaS and SaaS — but it never reaches zero.
-- AWS, Azure, and GCP follow the same core framework, with differences in scope and terminology that matter in multi-cloud environments.
-- The most frequent cloud security failures — exposed storage, misconfigured IAM, unpatched workloads — occur entirely within the customer's area of responsibility.
-- Compliance certifications held by providers do not transfer to customer workloads. You must independently evidence controls for the layers you own.
+- **Shared responsibility** divides cloud security obligations: the provider secures physical infrastructure and the foundational platform; the customer secures data, identity, network configuration, and application code.
+- **Service model determines scope:** IaaS customers own the most (OS through application); PaaS shifts OS and runtime management to the provider; SaaS leaves only data, identity, and compliance obligations for the customer — but customer responsibility never reaches zero.
+- **Cross-cloud consistency:** AWS, Azure, and GCP follow the same core framework with different terminology. AWS calls it "security of the cloud vs. security in the cloud"; the principle is identical across all three.
+- **Misconfiguration is the dominant failure pattern** — exposed S3 buckets, overpermissioned IAM roles, unpatched EC2 instances — all occur entirely within the customer's area of responsibility, not the provider's.
+- **Certifications don't transfer:** ISO 27001, SOC 2, and PCI DSS held by cloud providers cover their infrastructure layer only. Customer workloads require independent evidence for the controls the customer owns.
 
 
 ## Related Guides

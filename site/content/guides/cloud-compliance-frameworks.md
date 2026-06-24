@@ -13,6 +13,8 @@ Compliance in cloud environments is widely misunderstood and frequently mishandl
 
 This guide covers the compliance frameworks most relevant to UK cloud security architects, what each actually demands in a cloud context, how the shared responsibility model interacts with compliance obligations, and the tooling that makes continuous compliance operational rather than a quarterly project.
 
+The frameworks covered are ISO 27001:2022, SOC 2 Type II, PCI DSS v4.0, UK GDPR, Cyber Essentials Plus, NCSC Cloud Security Principles (14 principles), and FCA Operational Resilience rules (PS21/3). Each has a distinct scope, evidence model, and enforcement body — but all share a dependence on the shared responsibility model. Cloud provider certifications (AWS ISO 27001, Azure SOC 2, GCP PCI DSS) cover the provider's infrastructure layer; the customer must independently evidence controls within their responsibility boundary. AWS Security Hub, Microsoft Defender for Cloud, and GCP Security Command Center map their findings directly to framework controls — CIS Benchmarks, NIST CSF, PCI DSS, ISO 27001 — making automated, continuous compliance evidence collection operationally achievable.
+
 ---
 
 ## The Shared Responsibility Model and Compliance

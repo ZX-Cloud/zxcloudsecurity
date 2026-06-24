@@ -11,6 +11,8 @@ author = "Steve Harrison, Principal Security Architect"
 
 Cloud identity and access management (IAM) is the system of controls that determines who can access what in a cloud environment — governing authentication, authorisation, and privilege for every human user, workload, and service that interacts with cloud resources. It is not a supporting discipline within cloud security; it is the foundation on which everything else rests. There is no network boundary to cross, no physical server room to enter. The only thing standing between an attacker and your cloud resources is whether they can obtain and use valid credentials.
 
+AWS data indicates that more than 90% of granted IAM permissions go unused within any 90-day window — those unused permissions represent latent risk that an attacker can exploit the moment they obtain a single compromised credential. Credential exposure initiates the majority of significant cloud breaches: access keys committed to public repositories, hardcoded in application code, or extracted via SSRF attacks against instance metadata endpoints. The Rhino Security Labs research documents over 20 distinct privilege escalation paths within AWS IAM alone, each exploitable from a low-privilege starting position given certain permission combinations.
+
 This guide covers what cloud IAM actually is, why it differs from traditional access control, the principal threat patterns it must defend against, and the architectural controls that make a cloud IAM programme resilient rather than brittle.
 
 ---
