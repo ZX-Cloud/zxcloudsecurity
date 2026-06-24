@@ -58,6 +58,14 @@ CSPM tools offer remediation guidance ranging from human-readable descriptions o
 
 ## Native Tooling vs. Third-Party CSPM
 
+| | Native CSPM | Third-Party CSPM |
+|---|---|---|
+| **Examples** | AWS Security Hub, Microsoft Defender for Cloud, GCP Security Command Center | Wiz, Orca Security, Prisma Cloud, Lacework |
+| **Strengths** | Deep service integration, low cost, compliance framework coverage | Cross-cloud normalisation, attack path modelling, developer workflows |
+| **Coverage** | Single cloud only | AWS + Azure + GCP in one view |
+| **Best for** | Baseline coverage, compliance reporting | Multi-cloud enterprises, enriched risk context |
+| **Recommendation** | Enable regardless of other tooling | Add when operating across 2+ cloud providers |
+
 Every major cloud provider offers native posture management capabilities: AWS Security Hub with Config Rules, Microsoft Defender for Cloud, and Google Security Command Center. These are worth enabling regardless of what else you deploy — they're deeply integrated, reasonably priced, and often a licensing requirement for certain compliance frameworks.
 
 The case for third-party CSPM platforms rests primarily on multi-cloud normalisation and depth. If you operate across AWS and Azure — or AWS and GCP — you'll want a single pane of glass with consistent severity scoring, unified compliance reporting, and a single workflow for triage and remediation. Native tools don't provide this cross-cloud visibility. Third-party platforms also tend to offer richer contextual analysis, better integration with developer workflows, and more sophisticated attack path modelling.

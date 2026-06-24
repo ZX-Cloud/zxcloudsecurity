@@ -27,6 +27,17 @@ The core principle is consistent: the provider secures what you cannot physicall
 
 The service model in use dramatically changes where the responsibility line sits, and this is where many security programmes fall short.
 
+| Security Domain | IaaS (e.g. EC2) | PaaS (e.g. Lambda) | SaaS (e.g. M365) |
+|---|---|---|---|
+| Physical infrastructure | Provider | Provider | Provider |
+| Network fabric & hypervisor | Provider | Provider | Provider |
+| Guest OS & runtime | **Customer** | Provider | Provider |
+| Application code | **Customer** | **Customer** | Provider |
+| Data classification & governance | **Customer** | **Customer** | **Customer** |
+| Identity & access management | **Customer** | **Customer** | **Customer** |
+| Network configuration | **Customer** | Shared | Provider |
+| Encryption (customer-managed keys) | **Customer** | **Customer** | **Customer** |
+
 ### Infrastructure as a Service (IaaS)
 
 With IaaS — EC2 on AWS, Azure Virtual Machines, or GCP Compute Engine — the customer carries the heaviest security burden. The provider manages physical hardware and the hypervisor; you own the guest OS, middleware, runtime, application code, and data. Patch management, host-based intrusion detection, endpoint hardening, and network security group configuration all fall to you. An unpatched kernel vulnerability on an EC2 instance is entirely your problem.

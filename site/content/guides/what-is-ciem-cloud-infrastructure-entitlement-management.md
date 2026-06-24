@@ -31,6 +31,15 @@ CIEM fills this gap. It operates at a layer above native cloud IAM tools, ingest
 
 A mature CIEM solution typically provides the following capabilities:
 
+| Capability | What It Does | Why It Matters |
+|---|---|---|
+| **Entitlement discovery** | Continuous inventory of all identities and their permissions across every account | You cannot enforce least privilege on entitlements you haven't mapped |
+| **Effective permissions analysis** | Resolves what an identity can *actually* do — accounting for SCPs, boundaries, conditions | Policy attachment ≠ effective access; CIEM computes the real answer |
+| **Usage analytics** | Integrates with CloudTrail/Azure Monitor to surface unused permissions | AWS data: 90%+ of granted permissions go unused in any 90-day window |
+| **Remediation recommendations** | Generates right-sized least-privilege policies based on observed usage | Replaces guesswork with evidence-driven policy tightening |
+| **Cross-cloud visibility** | Normalises AWS, Azure, and GCP identity data into a single model | Multi-cloud environments otherwise require separate tooling per provider |
+| **Anomaly detection** | Flags unusual permission usage patterns against established baselines | Detects credential compromise via IAM behaviour before damage escalates |
+
 **Entitlement discovery and inventory**
 Continuous discovery of all identities — human users, service accounts, roles, groups, and machine identities — and the permissions associated with each, across every connected cloud account or subscription.
 

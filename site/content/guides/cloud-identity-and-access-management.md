@@ -9,7 +9,7 @@ draft = false
 author = "Steve Harrison, Principal Security Architect"
 +++
 
-Identity is the new perimeter. That phrase has been repeated so often it risks becoming meaningless — but in cloud environments it is structurally true in a way it never was in the data centre era. There is no network boundary to cross, no physical server room to enter. The only thing standing between an attacker and your cloud resources is whether they can obtain and use valid credentials. Cloud identity and access management is therefore not a supporting discipline within cloud security; it is the foundation on which everything else rests.
+Cloud identity and access management (IAM) is the system of controls that determines who can access what in a cloud environment — governing authentication, authorisation, and privilege for every human user, workload, and service that interacts with cloud resources. It is not a supporting discipline within cloud security; it is the foundation on which everything else rests. There is no network boundary to cross, no physical server room to enter. The only thing standing between an attacker and your cloud resources is whether they can obtain and use valid credentials.
 
 This guide covers what cloud IAM actually is, why it differs from traditional access control, the principal threat patterns it must defend against, and the architectural controls that make a cloud IAM programme resilient rather than brittle.
 
