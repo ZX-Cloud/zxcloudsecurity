@@ -6,6 +6,7 @@ description = "AWS IAM Security Best Practices — a practical guide for cloud s
 keywords = ["AWS IAM", "least privilege", "roles", "policies", "MFA"]
 type = "guides"
 draft = false
+author = "Steve Harrison, Principal Security Architect"
 +++
 
 AWS IAM is the control plane for everything you do in AWS — misconfigured policies and poorly scoped permissions are consistently the root cause of serious cloud breaches. Securing IAM correctly means enforcing least privilege at every layer, eliminating long-lived credentials where possible, and building preventive controls that survive organisational change. The practices below are applicable at any scale, from a single-account startup to a multi-account enterprise estate.

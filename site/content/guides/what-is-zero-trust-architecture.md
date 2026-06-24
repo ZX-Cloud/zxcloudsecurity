@@ -6,6 +6,7 @@ description = "What is Zero Trust Architecture? — a practical guide for cloud 
 keywords = ["zero trust", "identity", "least privilege", "network security"]
 type = "guides"
 draft = false
+author = "Steve Harrison, Principal Security Architect"
 +++
 
 Zero Trust is a security model built on the principle of "never trust, always verify" — every user, device, and connection must be authenticated and authorised before accessing any resource, regardless of whether the request originates inside or outside the corporate network. It replaces the outdated assumption that anything behind the firewall is inherently trustworthy. In cloud environments particularly, Zero Trust has become the foundational approach to modern network security.

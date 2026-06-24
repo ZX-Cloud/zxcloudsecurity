@@ -6,6 +6,7 @@ description = "What is CIEM (Cloud Infrastructure Entitlement Management)? — a
 keywords = ["CIEM", "entitlements", "permissions", "least privilege", "identity"]
 type = "guides"
 draft = false
+author = "Steve Harrison, Principal Security Architect"
 +++
 
 Cloud Infrastructure Entitlement Management (CIEM) is a category of security tooling designed to discover, analyse, and govern the permissions granted to identities across cloud environments. It addresses a fundamental challenge of cloud-scale operations: the near-impossibility of manually tracking who — or what — can do what across thousands of roles, policies, and resources. CIEM helps organisations enforce least privilege systematically, reducing the blast radius of compromised credentials and insider threats.

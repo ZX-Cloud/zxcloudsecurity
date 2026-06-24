@@ -5,6 +5,7 @@ slug = "social-engineering-ai-agents"
 description = "Social engineering has long been the most effective attack against humans. Now attackers are turning the same techniques against AI agents — with alarming success. A technical and boardroom guide to the emerging threat of AI agent manipulation."
 keywords = ["AI agent social engineering", "prompt injection", "EchoLeak", "CVE-2025-32711", "indirect prompt injection", "LLM manipulation", "AI security", "agentic AI risks", "Microsoft Copilot vulnerability", "AI agent attacks"]
 draft = false
+author = "Steve Harrison, Principal Security Architect"
 +++
 
 In 2011, security researcher Christopher Hadnagy published *The Art of Human Hacking*, codifying what attackers had known for decades: the easiest way into a system is not through the firewall — it is through the person sitting in front of it. Pretexting, phishing, impersonation, authority exploitation — social engineering bypasses technical controls by targeting trust itself.

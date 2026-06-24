@@ -4,7 +4,7 @@ date: 2026-06-18
 description: "Master AWS KMS key management best practices with real policy examples, rotation strategy, audit controls, and pitfalls that cost teams dearly in production."
 tags: ["aws-kms", "encryption", "cloud-security", "iam", "key-management"]
 slug: "aws-kms-key-management-best-practices"
-author: "Steve Harrison & AI - Principal Security Architect"
+author: "Steve Harrison, Principal Security Architect"
 word_count: 2472
 draft: false
 ---

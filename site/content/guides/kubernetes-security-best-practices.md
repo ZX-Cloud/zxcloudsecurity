@@ -6,6 +6,7 @@ description = "Kubernetes Security Best Practices — a practical guide for clou
 keywords = ["Kubernetes", "K8s security", "container security", "RBAC", "CKS"]
 type = "guides"
 draft = false
+author = "Steve Harrison, Principal Security Architect"
 +++
 
 Securing Kubernetes requires a defence-in-depth approach across the control plane, workload configuration, and runtime environment. The most impactful controls are RBAC hardening, network policy enforcement, pod security standards, proper secrets management, and continuous image scanning — the same domains tested in the CKS exam and exploited most frequently in real-world incidents. This guide covers each layer with practical guidance for teams running managed clusters on EKS, GKE, or AKS.

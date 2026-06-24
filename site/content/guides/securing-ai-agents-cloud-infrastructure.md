@@ -6,6 +6,7 @@ description = "Securing AI Agents with Access to Cloud Infrastructure — a prac
 keywords = ["AI agents", "agentic AI", "cloud security", "model security", "least privilege"]
 type = "guides"
 draft = false
+author = "Steve Harrison, Principal Security Architect"
 +++
 
 Securing AI agents with persistent access to production cloud infrastructure requires a fundamentally different threat model from traditional IAM hardening. Unlike human operators, agentic AI systems can act at machine speed, chain tool calls autonomously, and be manipulated through their input data — making conventional perimeter and identity controls insufficient on their own. Architects must layer prompt-level guardrails, strict least privilege boundaries, and runtime monitoring to safely deploy agentic workloads.

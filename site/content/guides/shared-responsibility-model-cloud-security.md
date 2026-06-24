@@ -6,6 +6,7 @@ description = "What is the Shared Responsibility Model in Cloud Security? — a 
 keywords = ["shared responsibility model", "cloud security", "AWS", "Azure", "GCP"]
 type = "guides"
 draft = false
+author = "Steve Harrison, Principal Security Architect"
 +++
 
 The shared responsibility model is a framework that defines the division of security obligations between a cloud provider and its customers. The provider secures the underlying infrastructure — physical hardware, network fabric, and hypervisor layers — whilst the customer remains responsible for everything they build and configure on top of it. Misunderstanding this boundary is one of the most common root causes of cloud security incidents.

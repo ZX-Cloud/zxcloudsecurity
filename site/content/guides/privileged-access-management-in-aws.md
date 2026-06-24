@@ -4,7 +4,7 @@ date: 2026-06-23
 description: "A practical guide to privileged access management in AWS — covering JIT access, SCPs, IAM least privilege, break-glass, and common pitfalls to avoid."
 tags: ["aws", "iam", "privileged-access-management", "cloud-security", "identity"]
 slug: "privileged-access-management-in-aws"
-author: "Steve Harrison & AI - Principal Security Architect"
+author: "Steve Harrison, Principal Security Architect"
 word_count: 2318
 draft: false
 ---

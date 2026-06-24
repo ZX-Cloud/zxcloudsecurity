@@ -93,6 +93,18 @@ buildFuture = false
   url = "/archive/"
   weight = 60
 
+[[menu.main]]
+  identifier = "menu-about"
+  name = "About"
+  url = "/about/"
+  weight = 70
+
+[[menu.main]]
+  identifier = "menu-contact"
+  name = "Contact"
+  url = "/contact/"
+  weight = 80
+
 [markup]
   [markup.highlight]
     noClasses = false

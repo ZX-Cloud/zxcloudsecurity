@@ -6,6 +6,7 @@ description = "A comprehensive cross-cloud mapping of AWS, Azure and GCP securit
 keywords = ["AWS security services", "Azure security services", "GCP security services", "cloud security comparison", "multi-cloud security", "Security Hub", "Defender for Cloud", "Security Command Center"]
 draft = false
 aliases = ["/guides/cross-cloud-security-services-comparison/"]
+author = "Steve Harrison, Principal Security Architect"
 +++
 
 Security architects working across more than one cloud constantly hit the same problem: each provider names equivalent capabilities completely differently, and the equivalences are rarely exact. AWS Security Hub, Microsoft Defender for Cloud and Google Security Command Center occupy roughly the same space, but they differ in scope, pricing model and how much they overlap with neighbouring services.

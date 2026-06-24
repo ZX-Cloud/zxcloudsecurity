@@ -4,7 +4,7 @@ date: 2026-06-23
 description: "A deep-dive into AWS IAM Identity Centre covering architecture, permission sets, SCIM federation, common pitfalls, and the June 2026 quota changes. 1,700 words."
 tags: ["aws-iam-identity-centre", "aws-security", "identity-federation", "permission-sets", "multi-account"]
 slug: "aws-iam-identity-centre-guide"
-author: "Steve Harrison & AI - Principal Security Architect"
+author: "Steve Harrison, Principal Security Architect"
 word_count: 2302
 draft: false
 ---

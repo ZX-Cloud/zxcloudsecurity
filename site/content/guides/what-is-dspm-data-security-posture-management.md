@@ -6,6 +6,7 @@ description = "What is DSPM (Data Security Posture Management)? — a practical 
 keywords = ["DSPM", "data security posture management", "data discovery", "classification"]
 type = "guides"
 draft = false
+author = "Steve Harrison, Principal Security Architect"
 +++
 
 Data Security Posture Management (DSPM) is a security discipline focused on continuously discovering, classifying, and monitoring sensitive data across cloud environments to identify and remediate exposure risks. Unlike perimeter-focused controls, DSPM keeps the data itself at the centre of your security strategy — understanding where it lives, who can access it, and whether those access patterns are appropriate. As organisations spread data across multi-cloud storage, SaaS platforms, and data pipelines, DSPM has become an essential capability for maintaining a defensible security posture.

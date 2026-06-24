@@ -4,7 +4,7 @@ date: 2026-06-21
 description: "Master AWS CloudTrail configuration best practices with this hands-on guide covering organisation trails, KMS encryption, SCPs, log integrity, and incident response."
 tags: ["aws-cloudtrail", "cloud-security", "aws-logging", "compliance"]
 slug: "aws-cloudtrail-configuration-best-practices"
-author: "Steve Harrison & AI - Principal Security Architect"
+author: "Steve Harrison, Principal Security Architect"
 word_count: 2017
 draft: false
 ---

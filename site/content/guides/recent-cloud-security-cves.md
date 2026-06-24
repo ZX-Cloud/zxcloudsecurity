@@ -4,7 +4,7 @@ date: 2026-06-21
 description: "A practitioner's breakdown of recent cloud security CVEs in 2026, covering wormable Windows flaws, Defender exploits, and how to respond in AWS environments."
 tags: ["cloud security", "CVE", "vulnerability management", "AWS", "patch management", "Windows security"]
 slug: "recent-cloud-security-cves"
-author: "Steve Harrison & AI - Principal Security Architect"
+author: "Steve Harrison, Principal Security Architect"
 word_count: 2277
 draft: false
 ---

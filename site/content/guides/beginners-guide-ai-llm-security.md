@@ -5,6 +5,7 @@ slug = "beginners-guide-ai-llm-security"
 description = "A comprehensive beginner's guide to how AI and large language models work, how they are built, and the security risks architects need to understand when deploying or integrating LLMs in enterprise environments."
 keywords = ["large language models", "LLM security", "AI security", "prompt injection", "OWASP LLM Top 10", "generative AI risks", "AI for beginners", "LLM architecture", "transformer model", "AI in the enterprise"]
 draft = false
+author = "Steve Harrison, Principal Security Architect"
 +++
 
 Artificial intelligence has moved from research curiosity to enterprise infrastructure in under five years. If you are a cloud security architect who has not yet had to secure an LLM-powered application, you almost certainly will within the next twelve months. This guide explains what large language models are, how they are built, and — critically — what the security risks are when you deploy, integrate, or expose them in your organisation.
