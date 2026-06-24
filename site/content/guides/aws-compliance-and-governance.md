@@ -1,7 +1,7 @@
 ---
 title: "AWS Compliance and Governance: A Practitioner's Guide for 2026"
 date: 2026-06-20
-description: "Master AWS compliance and governance with SCPs, Control Tower, NCSC alignment, and real-world guardrails. Practical guidance for UK regulated environments."
+description: "SCPs, Control Tower, AWS Config, and NCSC alignment — the AWS compliance and governance architecture that holds up under FCA, NHS, and ISO 27001 audit."
 tags: ["aws-compliance", "aws-governance", "service-control-policies", "aws-security", "ncsc", "fca", "cloud-security"]
 slug: "aws-compliance-and-governance"
 author: "Steve Harrison, Principal Security Architect"

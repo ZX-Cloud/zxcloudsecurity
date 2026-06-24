@@ -1,7 +1,7 @@
 ---
 title: "AWS KMS Key Management Best Practices: A Production-Grade Guide"
 date: 2026-06-18
-description: "Master AWS KMS key management best practices with real policy examples, rotation strategy, audit controls, and pitfalls that cost teams dearly in production."
+description: "AWS KMS key policies, rotation strategy, cross-account access, audit controls, and the gaps that leave encrypted workloads exposed — with real policy examples."
 tags: ["aws-kms", "encryption", "cloud-security", "iam", "key-management"]
 slug: "aws-kms-key-management-best-practices"
 author: "Steve Harrison, Principal Security Architect"

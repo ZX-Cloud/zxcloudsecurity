@@ -1,7 +1,7 @@
 ---
 title: "AWS CloudTrail Configuration Best Practices: A Practitioner's Guide"
 date: 2026-06-21
-description: "Master AWS CloudTrail configuration best practices with this hands-on guide covering organisation trails, KMS encryption, SCPs, log integrity, and incident response."
+description: "AWS CloudTrail configuration for architects: organisation trails, KMS encryption, SCP tamper protection, log integrity validation, and incident response readiness."
 tags: ["aws-cloudtrail", "cloud-security", "aws-logging", "compliance"]
 slug: "aws-cloudtrail-configuration-best-practices"
 author: "Steve Harrison, Principal Security Architect"

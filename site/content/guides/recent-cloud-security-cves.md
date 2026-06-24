@@ -1,7 +1,7 @@
 ---
 title: "Recent Cloud Security CVEs: What AWS Architects Need to Act On Right Now"
 date: 2026-06-21
-description: "A practitioner's breakdown of recent cloud security CVEs in 2026, covering wormable Windows flaws, Defender exploits, and how to respond in AWS environments."
+description: "Cloud security CVEs from April–June 2026 analysed for AWS architects: what each means for EC2, hybrid environments, and cloud management plane exposure."
 tags: ["cloud security", "CVE", "vulnerability management", "AWS", "patch management", "Windows security"]
 slug: "recent-cloud-security-cves"
 author: "Steve Harrison, Principal Security Architect"
