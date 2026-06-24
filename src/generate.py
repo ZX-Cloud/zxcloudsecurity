@@ -276,6 +276,11 @@ def generate(
 
     log.info(f"Written: {written} new, Skipped: {skipped} duplicates")
 
+    # Write new slugs for IndexNow pinging
+    new_slugs = list(slugs_seen - existing_slugs)
+    with open("new_post_slugs.json", "w") as f:
+        json.dump(new_slugs, f)
+
     # Write stats based on ALL posts in archive (not just today's new ones)
     all_archive = read_archive_stats(output_dir)
     log.info(f"Archive total for stats: {len(all_archive)} posts")

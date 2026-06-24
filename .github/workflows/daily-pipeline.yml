@@ -76,6 +76,9 @@ jobs:
             --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
             --paths "/*"
 
+      - name: Submit new posts to IndexNow
+        run: python src/indexnow.py
+
       - name: Send daily email digest
         env:
           AWS_DEFAULT_REGION: eu-west-1
