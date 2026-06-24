@@ -102,4 +102,4 @@ Getting CSPM right requires more than licensing a tool. Here's what effective im
 - [Cloud Infrastructure Entitlement Management (CIEM)](/guides/what-is-ciem-cloud-infrastructure-entitlement-management/) — CIEM extends CSPM into the identity layer, surfacing over-privileged roles and toxic permission combinations that CSPM alone may miss.
 - [AWS IAM Security Best Practices](/guides/aws-iam-security-best-practices/) — The IAM misconfigurations that CSPM tools most frequently flag, and how to remediate them.
 - [The Shared Responsibility Model in Cloud Security](/guides/shared-responsibility-model-cloud-security/) — Understanding which posture controls are your responsibility versus the cloud provider's.
-- [Cross-Cloud Security Services Comparison](/guides/cross-cloud-security-services-comparison/) — Compare AWS Security Hub, Microsoft Defender for Cloud, and Google Security Command Center as native CSPM solutions.
+- [Cross-Cloud Security Services Comparison](/guides/aws-azure-gcp-security-service-comparison/) — Compare AWS Security Hub, Microsoft Defender for Cloud, and Google Security Command Center as native CSPM solutions.

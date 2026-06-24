@@ -91,4 +91,4 @@ The practical implication: CSPM and DSPM should be used together. CSPM reduces t
 - [Zero Trust Architecture](/guides/what-is-zero-trust-architecture/) — Zero Trust treats data as the ultimate resource to protect. DSPM provides the data-centric controls that give Zero Trust its teeth.
 - [AWS IAM Security Best Practices](/guides/aws-iam-security-best-practices/) — Controlling access to data in S3, RDS, and other AWS data stores begins with a well-configured IAM layer.
 - [The Shared Responsibility Model in Cloud Security](/guides/shared-responsibility-model-cloud-security/) — In cloud environments, data protection responsibilities are split between you and the provider. This guide clarifies the boundary.
-- [Cross-Cloud Security Services Comparison](/guides/cross-cloud-security-services-comparison/) — Compare data protection and classification capabilities across AWS Macie, Microsoft Purview, and Google Cloud DLP.
+- [Cross-Cloud Security Services Comparison](/guides/aws-azure-gcp-security-service-comparison/) — Compare data protection and classification capabilities across AWS Macie, Microsoft Purview, and Google Cloud DLP.

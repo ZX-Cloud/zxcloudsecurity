@@ -119,4 +119,4 @@ Mature Zero Trust deployments use continuous validation — not just point-in-ti
 - [AWS IAM Security Best Practices](/guides/aws-iam-security-best-practices/) — Implementing Zero Trust on AWS begins with a hardened IAM configuration. This guide covers the specific controls and policies required.
 - [Kubernetes Security Best Practices](/guides/kubernetes-security-best-practices/) — Applying Zero Trust principles within Kubernetes clusters, including network policy enforcement and workload identity.
 - [The Shared Responsibility Model in Cloud Security](/guides/shared-responsibility-model-cloud-security/) — Understanding where your Zero Trust responsibilities begin and where the cloud provider's end.
-- [Cross-Cloud Security Services Comparison](/guides/cross-cloud-security-services-comparison/) — Compare the native Zero Trust and identity enforcement tools available across AWS, Azure, and GCP.
+- [Cross-Cloud Security Services Comparison](/guides/aws-azure-gcp-security-service-comparison/) — Compare the native Zero Trust and identity enforcement tools available across AWS, Azure, and GCP.
