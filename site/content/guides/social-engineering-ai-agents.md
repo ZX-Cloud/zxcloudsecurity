@@ -198,3 +198,4 @@ The question is not whether your AI agents can be phished. Based on the 2025 and
 - [Cloud Infrastructure Entitlement Management (CIEM)](/guides/what-is-ciem-cloud-infrastructure-entitlement-management/) — AI agent service accounts represent a new category of non-human identity. CIEM tooling must now extend to cover agentic workloads.
 - [AWS IAM Security Best Practices](/guides/aws-iam-security-best-practices/) — Correctly scoped IAM permissions limit the blast radius when an AI agent is successfully manipulated.
 - [Cloud Security Posture Management (CSPM)](/guides/what-is-cspm-cloud-security-posture-management/) — CSPM tools increasingly incorporate AI-specific security checks as agentic deployments become mainstream.
+- [AI Security in the Cloud](/guides/ai-security-cloud-guide/) — The hub guide for AI and LLM security: threat model, prompt injection defences, Bedrock and Azure OpenAI controls, and least privilege for AI workloads.

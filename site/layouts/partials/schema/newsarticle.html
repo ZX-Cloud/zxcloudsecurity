@@ -29,6 +29,4 @@
   {{- $schema = merge $schema (dict "image" (slice (index . 0))) -}}
 {{- end -}}
 
-<script type="application/ld+json">
-{{ $schema | jsonify (dict "indent" "  ") | safeHTML }}
-</script>
+{{- $schema | jsonify | printf "<script type=\"application/ld+json\">%s</script>" | safeHTML -}}

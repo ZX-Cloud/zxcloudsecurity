@@ -139,3 +139,4 @@ AWS IAM security is not a one-time configuration — it is an ongoing discipline
 - [Kubernetes Security Best Practices](/guides/kubernetes-security-best-practices/) — IAM roles for service accounts (IRSA) and workload identity federation connect AWS IAM controls into Kubernetes workloads.
 - [The Shared Responsibility Model in Cloud Security](/guides/shared-responsibility-model-cloud-security/) — AWS manages the security of IAM as a service; you are responsible for how you configure and use it.
 - [Cross-Cloud Security Services Comparison](/guides/aws-azure-gcp-security-service-comparison/) — Compare AWS IAM with Azure Entra ID and Google Cloud IAM to understand capability differences across providers.
+- [Cloud Identity and Access Management](/guides/cloud-identity-and-access-management/) — The hub guide covering cloud IAM concepts: principals, federation, least privilege, PAM, and the controls that prevent credential-based breaches.

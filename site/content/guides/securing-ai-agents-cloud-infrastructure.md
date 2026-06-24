@@ -110,3 +110,4 @@ Mitigation requires treating your agent stack as you would any third-party softw
 - [AWS IAM Security Best Practices](/guides/aws-iam-security-best-practices/) — How to scope the IAM permissions granted to AI workloads and agent service accounts running on AWS.
 - [Zero Trust Architecture](/guides/what-is-zero-trust-architecture/) — Zero Trust principles — verify explicitly, least privilege, assume breach — map directly onto AI agent security architecture.
 - [Cloud Infrastructure Entitlement Management (CIEM)](/guides/what-is-ciem-cloud-infrastructure-entitlement-management/) — AI agent service accounts are a new category of non-human identity that CIEM tooling must now cover.
+- [AI Security in the Cloud](/guides/ai-security-cloud-guide/) — The hub guide for AI and LLM security: threat model, prompt injection defences, Bedrock and Azure OpenAI controls, and least privilege for AI workloads.

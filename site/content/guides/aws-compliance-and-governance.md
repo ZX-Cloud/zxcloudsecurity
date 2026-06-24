@@ -204,3 +204,10 @@ Effective AWS compliance and governance is an architecture problem, not a checkb
 - Network isolation is a governance control: EKS IAM condition keys, Amazon MQ PrivateLink, and AWS Management Console Private Access all reduce your attack surface while satisfying NCSC Principle 1 (data in transit protection) and Principle 11 (external interface protection).
 - Version-control everything: SCPs, RCPs, Config rules, and Control Tower customisations belong in Git with peer review and automated testing. Treat them as production code, because that is exactly what they are.
 - Region restrictions require ongoing maintenance: encode permitted regions in your root OU SCP and review the `NotAction` list quarterly. Validate that AI inference services you adopt are available in your approved regions before deploying regulated workloads.
+
+---
+
+## Related Guides
+
+- [AWS Security Hub: A Practitioner's Guide](/guides/aws-security-hub-guide/) — How Security Hub aggregates GuardDuty, Inspector, and Macie findings with continuous compliance evaluation across your AWS organisation.
+- [Cloud Compliance Frameworks](/guides/cloud-compliance-frameworks/) — ISO 27001, SOC 2, PCI DSS, UK GDPR, Cyber Essentials Plus, NCSC Cloud Principles, and FCA requirements mapped to cloud controls.

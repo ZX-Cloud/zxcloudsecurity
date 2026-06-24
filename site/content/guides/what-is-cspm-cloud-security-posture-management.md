@@ -103,3 +103,5 @@ Getting CSPM right requires more than licensing a tool. Here's what effective im
 - [AWS IAM Security Best Practices](/guides/aws-iam-security-best-practices/) — The IAM misconfigurations that CSPM tools most frequently flag, and how to remediate them.
 - [The Shared Responsibility Model in Cloud Security](/guides/shared-responsibility-model-cloud-security/) — Understanding which posture controls are your responsibility versus the cloud provider's.
 - [Cross-Cloud Security Services Comparison](/guides/aws-azure-gcp-security-service-comparison/) — Compare AWS Security Hub, Microsoft Defender for Cloud, and Google Security Command Center as native CSPM solutions.
+- [AWS Security Hub: A Practitioner's Guide](/guides/aws-security-hub-guide/) — How Security Hub aggregates GuardDuty, Inspector, and Macie findings with continuous compliance evaluation across your AWS organisation.
+- [Cloud Compliance Frameworks](/guides/cloud-compliance-frameworks/) — ISO 27001, SOC 2, PCI DSS, UK GDPR, Cyber Essentials Plus, NCSC Cloud Principles, and FCA requirements mapped to cloud controls.

@@ -235,3 +235,4 @@ The field is moving fast. MITRE ATLAS, NIST AI RMF, and the EU AI Act are all ev
 - [Cloud Infrastructure Entitlement Management (CIEM)](/guides/what-is-ciem-cloud-infrastructure-entitlement-management/) — AI agent service accounts are a new category of non-human identity requiring the same entitlement controls as human identities.
 - [AWS IAM Security Best Practices](/guides/aws-iam-security-best-practices/) — How to scope the IAM permissions granted to AI workloads and agent service accounts running on AWS.
 - [Kubernetes Security Best Practices](/guides/kubernetes-security-best-practices/) — Many AI workloads run as containerised services. The security controls in this guide are directly applicable to AI deployments.
+- [AI Security in the Cloud](/guides/ai-security-cloud-guide/) — The hub guide for AI and LLM security: threat model, prompt injection defences, Bedrock and Azure OpenAI controls, and least privilege for AI workloads.

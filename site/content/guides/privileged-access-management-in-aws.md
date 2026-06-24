@@ -190,3 +190,9 @@ Build and test your break-glass procedure. Root credentials must be offline, MFA
 Implement phishing-resistant MFA for all privileged access. The NCSC recommends FIDO2 security keys or passkeys for administrative access. TOTP codes are not sufficient for your highest-privilege operators.
 
 Monitor continuously. CloudTrail at organisation scope, GuardDuty for anomalous IAM usage, and Access Analyzer findings reviewed on a defined cadence. Alerting on root login should be in place from day one.
+
+---
+
+## Related Guides
+
+- [Cloud Identity and Access Management](/guides/cloud-identity-and-access-management/) — The hub guide covering cloud IAM concepts: principals, federation, least privilege, PAM, and the controls that prevent credential-based breaches.

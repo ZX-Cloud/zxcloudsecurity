@@ -29,6 +29,4 @@
   ) -}}
 {{- end -}}
 
-<script type="application/ld+json">
-{{ dict "@context" "https://schema.org" "@type" "BreadcrumbList" "itemListElement" $items | jsonify (dict "indent" "  ") | safeHTML }}
-</script>
+{{- dict "@context" "https://schema.org" "@type" "BreadcrumbList" "itemListElement" $items | jsonify | printf "<script type=\"application/ld+json\">%s</script>" | safeHTML -}}

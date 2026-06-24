@@ -202,3 +202,9 @@ Getting CloudTrail right doesn't require a multi-month programme. Six actions wi
 - Enforce SCP guardrails denying `cloudtrail:DeleteTrail`, `cloudtrail:StopLogging`, and `kms:ScheduleKeyDeletion`. SCPs are the only control that a compromised account administrator cannot override.
 - Enable data events selectively for sensitive resources. S3 object-level events and Lambda invocations on critical functions close the gap between "we were breached" and "we can prove exactly what was accessed and when."
 - Integrate with CloudWatch Logs and enable Insights. Real-time alerting on anomalous API patterns transforms CloudTrail from a passive audit log into an active detection layer.
+
+---
+
+## Related Guides
+
+- [AWS Security Hub: A Practitioner's Guide](/guides/aws-security-hub-guide/) — How Security Hub aggregates GuardDuty, Inspector, and Macie findings with continuous compliance evaluation across your AWS organisation.
