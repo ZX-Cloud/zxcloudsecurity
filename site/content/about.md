@@ -15,9 +15,11 @@ The site also publishes in-depth practitioner guides covering the cloud security
 
 ## About the Author
 
-**Steve Harrison** is a Principal Security Architect with experience designing and reviewing security architectures for cloud-native and hybrid environments across AWS, Azure, and GCP. His work focuses on identity and access management, cloud posture management, threat modelling, and the practical security implications of adopting AI in enterprise infrastructure.
+**Steve Harrison** is a Principal Security Architect with deep experience designing and reviewing security architectures across cloud‑native and hybrid environments in AWS, Azure, and GCP. His background spans Banking, Insurance, Travel (easyJet), and UK Government, giving him a broad understanding of how different sectors interpret and operationalise security risk.
 
-ZX Cloud Security is built on the conviction that cloud security intelligence is most valuable when it is filtered through architectural judgement — not just aggregated. Most CVE feeds tell you what was disclosed. This site tells you what it means for your environment and what to do about it first.
+He previously spent time at AWS as a Senior Security Architect — a short tenure, but one that provided valuable insight into how hyperscalers think about scale, identity, and threat boundaries. His core work focuses on identity and access management, cloud posture management, threat modelling, and the practical security implications of adopting AI within enterprise infrastructure.
+
+ZX Cloud Security is a project Steve created to explore how AI can be applied meaningfully within Security Architecture. It's built on a simple conviction: cloud‑security intelligence only becomes valuable when filtered through architectural judgement. Most CVE feeds tell you what was disclosed. ZX Cloud Security tells you what it means for your environment — and what you should prioritise first.
 
 ---
 
