@@ -1,16 +1,23 @@
 {
-  "updated": "23 Jun 2026 06:05 UTC",
-  "total": 320,
+  "updated": "24 Jun 2026 06:05 UTC",
+  "total": 339,
   "severity": {
-    "critical": 27,
-    "high": 203,
-    "medium": 69
+    "critical": 32,
+    "high": 215,
+    "medium": 71
   },
   "categories": {
-    "aws": 24,
-    "azure": 134,
+    "aws": 25,
+    "azure": 136,
     "gcp": 1,
-    "general": 161
+    "general": 177
   },
-  "top_critical": null
+  "top_critical": {
+    "title": "CVE-2025-67038: Lantronix EDS5000 RCE Flaw",
+    "summary": "A critical code injection vulnerability in the Lantronix EDS5000 device server allows attackers to inject arbitrary operating system commands via the username parameter. These commands execute with ro",
+    "architects_take": "Audit your network for any Lantronix EDS5000 devices, particularly those exposed at the network edge or used to bridge serial devices to cloud-connected infrastructure. Apply vendor patches immediately, restrict management interface access to trusted networks only, and treat any device potentially exposed to untrusted input as compromised pending remediation.",
+    "slug": "lantronix-eds5000-os-command-injection-cve-2025-67038",
+    "source": "CISA Known Exploited Vulnerabilities",
+    "category": "general"
+  }
 }
