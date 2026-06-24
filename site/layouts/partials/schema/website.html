@@ -1,0 +1,46 @@
+{{- $base   := .Site.BaseURL -}}
+{{- $orgID  := printf "%s#organization" $base -}}
+{{- $personID := printf "%s#person" $base -}}
+
+{{- $schema := dict
+  "@context" "https://schema.org"
+  "@graph" (slice
+    (dict
+      "@type"       "WebSite"
+      "@id"         (printf "%s#website" $base)
+      "url"         $base
+      "name"        .Site.Title
+      "description" .Site.Params.description
+      "inLanguage"  "en-GB"
+      "publisher"   (dict "@id" $orgID)
+      "potentialAction" (dict
+        "@type"      "SearchAction"
+        "target"     (dict
+          "@type"      "EntryPoint"
+          "urlTemplate" (printf "%ssearch/?q={search_term_string}" $base)
+        )
+        "query-input" "required name=search_term_string"
+      )
+    )
+    (dict
+      "@type"       "Organization"
+      "@id"         $orgID
+      "name"        "ZX Cloud Security"
+      "url"         $base
+      "description" "Daily cloud security threat intelligence for architects and engineers tracking CVEs across AWS, Azure and GCP."
+      "founder"     (dict "@id" $personID)
+    )
+    (dict
+      "@type"    "Person"
+      "@id"      $personID
+      "name"     "Steve Harrison"
+      "jobTitle" "Principal Security Architect"
+      "url"      (printf "%sabout/" $base)
+      "worksFor" (dict "@id" $orgID)
+    )
+  )
+-}}
+
+<script type="application/ld+json">
+{{ $schema | jsonify (dict "indent" "  ") | safeHTML }}
+</script>

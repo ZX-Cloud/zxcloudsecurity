@@ -1,0 +1,34 @@
+{{- $base     := .Site.BaseURL -}}
+{{- $orgID    := printf "%s#organization" $base -}}
+{{- $personID := printf "%s#person" $base -}}
+
+{{- $publishDate := .PublishDate -}}
+{{- if $publishDate.IsZero -}}{{- $publishDate = .Date -}}{{- end -}}
+
+{{- $keywords := "" -}}
+{{- with .Params.tags -}}{{- $keywords = delimit . ", " -}}{{- end -}}
+
+{{- $schema := dict
+  "@context"         "https://schema.org"
+  "@type"            "TechArticle"
+  "mainEntityOfPage" (dict "@type" "WebPage" "@id" .Permalink)
+  "headline"         .Title
+  "description"      .Description
+  "datePublished"    ($publishDate.Format "2006-01-02T15:04:05Z07:00")
+  "dateModified"     (.Lastmod.Format "2006-01-02T15:04:05Z07:00")
+  "author"           (dict "@type" "Person" "@id" $personID "name" "Steve Harrison" "jobTitle" "Principal Security Architect")
+  "publisher"        (dict "@id" $orgID)
+  "inLanguage"       "en-GB"
+  "articleSection"   "Cloud Security"
+  "proficiencyLevel" "Expert"
+  "wordCount"        .WordCount
+  "keywords"         $keywords
+-}}
+
+{{- with .Site.Params.images -}}
+  {{- $schema = merge $schema (dict "image" (slice (index . 0))) -}}
+{{- end -}}
+
+<script type="application/ld+json">
+{{ $schema | jsonify (dict "indent" "  ") | safeHTML }}
+</script>

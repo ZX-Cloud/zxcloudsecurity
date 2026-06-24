@@ -1,0 +1,34 @@
+{{- $items := slice -}}
+{{- $pos := 0 -}}
+
+{{- $pos = add $pos 1 -}}
+{{- $items = $items | append (dict
+  "@type" "ListItem"
+  "position" $pos
+  "name" "Home"
+  "item" .Site.BaseURL
+) -}}
+
+{{- if and (not .IsHome) .Parent (not .Parent.IsHome) -}}
+  {{- $pos = add $pos 1 -}}
+  {{- $items = $items | append (dict
+    "@type" "ListItem"
+    "position" $pos
+    "name" .Parent.Title
+    "item" .Parent.Permalink
+  ) -}}
+{{- end -}}
+
+{{- if not .IsHome -}}
+  {{- $pos = add $pos 1 -}}
+  {{- $items = $items | append (dict
+    "@type" "ListItem"
+    "position" $pos
+    "name" .Title
+    "item" .Permalink
+  ) -}}
+{{- end -}}
+
+<script type="application/ld+json">
+{{ dict "@context" "https://schema.org" "@type" "BreadcrumbList" "itemListElement" $items | jsonify (dict "indent" "  ") | safeHTML }}
+</script>
