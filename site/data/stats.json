@@ -1,23 +1,23 @@
 {
-  "updated": "25 Jun 2026 06:04 UTC",
-  "total": 353,
+  "updated": "26 Jun 2026 06:04 UTC",
+  "total": 370,
   "severity": {
-    "critical": 37,
-    "high": 218,
-    "medium": 77
+    "critical": 39,
+    "high": 228,
+    "medium": 82
   },
   "categories": {
     "aws": 26,
-    "azure": 137,
+    "azure": 142,
     "gcp": 1,
-    "general": 189
+    "general": 201
   },
   "top_critical": {
-    "title": "Cisco Unified CM CVE-2026-20230 Exploited in Wild",
-    "summary": "A critical vulnerability in Cisco Unified Communications Manager (CVE-2026-20230, CVSS 8.6) allows unauthenticated remote attackers to write arbitrary files, potentially leading to root-level compromi",
-    "architects_take": "Apply Cisco's patch immediately and restrict HTTP access to Unified CM management interfaces via firewall rules or network segmentation \u2014 do not expose these systems to the internet. Audit logs for unexpected file creation or HTTP requests matching the exploit pattern as indicators of compromise.",
-    "slug": "cisco-unified-cm-cve-2026-20230-file-write-root-exploit",
-    "source": "The Hacker News",
+    "title": "CVE-2026-12569: PTC Windchill RCE Flaw Exploited",
+    "summary": "A critical remote code execution vulnerability (CVE-2026-12569) has been identified in PTC Windchill and FlexPLM, widely used product lifecycle management (PLM) platforms. An unauthenticated attacker ",
+    "architects_take": "Immediately audit your estate for internet-exposed or network-accessible PTC Windchill and FlexPLM instances and apply vendor patches before the CISA remediation deadline of 28 June 2026. As an interim measure, restrict network access to these services using firewall rules or zero-trust network controls, and ensure no instances are directly reachable from the public internet.",
+    "slug": "ptc-windchill-flexpml-rce-cve-2026-12569",
+    "source": "CISA Known Exploited Vulnerabilities",
     "category": "general"
   }
 }
