@@ -1,23 +1,16 @@
 {
-  "updated": "27 Jun 2026 06:06 UTC",
-  "total": 408,
+  "updated": "28 Jun 2026 06:02 UTC",
+  "total": 410,
   "severity": {
     "critical": 41,
-    "high": 258,
+    "high": 260,
     "medium": 88
   },
   "categories": {
     "aws": 26,
     "azure": 162,
     "gcp": 1,
-    "general": 219
+    "general": 221
   },
-  "top_critical": {
-    "title": "PTC Windchill RCE Flaw Added to CISA KEV Catalog",
-    "summary": "CISA has added a critical remote code execution vulnerability in PTC Windchill PDMLink and FlexPLM \u2014 software used to manage product data and lifecycles in industrial and manufacturing environments \u2014 ",
-    "architects_take": "Organisations running PTC Windchill PDMLink or FlexPLM should treat patching as urgent \u2014 apply available vendor patches immediately and audit internet-facing instances for signs of web shell deployment. If these systems are cloud-hosted or accessible via cloud-based DMZs, review network segmentation and WAF rules to restrict external access whilst remediation is underway.",
-    "slug": "cisa-kev-ptc-windchill-rce-web-shell-attacks",
-    "source": "The Hacker News",
-    "category": "general"
-  }
+  "top_critical": null
 }
