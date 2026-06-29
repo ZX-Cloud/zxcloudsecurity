@@ -1,0 +1,97 @@
+{
+  "date": "2026-06-29",
+  "domain": "zxcloudsecurity.co.uk",
+  "domain_overview": {
+    "organic_etv": 1.7220000326633453,
+    "organic_count": 4,
+    "pos_1": 0,
+    "pos_2_3": 0,
+    "pos_4_10": 0,
+    "pos_11_20": 0,
+    "pos_21_30": 0
+  },
+  "backlinks": {
+    "backlinks": 45,
+    "referring_domains": 42,
+    "referring_main_domains": 38,
+    "rank": 0,
+    "broken_backlinks": 0
+  },
+  "keywords": [
+    {
+      "keyword": "aws scp best practices",
+      "found": false,
+      "rank_absolute": null
+    },
+    {
+      "keyword": "aws guardduty configuration",
+      "found": false,
+      "rank_absolute": null
+    },
+    {
+      "keyword": "aws landing zone control tower",
+      "found": false,
+      "rank_absolute": null
+    },
+    {
+      "keyword": "aws iam identity centre",
+      "found": false,
+      "rank_absolute": null
+    },
+    {
+      "keyword": "aws security hub",
+      "found": false,
+      "rank_absolute": null
+    },
+    {
+      "keyword": "cyberark pam aws",
+      "found": false,
+      "rank_absolute": null
+    },
+    {
+      "keyword": "ncsc cloud guidance",
+      "found": false,
+      "rank_absolute": null
+    },
+    {
+      "keyword": "aws kms key management",
+      "found": false,
+      "rank_absolute": null
+    },
+    {
+      "keyword": "cloud security architect day rate uk",
+      "found": false,
+      "rank_absolute": null
+    },
+    {
+      "keyword": "aws cloudtrail configuration best practices",
+      "found": false,
+      "rank_absolute": null
+    },
+    {
+      "keyword": "aws compliance and governance",
+      "found": false,
+      "rank_absolute": null
+    },
+    {
+      "keyword": "cloud security vulnerability management",
+      "found": false,
+      "rank_absolute": null
+    },
+    {
+      "keyword": "recent cloud security cves",
+      "found": false,
+      "rank_absolute": null
+    },
+    {
+      "keyword": "aws least privilege iam",
+      "found": false,
+      "rank_absolute": null
+    },
+    {
+      "keyword": "post quantum cryptography aws",
+      "found": false,
+      "rank_absolute": null
+    }
+  ]
+}
