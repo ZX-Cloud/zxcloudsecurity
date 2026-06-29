@@ -1,176 +1,171 @@
 ---
-title: "Recent Cloud Security CVEs: What Every AWS & Azure Architect Needs to Act On Now"
-date: 2026-06-25
-description: "A practitioner's breakdown of recent cloud security CVEs across Azure and AWS, covering exploitation risk, triage strategy, and detection with real AWS CLI and policy examples."
-tags: ["cloud security", "CVE", "vulnerability management", "Azure", "AWS", "NCSC", "patch management"]
+title: "Recent Cloud Security CVEs: What Practitioners Need to Know in 2026"
+date: 2026-06-29
+description: "A practitioner's guide to recent cloud security CVEs in 2026 — covering critical vulnerabilities, SSRF risks, NVD changes, and AWS remediation steps."
+tags: ["cloud security", "CVE", "vulnerability management", "AWS", "SSRF", "IMDSv2"]
 slug: "recent-cloud-security-cves"
 author: "Steve Harrison & AI - Principal Security Architect"
-word_count: 2446
+word_count: 2183
 draft: false
 ---
 
-# Recent cloud security CVEs: what every AWS and Azure architect needs to act on now
+# Recent cloud security CVEs: what every cloud security practitioner must track in 2026
 
-If your vulnerability management process still revolves around a monthly Patch Tuesday calendar and a CVSS score spreadsheet, the threat landscape has moved on without you. The volume and severity of recent cloud security CVEs in 2026 alone has exposed real gaps in how organisations track, triage, and respond to vulnerabilities, particularly across cloud-native services where the shared responsibility model blurs remediation ownership. This guide covers the most operationally significant CVEs from the past few months, explains what they mean for AWS and Azure environments specifically, and gives you the detection and remediation scaffolding to act on them today.
-
----
-
-## Why 2026 has been a particularly brutal year for cloud CVEs
-
-CVE submissions to the NVD increased 263% between 2020 and 2025, and the rate is still accelerating. Submissions during the first three months of 2026 are nearly one-third higher than the same period last year. The practical consequence: most vulnerabilities will now enter the CVE ecosystem without the CVSS metadata required for automated downstream tooling to prioritise them.
-
-That last point matters enormously for security teams that rely on scanner integrations with NVD. NIST will now enrich only those CVEs that meet certain prioritisation criteria. CVEs that fall outside those criteria will still be listed in the NVD but deemed "lowest priority" and will not be immediately enriched. In plain English: your scanner's severity score may simply be absent for a significant chunk of newly published CVEs.
-
-On the threat side, the emergence of frontier agentic models in early 2026 has materially changed the offensive timeline. These are AI systems that no longer just suggest code but actively test it, and they compress the window between discovery and weaponisation in ways that manual research simply cannot match. The NCSC's own CTO, writing in May 2026, advised that organisations should plan to deploy software security updates quickly, more frequently, and at scale, including across their supply chains, and specifically called out the need to prepare for a "vulnerability patch wave" as AI-assisted discovery scales.
-
-The upshot: CVSS base scores alone are no longer a reliable triage mechanism, and the window between patch release and active exploitation keeps shrinking.
+If you manage cloud workloads for UK financial services, government, or enterprise clients, staying current with recent cloud security CVEs is a core operational control, not optional housekeeping. The vulnerability picture in 2026 has shifted in ways that matter: disclosure volumes have tripled in five years, the NVD's enrichment model has changed fundamentally, and adversaries are using AI-assisted tooling to find exploitable paths faster than most enterprise patch cycles can absorb. This guide covers the most operationally significant vulnerabilities and trends from mid-2026 and tells you what to do about them.
 
 ---
 
-## High-severity cloud CVEs you should have already triaged
+## Why the vulnerability landscape changed in 2026
 
-### CVE-2026-42826: Azure DevOps information disclosure (CVSS 10.0)
+CVE submissions to the NVD increased 263% between 2020 and 2025. Submissions during the first three months of 2026 alone ran nearly one-third higher than the same period last year. That volume drove a structural change that will affect how your team operates.
 
-CVE-2026-42826 is a critical information disclosure vulnerability affecting Azure DevOps, published on 7 May 2026. The flaw allows an unauthenticated remote attacker to expose sensitive information over a network. No credentials required. No user interaction. Network-accessible.
+On 15 April 2026, NIST announced a shift to a heavily constrained, risk-based model for vulnerability enrichment. In practice, this creates a significant information gap for organisations and security tools that rely on the NVD. Most vulnerabilities will now enter the CVE ecosystem without the CVSS metadata that automated downstream tooling needs to prioritise them.
 
-Azure DevOps is the backbone of countless development pipelines. It stores source code, build definitions, release scripts, and often secrets such as connection strings and API keys. An information disclosure flaw in this platform is not a theoretical risk; it is a potential gateway to IP theft, supply chain compromise, or lateral movement into connected Azure resources.
+From 15 April 2026, NIST will prioritise enrichment for CVEs appearing in CISA's Known Exploited Vulnerabilities (KEV) Catalog, CVEs for software used within the federal government, and CVEs for critical software as defined by Executive Order 14028.
 
-Microsoft remediated this vulnerability within the cloud infrastructure without requiring customer intervention. The important nuance is that this does not necessarily mean the issues are unimportant. Cloud vulnerabilities sit outside direct customer control, leaving defenders to audit logs, review configurations, and trust the vendor's fix rather than deploy a patch themselves.
+The practical consequence for UK teams: your scanner feeds will surface CVEs without severity scores. If your vulnerability management workflow gates remediation on a CVSS score threshold, that workflow is now broken by design. The NCSC is explicit on this point: decisions should be made on the overall level of risk of an application or asset, not simply the severity of a vulnerability such as the CVSS score.
 
-Your action here is not to patch, it is to audit. Review Azure DevOps access logs for any anomalous unauthenticated enumeration activity in the window between the flaw's introduction and remediation. If your pipelines store secrets as pipeline variables rather than Azure Key Vault references, this incident is your prompt to fix that.
-
-<!-- INTERNAL_LINK: securing Azure DevOps pipelines | azure-devops-pipeline-security -->
-
-### CVE-2026-41096: Windows DNS Client RCE (CVSS 9.8)
-
-This is a heap-based buffer overflow in the Windows DNS Client that allows an unauthenticated attacker to execute code over a network. An attacker sends a specially crafted DNS response to a vulnerable Windows system, causing the DNS Client to misprocess the response and corrupt memory. No authentication required.
-
-Practical exploitation does require a network position to intercept or respond to the target's DNS requests, whether through DNS spoofing, a rogue DNS server, or a machine-in-the-middle position on the network. For AWS workloads running Windows on EC2, that prerequisite is less reassuring than it sounds. If an attacker has already compromised another workload in the same VPC, or has positioned themselves between a Windows instance and the VPC DNS resolver at 169.254.169.253, this becomes exploitable. Patch your Windows AMIs.
-
-### CVE-2026-41089: Windows Netlogon RCE (CVSS 9.8)
-
-CVE-2026-41089 is a stack-based buffer overflow in Windows Netlogon. An unauthenticated attacker with network access can send a specially crafted request to a domain controller and execute code without any prior access. The targeted service sits on domain controllers, which makes this particularly serious. Successful exploitation means potential full domain takeover, followed by lateral movement, Kerberos and Entra tampering, and control over Group Policy and software deployment.
-
-If you are running Active Directory on EC2, which remains a common pattern for AWS-based financial services clients who have not yet moved to AWS Managed Microsoft AD, this is your highest-priority patch. An unauthenticated attacker with network access to your domain controllers on port 445 or 135 can own your entire Windows estate.
-
-### CVE-2026-35428: Azure Cloud Shell command injection (CVSS 9.6)
-
-CVE-2026-35428 is a command injection flaw in Azure Cloud Shell that allows unauthenticated remote attackers to perform spoofing over a network. It requires user interaction and carries high confidentiality, integrity, and availability impact. Microsoft remediated this server-side. Cloud Shell sessions are frequently used by privileged administrators, so if a session was open during the exposure window, treat the associated credential as potentially compromised and rotate it.
-
-### CVE-2026-42823: Azure Logic Apps privilege escalation (CVSS 9.9)
-
-CVE-2026-42823 is an improper access control vulnerability in Azure Logic Apps that allows an authorised attacker to elevate privileges over a network. Logic Apps are increasingly used to automate security workflows, data pipelines, and integration between SaaS platforms, which makes a privilege escalation path here a significant risk for organisations using them in regulated workloads. Microsoft patched this server-side. Your action is to review Logic App managed identity assignments and confirm they follow least-privilege.
-
-<!-- INTERNAL_LINK: Azure Logic Apps security best practices | azure-logic-apps-security -->
+This class of vulnerabilities is also likely to grow as researchers use advances in LLM capability to probe not just specific software but the standards on which software rests.
 
 ---
 
-## The "no customer action required" trap
+## High-impact recent cloud security CVEs you should have actioned
 
-A pattern has emerged across the cloud CVEs patched in 2026 that deserves its own section, because it is lulling teams into a false sense of security.
+### CVE-2026-40175: Axios cloud metadata exfiltration
 
-Microsoft resolved numerous critical cloud-native vulnerabilities, including CVE-2026-42826, CVE-2026-35428, CVE-2026-33109, and CVE-2026-33823, with the advisory note: "requires no customer action." For years, enterprise security teams built vulnerability programmes around assets they could see and remediate themselves: Windows servers, routers, laptops, applications. Cloud services increasingly break that model.
+This is the cloud-native CVE that deserves the most attention from AWS-heavy teams.
 
-The NCSC's Cloud Security Principle 5 is clear on this point: vulnerability management, protective monitoring, incident management, and configuration and change management are all aspects your provider should have a process in place to address. But the NCSC equally makes clear that customers retain responsibility for their configurations, data classification, and access controls built on top of those services.
+CVE-2026-40175, titled "Unrestricted Cloud Metadata Exfiltration via Header Injection Chain", involves a header injection chain in the Axios redirect handler that can be combined with cloud provider metadata services (AWS IMDSv1, GCP metadata, Azure IMDS) to exfiltrate credentials from compromised servers.
 
-"No customer action required" means the vendor patched their infrastructure. It does not mean:
+The flaw enables remote code execution and full cloud compromise. Attackers can chain prototype pollution, SSRF, and request smuggling to bypass AWS IMDSv2 and steal credentials. A public proof of concept is already available, which raises the risk materially.
 
-- Your data was not exposed during the vulnerability window
-- Your access logs do not warrant review
-- Your managed identities and RBAC assignments are correctly scoped
-- Your secrets stored in that service are uncompromised
+What makes this particularly nasty is that it requires zero direct user input. If an attacker can pollute `Object.prototype` via any other library in the stack (such as `qs`, `minimist`, `ini`, or `body-parser`), Axios will automatically pick up the polluted properties during its config merge.
 
-Run a log review. Validate your configurations. Rotate high-privilege credentials that were active during the exposure window. These actions are always warranted, regardless of what the advisory says.
+The exploit demonstrates bypass of AWS's IMDSv2 security layer. A smuggling request to the AWS Metadata Service returns a session token, allowing attackers to steal IAM credentials and pivot to the cloud account.
+
+Affected versions are all 1.x and 0.x releases up to but not including 1.15.0 and 0.31.0.
+
+Remediation is to upgrade to 1.15.1 (or 0.31.1 if you are on the legacy branch). You also need to audit your transitive dependency tree. Axios is a dependency of dozens of popular SDKs and CLIs, including cloud provider SDKs, observability agents, and internal HTTP clients. If a parent package pins Axios to an old version, your top-level upgrade is overridden unless you use `overrides` (npm) or `resolutions` (Yarn), or the equivalent.
 
 ---
 
-## Detecting cloud CVE exposure with AWS Security Hub and CLI
+### CVE-2026-41091 and CVE-2026-45498: Microsoft Defender zero-days under active exploitation
 
-For AWS environments, Security Hub's integration with Amazon Inspector provides your first line of automated CVE detection across EC2, Lambda, and container workloads. The following AWS CLI snippet queries Inspector v2 for critical findings on your EC2 fleet, scoped to findings with an EPSS score above 0.1. That threshold is a useful proxy for exploitation likelihood that supplements the now-degraded NVD enrichment:
+Both CVEs are directly relevant to any organisation running Windows workloads on EC2, Azure VMs, or a hybrid estate.
 
-```bash
-# Query Amazon Inspector v2 for critical EC2 CVE findings with high EPSS scores
-aws inspectorv2 list-findings \
-  --filter-criteria '{
-    "findingStatus": [{"comparison": "EQUALS", "value": "ACTIVE"}],
-    "severity": [{"comparison": "EQUALS", "value": "CRITICAL"}],
-    "resourceType": [{"comparison": "EQUALS", "value": "AWS_EC2_INSTANCE"}],
-    "epssScore": [{"lowerInclusive": 0.1, "upperInclusive": 1.0}]
-  }' \
-  --sort-criteria '{"field": "EPSS_SCORE", "sortOrder": "DESC"}' \
-  --query 'findings[].{CVE:packageVulnerabilityDetails.vulnerabilityId,
-                        EPSS:epss.score,
-                        Instance:resources[0].id,
-                        FixAvailable:fixAvailable}' \
-  --output table
+CVE-2026-41091 carries a CVSS score of 7.8. Successful exploitation allows an attacker to gain SYSTEM privileges. Microsoft's description: "Improper link resolution before file access ('link following') in Microsoft Defender allows an authorised attacker to elevate privileges locally."
+
+CVE-2026-45498 is a denial-of-service bug affecting Defender with a CVSS score of 4.0.
+
+CISA added both to its KEV catalog, requiring Federal Civilian Executive Branch agencies to apply fixes by 3 June 2026. UK organisations should treat KEV additions as near-mandatory remediation triggers regardless of US federal mandates. If adversaries are exploiting something against federal targets, they will exploit it against UK financial sector targets.
+
+Both vulnerabilities are addressed in Microsoft Defender Antimalware Platform versions 1.1.26040.8 and 4.18.26040.7 respectively. Verify your Defender platform version across your entire estate and do not assume auto-update is working correctly on every workload.
+
+---
+
+### CVE-2026-45585 ("YellowKey"): Windows BitLocker security feature bypass
+
+Microsoft is aware of a security feature bypass vulnerability publicly referred to as "YellowKey". The proof of concept has been made public, which violated coordinated vulnerability disclosure best practice.
+
+CVE-2026-45585 targets the protections provided by Microsoft BitLocker full-disk encryption. An attacker with physical access to a Windows device can exploit the Windows Recovery Environment by manipulating NTFS transaction logs and recovery configuration files, forcing WinRE to launch a privileged command prompt while the disk remains transparently decrypted by the TPM.
+
+For cloud architects: this matters wherever you manage hybrid endpoints, BYOD devices for developers with cloud console access, or physical servers in co-location facilities. An attacker with brief physical access to a developer laptop holding cached AWS or Azure credentials has a complete kill chain.
+
+While a permanent patch was not immediately available, Microsoft released a mitigation script that removes the `autofstx.exe` entry from the `BootExecute` REG_MULTI_SZ value in the offline SYSTEM registry hive of WinRE, preventing the executable from running during boot.
+
+---
+
+## The SSRF and IMDSv1 attack class: still the highest-ROI target
+
+No guide on recent cloud security CVEs is complete without addressing the underlying attack pattern that remains the single most exploited vector in AWS environments. IMDSv1 allows any process on the instance to retrieve credentials without authentication, making it vulnerable to SSRF attacks where a web application vulnerability causes the server to fetch the metadata endpoint and return the instance's IAM credentials to an attacker.
+
+Research from Datadog's 2024 State of Cloud Security report found that 68% of EC2 instances still do not enforce IMDSv2, representing millions of potentially vulnerable instances across the AWS ecosystem.
+
+CVE-2026-40175 is the most recent example, but this attack class has been active for years and continues to be weaponised. Where IMDSv2 is enforced, attacker payloads attempting the initial token retrieval have all requests to the metadata service rejected. If the same application were running in an environment still dependent on IMDSv1, the attack vector would very likely have resulted in credential compromise. IMDSv2 enforcement stops the pivot to the cloud control plane.
+
+<!-- INTERNAL_LINK: How to enforce IMDSv2 across your AWS organisation | enforce-imdsv2-aws-organisation -->
+
+### Enforcing IMDSv2 organisation-wide
+
+The following SCP denies the launch of new EC2 instances unless IMDSv2 is required. Attach this at the OU or root level in AWS Organizations:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "EnforceIMDSv2OnLaunch",
+      "Effect": "Deny",
+      "Action": "ec2:RunInstances",
+      "Resource": "arn:aws:ec2:*:*:instance/*",
+      "Condition": {
+        "StringNotEquals": {
+          "ec2:MetadataHttpTokens": "required"
+        }
+      }
+    }
+  ]
+}
 ```
 
-This query surfaces findings sorted by EPSS exploitation probability rather than raw CVSS base score, which is a materially better signal now that NVD enrichment is patchy. For Windows-specific CVEs like CVE-2026-41096 and CVE-2026-41089, filter further by `packageVulnerabilityDetails.vulnerablePackages[].name` for `Windows`.
-
-For patch compliance posture across an EC2 fleet, AWS Systems Manager Patch Manager gives you a compliance summary per patch group:
+For existing instances, enforce IMDSv2 without a restart using the AWS CLI:
 
 ```bash
-# Check patch compliance summary for a specific patch group
-aws ssm describe-patch-group-state \
-  --patch-group "windows-production" \
-  --query 'Instances | {
-    Compliant: sum_by(@, &ComplianceStatus == `COMPLIANT`),
-    NonCompliant: sum_by(@, &ComplianceStatus == `NON_COMPLIANT`),
-    Missing: sum_by(@, &MissingCount > `0`)
-  }'
+aws ec2 modify-instance-metadata-options \
+  --instance-id i-0123456789abcdef0 \
+  --http-tokens required \
+  --http-put-response-hop-limit 2 \
+  --http-endpoint enabled
 ```
 
-<!-- INTERNAL_LINK: AWS Inspector v2 setup and tuning | aws-inspector-v2-configuration -->
+Set `HttpPutResponseHopLimit` to 2 for ECS EC2 instances. The default of 1 means the PUT session token request is consumed at the first network hop (container-to-host bridge), so the container never receives the token. Setting it to 2 allows the request to traverse one bridge interface and reach the metadata service.
+
+AWS Security Hub includes an EC2 control (`EC2.8: Amazon EC2 instances should use Instance Metadata Service Version 2 (IMDSv2)`) that uses the AWS Config rule `ec2-imdsv2-check` to verify that the instance metadata version is configured with IMDSv2. Enable this control in all regions and accounts. It is one of the highest-signal findings in your Security Hub posture.
 
 ---
 
-## Common pitfalls in cloud CVE triage
+## Aligning your vulnerability management process with NCSC guidance
 
-This is where I see organisations of all sizes make avoidable mistakes.
+All systems contain vulnerabilities. They may take the form of a configuration issue for system administrators to resolve, software defects requiring a vendor update, or a vulnerability the vendor does not yet know exists, for which no mitigation is available. This makes vulnerability management a critical control.
 
-Pitfall 1: sorting by CVSS base score and treating the result as a priority list. Too often, teams ingest CVE data into scanners, sort by CVSS base score, and start patching from the top down. That approach ignores the richer signals available and leads to misallocated effort: patching an unconfirmed theoretical issue while a slightly lower-scored but actively exploited vulnerability sits unaddressed. Use EPSS scores and CISA's KEV catalogue as your primary triage signals. CVSS is context, not a queue.
+The NCSC's cloud security principles are equally direct: your provider should have a vulnerability management process in place to identify, triage, and mitigate vulnerabilities in all components of the service they are responsible for. But shared responsibility means there is always a customer-side component. A scanner may not tell you that AWS, Microsoft, or Google published an advisory for a managed service, agent, extension, SDK, or platform component your workloads depend on. The hyperscaler owns the service. Your team owns impact analysis, affected scope, customer-side mitigation, tickets, and proof.
 
-Pitfall 2: treating "no customer action required" as "nothing to do." Covered above, but it bears repeating. Cloud-patched CVEs still demand a log review and a configuration audit. Your blast radius is your problem, not Microsoft's or Amazon's.
+Organisations should plan to deploy software security updates quickly, more frequently, and at scale, including across their supply chains. Where a critical vulnerability is under active exploitation, particularly one affecting an internet-facing system, accelerating the update process is not optional.
 
-Pitfall 3: ignoring the NVD enrichment gap. If your vulnerability scanner pulls from NVD alone, you are flying partially blind. Subscribe to vendor-direct advisories from Microsoft MSRC, AWS Security Bulletins, and CISA KEV alerts, and supplement with a commercial enrichment feed.
+The FCA's operational resilience rules and DORA (which applies to UK firms with EU operations) both carry implicit requirements for timely patching of critical systems. Treating KEV-listed CVEs as SLA-bound remediation items with board-level visibility is the correct posture for any regulated UK firm.
 
-Pitfall 4: not separating cloud-service CVEs from OS-level CVEs in your patching workflow. Azure DevOps, Logic Apps, and Cloud Shell vulnerabilities resolve themselves. EC2 Windows instances with the Netlogon and DNS Client CVEs do not. Conflating these in your remediation workflow produces false compliance reporting.
-
-Pitfall 5: assuming your cloud workloads are unaffected by Windows kernel CVEs. If you run Windows on EC2, which is common across UK financial services for .NET workloads, SQL Server, and Active Directory, every Windows CVE in a given Patch Tuesday is in scope for your cloud environment. Treat your cloud Windows fleet with the same urgency as on-premises.
-
-Pitfall 6: underestimating how much AI has compressed the patch-to-exploit timeline. Security researcher Himanshu Anand made the point bluntly: "the 90-day disclosure policy is dead," because large language models compress disclosure and exploit timelines to near-zero. "When 10 unrelated researchers find the same bug in six weeks, and AI can turn a patch diff into a working exploit in 30 minutes, what exactly is the 90-day window protecting?" Your SLAs for critical patching need to reflect this. A 30-day window for CVSS 9.0+ vulnerabilities with network-level exploitability is no longer adequate.
-
-<!-- INTERNAL_LINK: building a cloud vulnerability management programme | cloud-vulnerability-management-programme -->
+<!-- INTERNAL_LINK: AWS Security Hub controls for FCA regulated environments | aws-security-hub-fca-compliance -->
 
 ---
 
-## Keeping pace: a practical monitoring stack
+## Common mistakes when responding to recent cloud security CVEs
 
-Given the volume of recent cloud security CVEs, manual review does not scale. A minimal but effective monitoring stack for a UK enterprise running AWS and Azure hybrid should include:
+Relying solely on CVSS scores for prioritisation is the most common one I see. With the NVD enrichment model in its current state, scores will arrive late or not at all. Use CISA KEV status and EPSS probability alongside any available CVSS data. The changes at NIST are a necessary response to an unsustainable volume of data, but they also mean you can no longer outsource your vulnerability enrichment entirely to public, government-funded databases.
 
-- CISA KEV Catalogue: your authoritative "patch this now" signal. Subscribe via RSS or the CISA API.
-- Microsoft MSRC Security Update Guide: do not wait for Patch Tuesday roundups. Set up email notifications for products in your scope.
-- AWS Security Bulletins (aws.amazon.com/security/security-bulletins): covers AMI-level, SDK-level, and service-level advisories.
-- Amazon Inspector v2: continuous CVE scanning across EC2, Lambda, and container images, with native integration into Security Hub.
-- AWS Security Hub with the AWS Foundational Security Best Practices standard enabled: surfaces misconfigurations that increase your blast radius when a CVE lands.
-- NCSC Early Warning: a free alerting service that maps CISA KEV and other threat intel to your registered IP ranges. Most UK organisations are not using it.
+Assuming auto-update covers managed services is the second. Provider-side CVEs covering SDK vulnerabilities, agent updates, and platform components require your team to track vendor advisories directly. A scanner finding OpenSSL vulnerable inside a container is not the same as discovering that your version of Axios is exfiltrating metadata credentials.
 
-The NCSC's vulnerability management guidance puts the objective clearly: an effective vulnerability management process allows your organisation to understand, and validate on a regular basis, which vulnerabilities are present in your technical estate, where updates are failing, and to actively reduce the impact of both. It also allows you to react quickly when a critical vulnerability is disclosed, by helping you understand your organisation's exposure to it.
+Skipping the IMDSv2 audit and jumping straight to enforcement is a mistake I have seen wreck production workloads. IMDSv2 enforcement is a two-phase operation: audit and migrate first, enforce second. Skipping the audit and applying the SCP immediately creates emergency exceptions that never get cleaned up.
 
-For FCA-regulated firms, this is not advisory; it is a control expectation under operational resilience requirements. Your ability to demonstrate a defensible response timeline to a critical CVE will be tested.
+Treating BitLocker bypass CVEs as endpoint-only issues misses the cloud risk. Cloud architects own the security of developer endpoints too, particularly where those devices hold cached cloud credentials or SSO sessions. YellowKey (CVE-2026-45585) requires physical access, but in a hybrid working model, physical access now means a laptop left unattended at a hot-desk.
+
+Ignoring transitive dependency exposure is where most teams have blind spots. If you are on any Axios version below 1.15.0 and your application makes outbound requests with a `NO_PROXY` configuration, follows redirects, or runs in a cloud environment with a metadata service, the relevant CVEs are exploitable in your environment. Your direct dependencies are the easy wins. Transitive dependencies are where exposure hides.
+
+Not monitoring for IMDSv1 usage drift is the final gap. Applying IMDSv2 enforcement is a one-time action; detecting regression is continuous work. Use the `MetadataNoToken` CloudWatch metric per instance and set an alarm at threshold 1 to catch any workload falling back to IMDSv1.
+
+<!-- INTERNAL_LINK: AWS CloudWatch security monitoring patterns | aws-cloudwatch-security-monitoring -->
 
 ---
 
 ## Key takeaways
 
-Stop triaging on CVSS base score alone. Use EPSS exploit probability and CISA KEV catalogue status as primary signals, particularly now that NVD enrichment is increasingly incomplete for non-federal, non-KEV CVEs.
+The NVD enrichment model has fundamentally changed. NIST now prioritises only KEV-listed and federally relevant CVEs for enrichment. Your tooling and triage processes must account for CVEs arriving without CVSS scores.
 
-"No customer action required" is not the end of your obligation. For cloud-native CVEs patched server-side, your job is to audit access logs, validate configurations, and rotate credentials that were active during the exposure window.
+CVE-2026-40175 (Axios) is a direct cloud credential theft risk. If any of your workloads use Axios below version 1.15.0 and run in an environment with access to a cloud metadata service, treat this as a critical remediation item regardless of the moderate CVSS rating.
 
-Windows on EC2 is in scope for every Windows Patch Tuesday. CVE-2026-41089 (Netlogon RCE, CVSS 9.8) and CVE-2026-41096 (DNS Client RCE, CVSS 9.8) are directly exploitable on AWS-hosted Windows workloads if unpatched. Use AWS Systems Manager Patch Manager to enforce compliance at scale.
+KEV additions are de facto mandatory remediation triggers for UK regulated organisations. CVE-2026-41091 and CVE-2026-45498 were actively exploited and CISA-listed. Remediation should be SLA-bound, not advisory.
 
-Agentic adversaries have compressed patch-to-exploit timelines to hours, not weeks. Your critical CVE patching SLA needs to reflect this. Thirty days is no longer an acceptable window for CVSS 9.0+ vulnerabilities with network-level exploitability.
+Enforcing IMDSv2 organisation-wide remains one of the highest-return security controls available on AWS. 68% of EC2 instances still do not enforce it. An SCP at the AWS Organizations level is the only reliable way to ensure new workloads cannot regress.
 
-Supplement NVD with vendor-direct advisory feeds. As NIST moves to risk-based NVD enrichment, organisations relying solely on scanner-integrated NVD data will have significant coverage gaps. Subscribe directly to MSRC, AWS Security Bulletins, and CISA KEV.
+NCSC vulnerability management guidance and the Cloud Security Principles are the correct reference framework for UK organisations. Align your patch SLAs to NCSC timescales and treat active exploitation as an immediate escalation trigger.
 
-The NCSC's vulnerability management guidance is the baseline, not the ceiling. For UK financial services and public sector organisations, demonstrating adherence to the NCSC's five vulnerability management principles is the minimum expected posture.
+Tracking recent cloud security CVEs is not just about patching. It is about understanding the attack surface created by the shared responsibility model, your supply chain, and the transitive dependencies your workloads carry into production.
