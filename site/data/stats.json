@@ -1,16 +1,23 @@
 {
-  "updated": "29 Jun 2026 06:04 UTC",
-  "total": 428,
+  "updated": "30 Jun 2026 06:05 UTC",
+  "total": 455,
   "severity": {
-    "critical": 41,
-    "high": 266,
-    "medium": 100
+    "critical": 45,
+    "high": 285,
+    "medium": 104
   },
   "categories": {
-    "aws": 26,
-    "azure": 180,
+    "aws": 28,
+    "azure": 187,
     "gcp": 1,
-    "general": 221
+    "general": 239
   },
-  "top_critical": null
+  "top_critical": {
+    "title": "CVE-2026-48558: SimpleHelp OIDC Auth Bypass",
+    "summary": "A critical authentication bypass vulnerability in SimpleHelp's OIDC login flow allows attackers to forge identity tokens and gain full technician-level access without valid credentials. Because crypto",
+    "architects_take": "Patch SimpleHelp immediately and prioritise instances exposed to the internet or integrated with your identity provider via OIDC. As an interim control, restrict access to the SimpleHelp management interface to trusted IP ranges via firewall or VPN, and audit recent technician session logs for anomalous or unexpected logins.",
+    "slug": "simplehelp-oidc-authentication-bypass-cve-2026-48558",
+    "source": "CISA Known Exploited Vulnerabilities",
+    "category": "general"
+  }
 }
