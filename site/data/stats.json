@@ -1,23 +1,23 @@
 {
-  "updated": "30 Jun 2026 06:05 UTC",
-  "total": 455,
+  "updated": "30 Jun 2026 09:58 UTC",
+  "total": 464,
   "severity": {
-    "critical": 45,
-    "high": 285,
-    "medium": 104
+    "critical": 46,
+    "high": 291,
+    "medium": 106
   },
   "categories": {
     "aws": 28,
-    "azure": 187,
+    "azure": 193,
     "gcp": 1,
-    "general": 239
+    "general": 242
   },
   "top_critical": {
-    "title": "CVE-2026-48558: SimpleHelp OIDC Auth Bypass",
-    "summary": "A critical authentication bypass vulnerability in SimpleHelp's OIDC login flow allows attackers to forge identity tokens and gain full technician-level access without valid credentials. Because crypto",
-    "architects_take": "Patch SimpleHelp immediately and prioritise instances exposed to the internet or integrated with your identity provider via OIDC. As an interim control, restrict access to the SimpleHelp management interface to trusted IP ranges via firewall or VPN, and audit recent technician session logs for anomalous or unexpected logins.",
-    "slug": "simplehelp-oidc-authentication-bypass-cve-2026-48558",
-    "source": "CISA Known Exploited Vulnerabilities",
+    "title": "CVE-2026-8037: Kemp LoadMaster Pre-Auth RCE Flaw",
+    "summary": "A critical unauthenticated remote code execution vulnerability (CVE-2026-8037) in Progress Kemp LoadMaster allows an attacker to run arbitrary commands as root simply by sending a crafted API request ",
+    "architects_take": "Prioritise emergency patching of all LoadMaster appliances immediately; if patching cannot be completed right away, disable the management API and restrict access to it via network controls or firewall rules to trusted management IP ranges only.",
+    "slug": "progress-kemp-loadmaster-pre-auth-rce-cve-2026-8037",
+    "source": "The Hacker News",
     "category": "general"
   }
 }
