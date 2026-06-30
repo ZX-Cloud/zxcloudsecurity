@@ -3,6 +3,7 @@
 {{- else if eq .Section "guides" -}}
   {{- partial "schema/techarticle.html" . -}}
   {{- partial "schema/breadcrumb.html" . -}}
+  {{- partial "schema/faqpage.html" . -}}
 {{- else if eq .Section "posts" -}}
   {{- partial "schema/newsarticle.html" . -}}
   {{- partial "schema/breadcrumb.html" . -}}

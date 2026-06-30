@@ -7,6 +7,22 @@ keywords = ["CIEM", "entitlements", "permissions", "least privilege", "identity"
 type = "guides"
 draft = false
 author = "Steve Harrison, Principal Security Architect"
+
+[[faqs]]
+question = "What is CIEM in cloud security?"
+answer = "CIEM (Cloud Infrastructure Entitlement Management) is a category of security tooling that discovers, analyses, and governs the permissions granted to identities across cloud environments. It enforces least privilege at scale by identifying unused, excessive, and misconfigured entitlements across IAM roles, service accounts, and federated identities in AWS, Azure, and GCP."
+
+[[faqs]]
+question = "What is the difference between CIEM and PAM?"
+answer = "PAM (Privileged Access Management) was designed for on-premises environments and manages privileged sessions, credential vaulting, and just-in-time access for human users. CIEM is purpose-built for cloud identity complexity — it governs machine identities, service accounts, IAM roles, and workload permissions at cloud scale, where entitlements are API-driven and ephemeral rather than session-based."
+
+[[faqs]]
+question = "What is permission sprawl in cloud environments?"
+answer = "Permission sprawl is the accumulation of entitlements far beyond what identities actually need to function. It occurs when temporary elevated access is never revoked, CI/CD pipelines are granted broad permissions for convenience, or service accounts carry over entitlements from earlier project phases. Research consistently shows that over 90% of granted cloud permissions go unused, representing significant latent risk if credentials are compromised."
+
+[[faqs]]
+question = "How does CIEM enforce least privilege?"
+answer = "CIEM tools build a unified entitlements graph across cloud providers, then compare granted permissions against observed usage over a defined period — typically 30 to 90 days. Permissions that are never exercised are flagged for removal or scoping. Many tools generate right-sized IAM policies automatically and integrate with approval workflows so remediation can happen at scale without manual policy authoring."
 +++
 
 Cloud Infrastructure Entitlement Management (CIEM) is a category of security tooling designed to discover, analyse, and govern the permissions granted to identities across cloud environments. It addresses a fundamental challenge of cloud-scale operations: the near-impossibility of manually tracking who — or what — can do what across thousands of roles, policies, and resources. CIEM helps organisations enforce least privilege systematically, reducing the blast radius of compromised credentials and insider threats.

@@ -7,6 +7,22 @@ keywords = ["zero trust", "identity", "least privilege", "network security"]
 type = "guides"
 draft = false
 author = "Steve Harrison, Principal Security Architect"
+
+[[faqs]]
+question = "What is Zero Trust Architecture?"
+answer = "Zero Trust Architecture is a security model based on the principle of never trust, always verify. Every user, device, and connection must be authenticated and authorised before accessing any resource, regardless of whether the request originates inside or outside the corporate network. It is defined in NIST SP 800-207 and recognised by NCSC, CISA, and all three major cloud providers as the foundational approach to modern security."
+
+[[faqs]]
+question = "What are the core principles of Zero Trust?"
+answer = "The core principles of Zero Trust are: verify explicitly (authenticate and authorise every request using identity, device health, location, and other signals); use least privilege access (limit user and workload permissions to only what is required); and assume breach (design systems as if the network is already compromised, using micro-segmentation, end-to-end encryption, and continuous monitoring to limit blast radius)."
+
+[[faqs]]
+question = "How do you implement Zero Trust in AWS?"
+answer = "Implementing Zero Trust in AWS involves: enforcing MFA and strong identity controls via IAM Identity Centre; applying least privilege IAM policies with regular access reviews; using AWS Verified Access for application-level access without VPN; implementing micro-segmentation with VPC security groups and Network Firewall; enabling CloudTrail, GuardDuty, and Security Hub for continuous monitoring; and using AWS Private Link to keep traffic off the public internet."
+
+[[faqs]]
+question = "What is the difference between Zero Trust and VPN?"
+answer = "A VPN grants broad network access once a user authenticates — anyone inside the VPN tunnel can typically reach many internal resources. Zero Trust replaces this with per-application, per-request authorisation based on identity, device posture, and context. Zero Trust is more granular, harder to laterally traverse after a compromise, and better suited to cloud-native and hybrid environments where the traditional network perimeter no longer exists."
 +++
 
 Zero Trust is a security model built on the principle of "never trust, always verify" — every user, device, and connection must be authenticated and authorised before accessing any resource, regardless of whether the request originates inside or outside the corporate network. It replaces the outdated assumption that anything behind the firewall is inherently trustworthy. In cloud environments particularly, Zero Trust has become the foundational approach to modern network security.

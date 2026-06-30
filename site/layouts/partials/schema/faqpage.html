@@ -1,0 +1,17 @@
+{{- with .Params.faqs -}}
+{{- $schema := dict
+  "@context" "https://schema.org"
+  "@type"    "FAQPage"
+  "mainEntity" (slice)
+-}}
+{{- $entities := slice -}}
+{{- range . -}}
+  {{- $entities = $entities | append (dict
+    "@type"          "Question"
+    "name"           .question
+    "acceptedAnswer" (dict "@type" "Answer" "text" .answer)
+  ) -}}
+{{- end -}}
+{{- $schema = merge $schema (dict "mainEntity" $entities) -}}
+{{- $schema | jsonify | printf "<script type=\"application/ld+json\">%s</script>" | safeHTML -}}
+{{- end -}}

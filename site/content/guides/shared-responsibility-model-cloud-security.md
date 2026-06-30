@@ -7,6 +7,22 @@ keywords = ["shared responsibility model", "cloud security", "AWS", "Azure", "GC
 type = "guides"
 draft = false
 author = "Steve Harrison, Principal Security Architect"
+
+[[faqs]]
+question = "What is the shared responsibility model in cloud security?"
+answer = "The shared responsibility model defines the division of security obligations between a cloud provider and its customers. The provider secures the underlying infrastructure — physical hardware, network fabric, and hypervisor — whilst the customer is responsible for everything built and configured on top of it, including data, identity, operating systems, network configuration, and application-layer controls."
+
+[[faqs]]
+question = "What is AWS responsible for under the shared responsibility model?"
+answer = "AWS is responsible for the security of the cloud — the global infrastructure including regions, availability zones, and the hardware, software, and networking that underpins all AWS services. This includes physical security of data centres, hypervisor security, and the managed services layer. Customers remain responsible for security in the cloud: their data, IAM configurations, OS-level controls on EC2, network settings, and application security."
+
+[[faqs]]
+question = "What does the customer own under the shared responsibility model?"
+answer = "Customers own security in the cloud regardless of service model. This includes: data classification and encryption, identity and access management (IAM policies, MFA, federation), network configuration (security groups, NACLs, VPC design), operating system and application patching on IaaS services, and compliance evidence for workloads within their responsibility boundary. Cloud provider certifications cover the provider's infrastructure layer only."
+
+[[faqs]]
+question = "Does the shared responsibility model change between IaaS, PaaS, and SaaS?"
+answer = "Yes, the responsibility boundary shifts significantly with the service model. IaaS customers (EC2, Azure VMs, GCP Compute Engine) own the guest OS, runtime, and all application-layer controls. PaaS customers hand off OS and runtime management but retain responsibility for application code and data. SaaS customers own data governance, identity configuration, and compliance evidence — the provider manages virtually everything else."
 +++
 
 The shared responsibility model is a framework that defines the division of security obligations between a cloud provider and its customers. The provider secures the underlying infrastructure — physical hardware, network fabric, and hypervisor layers — whilst the customer remains responsible for everything they build and configure on top of it. Misunderstanding this boundary is one of the most common root causes of cloud security incidents.
