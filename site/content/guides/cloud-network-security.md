@@ -7,6 +7,22 @@ keywords = ["cloud network security", "VPC security", "security groups", "networ
 type = "guides"
 draft = false
 author = "Steve Harrison, Principal Security Architect"
+
+[[faqs]]
+question = "What is the difference between a security group and a network ACL in AWS?"
+answer = "Security groups are stateful firewalls attached to individual resources (EC2 instances, RDS databases, Lambda functions in a VPC). They track connection state, so return traffic is automatically allowed without an explicit outbound rule. Network ACLs (NACLs) are stateless firewalls applied at the subnet level, evaluated before traffic reaches any resource. NACLs require explicit rules for both inbound and return traffic. In practice, security groups are the primary network control in AWS; NACLs provide a secondary defence layer for subnet-level blocking, particularly useful for blocking specific IP ranges that need to be stopped before they reach any resource in the subnet."
+
+[[faqs]]
+question = "What is micro-segmentation in cloud environments?"
+answer = "Micro-segmentation is the practice of applying granular network controls between individual workloads rather than just at the perimeter. In cloud environments, this means: using security groups to restrict communication between EC2 instances even within the same subnet; applying Kubernetes NetworkPolicies to control pod-to-pod traffic within a cluster; using VPC endpoints rather than internet gateways for AWS service access; and designing VPC architecture with separate subnets for different trust tiers (public, application, data). Micro-segmentation limits lateral movement — a compromised workload cannot freely reach other services even within the same VPC."
+
+[[faqs]]
+question = "What is AWS PrivateLink and when should I use it?"
+answer = "AWS PrivateLink creates private network connectivity between your VPC and AWS services or third-party services via interface VPC endpoints, without traffic traversing the public internet. Use PrivateLink when you need AWS API calls (S3, KMS, SSM, Secrets Manager) to stay within your network perimeter and not traverse the internet, when connecting to SaaS services that support PrivateLink without public IP exposure, and when you need to share a service between VPCs without VPC peering (which exposes entire CIDR ranges). PrivateLink endpoints are required for compliance in regulated environments where outbound internet access must be minimised."
+
+[[faqs]]
+question = "What is the difference between AWS WAF and AWS Network Firewall?"
+answer = "AWS WAF is a web application firewall that inspects HTTP/HTTPS traffic at Layer 7, protecting CloudFront distributions, API Gateways, Application Load Balancers, and Bedrock endpoints from web exploits (OWASP Top 10), rate-based attacks, and bot traffic. AWS Network Firewall is a stateful network firewall operating at Layers 3–7, deployed in a VPC to inspect and filter all TCP/UDP traffic — not just web traffic. Use WAF for internet-facing web applications and APIs; use Network Firewall for VPC-level traffic inspection, outbound egress filtering, and east-west traffic control between subnets and VPCs."
 +++
 
 Cloud network security is the set of controls that govern how traffic moves into, out of, and between resources in a cloud environment — covering ingress and egress filtering, network segmentation, private connectivity, traffic inspection, and detection of anomalous network behaviour. It is structurally different from traditional network security: there is no physical perimeter, no hardware firewall appliance to configure, and no cable you can pull. Instead, the network itself is software-defined, provisioned via API, and controlled through policies attached to virtual constructs. That shift eliminates some traditional attack vectors and introduces entirely new ones.

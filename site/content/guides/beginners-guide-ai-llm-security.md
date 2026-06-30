@@ -6,6 +6,22 @@ description = "A comprehensive beginner's guide to how AI and large language mod
 keywords = ["large language models", "LLM security", "AI security", "prompt injection", "OWASP LLM Top 10", "generative AI risks", "AI for beginners", "LLM architecture", "transformer model", "AI in the enterprise"]
 draft = false
 author = "Steve Harrison, Principal Security Architect"
+
+[[faqs]]
+question = "What is a large language model (LLM)?"
+answer = "A large language model (LLM) is a type of AI trained on vast amounts of text data to predict and generate human language. Models like GPT-4, Claude, and Gemini are trained on hundreds of billions of words and use a neural network architecture called a transformer, which processes all words in a sequence simultaneously rather than one at a time. LLMs learn statistical patterns across language and can generate coherent text, answer questions, write code, summarise documents, and follow complex instructions — without being explicitly programmed for each task."
+
+[[faqs]]
+question = "What are the biggest security risks when deploying LLMs in enterprise environments?"
+answer = "The five most significant security risks for enterprise LLM deployments are: prompt injection attacks where malicious content overrides system instructions (OWASP LLM01); sensitive data leakage where the model reveals training data, system prompts, or user data in its outputs (LLM06); insecure plugin and tool integration where LLM agents with access to APIs, databases, and file systems can be manipulated to perform unauthorised actions (LLM07/LLM08); supply chain vulnerabilities in third-party model weights and datasets; and model denial-of-service via resource-exhausting inputs. These risks require controls that differ fundamentally from traditional application security."
+
+[[faqs]]
+question = "What is the OWASP LLM Top 10?"
+answer = "The OWASP LLM Top 10 is a reference framework for the most critical security risks specific to large language model applications. The top risks are prompt injection (LLM01), insecure output handling (LLM02), training data poisoning (LLM03), model denial of service (LLM04), supply chain vulnerabilities (LLM05), sensitive information disclosure (LLM06), insecure plugin design (LLM07), excessive agency (LLM08), overreliance (LLM09), and model theft (LLM10). It was first published by OWASP in 2023 and is the primary framework used by security teams to assess LLM-based applications."
+
+[[faqs]]
+question = "Do I need to understand AI to secure it as a security architect?"
+answer = "You need to understand enough about how LLMs work to reason about their attack surface — you do not need to be able to train one. Specifically: understanding that LLMs process inputs as tokens and can be manipulated through those inputs (prompt injection); that LLMs generate outputs probabilistically and can leak training data; and that AI agents with tool access behave as autonomous IAM principals. You can map these risks to controls you already understand: input validation, output filtering, least-privilege IAM, and audit logging. The AI-specific threat model extends your existing cloud security knowledge rather than replacing it."
 +++
 
 Artificial intelligence has moved from research curiosity to enterprise infrastructure in under five years. If you are a cloud security architect who has not yet had to secure an LLM-powered application, you almost certainly will within the next twelve months. This guide explains what large language models are, how they are built, and — critically — what the security risks are when you deploy, integrate, or expose them in your organisation.

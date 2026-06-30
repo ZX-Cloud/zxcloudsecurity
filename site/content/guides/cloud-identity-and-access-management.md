@@ -7,6 +7,22 @@ keywords = ["cloud IAM", "identity and access management", "cloud security", "le
 type = "guides"
 draft = false
 author = "Steve Harrison, Principal Security Architect"
+
+[[faqs]]
+question = "Why is identity considered the most important security domain in cloud?"
+answer = "In cloud environments, there is no physical perimeter — no server room to enter, no network cable to pull. The only thing standing between an attacker and your cloud resources is whether they can obtain valid credentials and what those credentials are permitted to do. A compromised identity with AdministratorAccess can read every secret, exfiltrate every database, and pivot across every account in seconds via scripted API calls. Identity is the primary attack vector (credential theft, phishing, SSRF against instance metadata), the primary persistence mechanism (new IAM users, access keys, modified trust policies), and the primary containment layer (disabling credentials stops the attack)."
+
+[[faqs]]
+question = "What is federated identity in cloud environments?"
+answer = "Federated identity allows users to authenticate with an existing identity provider (corporate Active Directory, Okta, Entra ID) and receive temporary cloud credentials, rather than managing separate cloud-native user accounts. For AWS, this means using IAM Identity Centre (SSO) to map identity provider groups to permission sets and issue short-lived STS credentials for each session. Federation eliminates long-term IAM access keys for human users, enforces MFA at the identity provider layer, and ensures leavers are automatically de-provisioned when their corporate account is disabled."
+
+[[faqs]]
+question = "What is zero standing privilege and how do I implement it in AWS?"
+answer = "Zero standing privilege (ZSP) means no principal holds persistent elevated permissions — privileged access is granted just-in-time for a specific task and revoked automatically when the session ends. In AWS, ZSP is implemented by: having engineers assume roles rather than hold IAM users; using AWS IAM Identity Centre for temporary credential issuance with session duration limits (typically 1–4 hours); integrating with a PAM tool (CyberArk, BeyondTrust, or AWS Systems Manager Change Manager) to gate access to production roles behind approval workflows; and auditing all role assumptions via CloudTrail. ZSP eliminates the risk of long-term credential theft because there are no standing credentials to steal."
+
+[[faqs]]
+question = "What is the difference between CIEM and IAM?"
+answer = "IAM (Identity and Access Management) is the system of policies and roles that defines what identities are permitted to do. CIEM (Cloud Infrastructure Entitlement Management) is a security discipline focused on continuously discovering, analysing, and right-sizing the permissions that identities actually have versus what they use. Where IAM is the control plane, CIEM is the analytics layer that identifies permission sprawl — identities with far more privilege than they exercise — and enables organisations to enforce least privilege at scale. AWS IAM Access Analyzer is a native CIEM tool; dedicated CIEM platforms extend this across multi-cloud environments and include identity risk scoring."
 +++
 
 Cloud identity and access management (IAM) is the system of controls that determines who can access what in a cloud environment — governing authentication, authorisation, and privilege for every human user, workload, and service that interacts with cloud resources. It is not a supporting discipline within cloud security; it is the foundation on which everything else rests. There is no network boundary to cross, no physical server room to enter. The only thing standing between an attacker and your cloud resources is whether they can obtain and use valid credentials.

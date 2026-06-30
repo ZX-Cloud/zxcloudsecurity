@@ -7,6 +7,22 @@ keywords = ["cloud threat detection", "GuardDuty", "Microsoft Sentinel", "cloud 
 type = "guides"
 draft = false
 author = "Steve Harrison, Principal Security Architect"
+
+[[faqs]]
+question = "What is cloud threat detection and how does it differ from a traditional SIEM?"
+answer = "Cloud threat detection is the discipline of identifying malicious activity in cloud environments using cloud-native signal sources — API call logs (CloudTrail), network flow data (VPC Flow Logs), DNS query logs, and managed detection services (GuardDuty, Microsoft Defender for Cloud). A traditional SIEM ingests syslog and event data from on-premises systems; cloud threat detection works with API-level telemetry where the attacker never touches a server. The most effective architecture combines cloud-native detection services with a SIEM (AWS Security Lake + Sentinel, or Splunk) for correlation and investigation."
+
+[[faqs]]
+question = "What does Amazon GuardDuty detect?"
+answer = "Amazon GuardDuty is a managed threat detection service that analyses CloudTrail API events, VPC Flow Logs, DNS logs, and Kubernetes audit logs to identify threats including: compromised IAM credentials used from unusual locations, EC2 instances communicating with command-and-control infrastructure, cryptocurrency mining activity, S3 data exfiltration patterns, and EKS workload anomalies. GuardDuty uses AWS threat intelligence feeds, ML-based anomaly detection, and behaviour baselines. It generates prioritised findings with MITRE ATT&CK mappings and integrates with EventBridge for automated response."
+
+[[faqs]]
+question = "What logs should I enable for cloud threat detection in AWS?"
+answer = "The minimum viable logging set for AWS threat detection is: CloudTrail (management and data events across all regions), VPC Flow Logs (at VPC level, not subnet, to capture cross-VPC traffic), Route 53 Resolver query logs, and GuardDuty in every region including regions you are not actively using. For deeper investigation capability, add AWS Config for resource state history, S3 access logs on buckets holding sensitive data, and EKS audit logs. All of these should be centralised in AWS Security Lake or S3 with cross-account write-once permissions to prevent tampering."
+
+[[faqs]]
+question = "What is the difference between Amazon GuardDuty and AWS Security Hub?"
+answer = "GuardDuty is a threat detection service — it analyses logs and network traffic to identify active threats and generates time-sensitive findings. AWS Security Hub is a posture management and findings aggregation service — it evaluates configuration compliance against standards (CIS, FSBP, PCI DSS) and aggregates findings from GuardDuty, Inspector, Macie, and third-party tools. GuardDuty findings flow into Security Hub automatically. Think of GuardDuty as the detector and Security Hub as the aggregator and compliance evaluator."
 +++
 
 Cloud threat detection is not a product you buy — it is a discipline you build. The cloud gives you access to more security signal than any on-premises environment could generate, but that abundance is also the problem. Without deliberate architecture, you drown in logs while the attacks that matter go undetected. This guide covers what cloud threat detection actually requires: the signal sources, the threat categories worth instrumenting, the native and third-party tooling landscape, and the architectural decisions that determine whether your detection programme catches real attacks or generates expensive noise.

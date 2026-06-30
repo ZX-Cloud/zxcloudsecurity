@@ -7,6 +7,22 @@ keywords = ["AWS Security Hub", "cloud security posture", "ASFF", "GuardDuty int
 type = "guides"
 draft = false
 author = "Steve Harrison, Principal Security Architect"
+
+[[faqs]]
+question = "What is AWS Security Hub and what does it do?"
+answer = "AWS Security Hub is a centralised security posture management service that aggregates findings from AWS-native services (GuardDuty, Inspector, Macie, IAM Access Analyzer, AWS Config) and over 60 third-party security products, normalising all findings into the Amazon Security Finding Format (ASFF). It continuously evaluates account configuration against security standards — the AWS Foundational Security Best Practices (FSBP), CIS AWS Foundations Benchmark, and PCI DSS — generating PASS or FAIL findings for each control across every member account. Security Hub provides a single view across your entire AWS Organisation without requiring per-account log queries."
+
+[[faqs]]
+question = "How does AWS Security Hub integrate with Amazon GuardDuty?"
+answer = "GuardDuty threat detection findings are automatically sent to Security Hub without any additional configuration once both services are enabled. In Security Hub, GuardDuty findings appear alongside compliance findings from AWS Config and vulnerability findings from Inspector, unified under the ASFF schema. This enables correlation — a GuardDuty finding for compromised credentials can be viewed alongside the Inspector finding for the unpatched vulnerability on the same EC2 instance. Security Hub also provides finding suppression, custom actions, and EventBridge routing that apply consistently across all integrated sources including GuardDuty."
+
+[[faqs]]
+question = "What security standards does AWS Security Hub support?"
+answer = "AWS Security Hub supports the AWS Foundational Security Best Practices (FSBP), CIS AWS Foundations Benchmark (versions 1.2, 1.4, and 3.0), PCI DSS v3.2.1, NIST SP 800-53 Rev 5, and the AWS Resource Tagging Standard. Each standard evaluates specific controls using AWS Config rules and returns PASS, FAIL, or NOT_AVAILABLE findings per resource. FSBP is the most comprehensive AWS-specific standard and the recommended starting point; CIS is commonly required for audit evidence; PCI DSS is required for organisations processing payment card data."
+
+[[faqs]]
+question = "How do I enable AWS Security Hub across multiple accounts?"
+answer = "Enable Security Hub at the AWS Organizations level by designating a delegated administrator account — typically your Security or Audit account — from the management account. The delegated administrator can then auto-enable Security Hub in all member accounts (existing and new), configure which security standards are enabled organisation-wide, aggregate all findings into a central administrator account, and manage finding suppression and custom actions centrally. Use a CloudFormation StackSet or Terraform to enable the service consistently across all regions, as Security Hub must be enabled per-region and findings are not automatically cross-region aggregated without configuring a finding aggregation region."
 +++
 
 AWS Security Hub is the centralised security posture management service within AWS, functioning as both a findings aggregator and a compliance evaluation engine across your entire AWS organisation. Findings from native services — GuardDuty, Amazon Inspector, Amazon Macie, IAM Access Analyzer, and AWS Config — are ingested alongside findings from over 60 third-party security products, all normalised into the Amazon Security Finding Format (ASFF). Security Hub continuously evaluates account configuration against security standards including the AWS Foundational Security Best Practices (FSBP), CIS AWS Foundations Benchmark, and PCI DSS, generating PASS or FAIL findings for each evaluated resource across every member account.

@@ -7,6 +7,22 @@ keywords = ["AI agents", "agentic AI", "cloud security", "model security", "leas
 type = "guides"
 draft = false
 author = "Steve Harrison, Principal Security Architect"
+
+[[faqs]]
+question = "What is an AI agent and why does it require a different security model?"
+answer = "An AI agent is an LLM-based system that can take actions autonomously — calling APIs, reading and writing files, executing code, querying databases — rather than only producing text. Unlike a chatbot that requires a human to act on its output, an AI agent closes the loop between reasoning and action. This means a compromised or manipulated agent can perform destructive operations at machine speed without human confirmation. Traditional IAM controls assume a human principal who can be interrupted; agentic AI requires guardrails at the model layer (what it is instructed to do), the IAM layer (what it is permitted to do), and the runtime layer (what actions it actually takes)."
+
+[[faqs]]
+question = "What is indirect prompt injection in agentic AI systems?"
+answer = "Indirect prompt injection is an attack where malicious instructions are embedded in content that an AI agent reads — a web page, email, document, database record, or API response — rather than in a direct user message. When the agent processes this content, the embedded instructions override its system prompt and cause it to take unintended actions. For agents with cloud infrastructure access, this can mean exfiltrating credentials, deleting resources, or calling unauthorised APIs. Defending against indirect prompt injection requires input sanitisation, output validation, and an architecture that separates trusted instructions from untrusted external data."
+
+[[faqs]]
+question = "How do I apply least privilege to an AI agent's cloud permissions?"
+answer = "Treat an AI agent as an IAM principal: create a dedicated IAM role for it, scope permissions to the specific API actions and resources the agent needs for its defined tasks, and do not grant permissions 'just in case'. Use IAM conditions to restrict the role to specific resource ARNs, regions, and request contexts. Avoid granting broad managed policies like ReadOnlyAccess — analyse what actions the agent actually needs using IAM Access Analyzer. Set resource-based policies on the services the agent accesses (S3 buckets, DynamoDB tables, Bedrock endpoints) to create a second permission boundary independent of the role policy."
+
+[[faqs]]
+question = "What runtime monitoring should I put in place for AI agents in production?"
+answer = "Runtime monitoring for AI agents should cover: CloudTrail alerts on IAM actions taken by the agent's role that fall outside its expected behaviour baseline; rate limiting on all tool calls (API calls, database queries, file operations) to detect runaway loops or exfiltration attempts; structured logging of every tool call the agent makes, including inputs and outputs, to an immutable S3 destination; and LLM-layer output filtering to detect and block the agent from including sensitive values (credentials, PII, internal infrastructure details) in its responses. GuardDuty will surface anomalous EC2 or ECS behaviour if the agent runtime is compromised at the infrastructure level."
 +++
 
 Securing AI agents with persistent access to production cloud infrastructure requires a fundamentally different threat model from traditional IAM hardening. Unlike human operators, agentic AI systems can act at machine speed, chain tool calls autonomously, and be manipulated through their input data — making conventional perimeter and identity controls insufficient on their own. Architects must layer prompt-level guardrails, strict least privilege boundaries, and runtime monitoring to safely deploy agentic workloads.

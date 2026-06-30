@@ -7,6 +7,22 @@ keywords = ["AWS IAM", "least privilege", "roles", "policies", "MFA"]
 type = "guides"
 draft = false
 author = "Steve Harrison, Principal Security Architect"
+
+[[faqs]]
+question = "What are the most important AWS IAM security best practices?"
+answer = "The highest-impact AWS IAM security practices are: eliminate IAM users in favour of IAM roles and federated identity via IAM Identity Centre; never use root account credentials for operational tasks; enforce MFA on all human principals; apply least privilege by using IAM Access Analyzer to identify unused permissions and tighten policies; use Service Control Policies (SCPs) at the AWS Organization level to enforce preventive guardrails that individual accounts cannot override; and rotate or eliminate long-term access keys."
+
+[[faqs]]
+question = "What is the difference between IAM roles and IAM users in AWS?"
+answer = "IAM users are long-term identities with permanent credentials (password and access keys) that do not expire automatically. IAM roles are temporary identities that issue short-lived credentials via STS, lasting from 15 minutes to 12 hours. Roles should be used for EC2 instances, Lambda functions, ECS tasks, CI/CD pipelines, and cross-account access — any non-human workload. IAM users should be eliminated in favour of federated human access via IAM Identity Centre (SSO), which issues role-based temporary credentials for each session."
+
+[[faqs]]
+question = "What is an AWS Service Control Policy (SCP) and how does it differ from an IAM policy?"
+answer = "A Service Control Policy (SCP) is an AWS Organizations policy that sets the maximum permission boundary for all accounts and IAM principals within an Organizational Unit (OU) or account. SCPs do not grant permissions — they restrict what IAM policies within that account can grant. An IAM policy attached to a role grants access; an SCP can override that by denying the action regardless of what IAM policies say. SCPs are the primary preventive guardrail mechanism for multi-account environments, used to prevent actions like disabling GuardDuty, leaving approved regions, or accessing production data from development accounts."
+
+[[faqs]]
+question = "How do I enforce least privilege in AWS IAM?"
+answer = "Enforcing least privilege in AWS IAM requires four steps: start with AWS managed policies for common use cases rather than writing overly broad policies from scratch; use IAM Access Analyzer to identify unused services and actions in existing policies and generate tighter policy suggestions based on CloudTrail activity; apply permission boundaries to limit the maximum permissions any role can grant even when developers self-service IAM; and use conditions (aws:RequestedRegion, aws:PrincipalOrgID, s3:prefix) to scope policies to specific resources, regions, and organisations rather than using wildcards."
 +++
 
 AWS IAM is the control plane for everything you do in AWS — misconfigured policies and poorly scoped permissions are consistently the root cause of serious cloud breaches. Securing IAM correctly means enforcing least privilege at every layer, eliminating long-lived credentials where possible, and building preventive controls that survive organisational change. The practices below are applicable at any scale, from a single-account startup to a multi-account enterprise estate.

@@ -6,6 +6,15 @@ tags: ["aws-cloudtrail", "cloud-security", "aws-logging", "compliance"]
 slug: "aws-cloudtrail-configuration-best-practices"
 author: "Steve Harrison, Principal Security Architect"
 word_count: 2017
+faqs:
+  - question: "What is AWS CloudTrail and what does it record?"
+    answer: "AWS CloudTrail records API calls made to AWS services — every create, read, update, and delete operation performed via the AWS console, CLI, SDKs, or CloudFormation. Each CloudTrail event includes: who made the call (IAM principal ARN), what was called (API action and service), when it happened (timestamp), where from (source IP address), and on what resource (resource ARN). CloudTrail is the primary audit trail for AWS environments, essential for incident investigation, compliance evidence, and detecting anomalous behaviour such as credential misuse or resource deletion."
+  - question: "What is an AWS CloudTrail organisation trail and why should I use one?"
+    answer: "An organisation trail is a CloudTrail trail created in the AWS Organizations management account that automatically captures API events from all member accounts — current and future — into a single centralised S3 bucket in your security or logging account. Member accounts cannot modify or delete an organisation trail, providing tamper resistance that per-account trails lack. Using an organisation trail eliminates the need to configure and maintain trails in each account separately, ensures new accounts are automatically covered, and enables cross-account investigation from a single log source without per-account Athena queries."
+  - question: "How do I protect CloudTrail logs from tampering or deletion?"
+    answer: "Protect CloudTrail logs with four controls: enable log file integrity validation (CloudTrail generates a SHA-256 hash chain for each log file, allowing detection of any modification or deletion); apply an S3 bucket policy that denies DeleteObject and DeleteBucket to all principals except a break-glass role; use an SCP to deny cloudtrail:StopLogging, cloudtrail:DeleteTrail, and cloudtrail:UpdateTrail across all member accounts; and write logs to a separate security account that development and operations accounts cannot access. MFA Delete on the S3 bucket adds a further barrier to log deletion."
+  - question: "How long should I retain CloudTrail logs for compliance?"
+    answer: "CloudTrail retains event history in the console for 90 days free. For compliance purposes, logs should be retained in S3 for a minimum of 12 months — the standard required by PCI DSS and commonly required by FCA SYSC and ISO 27001 auditors. Move logs to S3 Intelligent-Tiering or Glacier after 90 days to reduce cost while meeting retention requirements. For forensic readiness, retain at least 12 months in queryable storage (Athena or Security Lake) so you can investigate incidents across a full year of API history without needing to restore archived logs under time pressure."
 draft: false
 ---
 

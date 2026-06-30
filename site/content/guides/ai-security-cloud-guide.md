@@ -7,6 +7,22 @@ keywords = ["AI security", "LLM security", "AI cloud security", "prompt injectio
 type = "guides"
 draft = false
 author = "Steve Harrison, Principal Security Architect"
+
+[[faqs]]
+question = "What are the main security risks of running AI workloads in the cloud?"
+answer = "The primary risks are: prompt injection (malicious content in AI inputs overrides system instructions and causes the model to take unintended actions), training data exfiltration (sensitive data used to fine-tune models leaks through model outputs), model abuse (public-facing AI endpoints used to generate harmful content or bypass safety controls), supply chain attacks against model weights and datasets, and AI agents with cloud IAM access being manipulated to perform destructive API operations. Each risk requires specific controls that differ from traditional application security."
+
+[[faqs]]
+question = "What is prompt injection and why is it particularly dangerous for AI agents with cloud access?"
+answer = "Prompt injection is an attack where malicious content in the AI's input overrides its system instructions. Direct prompt injection comes from a user; indirect prompt injection comes from external content the AI reads — a web page, email, document, or database record that contains hidden instructions. For AI agents with cloud infrastructure access, a successful indirect prompt injection can cause the agent to exfiltrate data, delete resources, or escalate privileges via IAM API calls. Because agents act autonomously without human confirmation of each action, the blast radius is significantly larger than for a chatbot that only produces text."
+
+[[faqs]]
+question = "How do I secure Amazon Bedrock workloads?"
+answer = "Key controls for Amazon Bedrock security are: use IAM least privilege to scope Bedrock API access to the specific models and actions required; enable Bedrock Guardrails to enforce content filtering, PII redaction, and grounding checks; store all model invocation logs in CloudWatch and S3 for audit; use VPC endpoints so Bedrock API traffic stays within your network perimeter; apply resource-based policies to restrict which IAM principals can invoke specific model endpoints; and treat Bedrock agents as IAM principals with their own roles scoped to minimum required permissions."
+
+[[faqs]]
+question = "What is the OWASP LLM Top 10?"
+answer = "The OWASP LLM Top 10 is a list of the most critical security risks for large language model applications, published by OWASP in 2023 and updated in 2025. The top risks include prompt injection (LLM01), insecure output handling (LLM02), training data poisoning (LLM03), model denial of service (LLM04), supply chain vulnerabilities (LLM05), sensitive information disclosure (LLM06), insecure plugin design (LLM07), excessive agency (LLM08), overreliance (LLM09), and model theft (LLM10). It is the primary reference framework for security teams assessing LLM-based applications."
 +++
 
 AI systems running in cloud environments introduce a threat model that most security teams are not yet equipped to handle. The underlying risk is not that AI is inherently dangerous — it is that AI components are being wired into cloud infrastructure with the same access patterns as any other service, without the same scrutiny applied to the novel attack surfaces they introduce. An LLM with access to a database, a file system, or a set of API credentials is a new kind of principal with new kinds of attack vectors. Security architects who understand cloud IAM, network controls, and vulnerability management need to extend that understanding to cover AI-specific threats before organisations learn about them the hard way.

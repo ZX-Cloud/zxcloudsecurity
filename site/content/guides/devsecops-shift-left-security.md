@@ -7,6 +7,22 @@ keywords = ["DevSecOps", "shift-left security", "CI/CD security", "IaC scanning"
 type = "guides"
 draft = false
 author = "Steve Harrison, Principal Security Architect"
+
+[[faqs]]
+question = "What does shift-left mean in security?"
+answer = "Shift-left security means moving security testing and validation earlier in the software development lifecycle — into the IDE, code review, and CI pipeline — rather than leaving it as a deployment gate or post-production activity. The term refers to shifting activities left on the timeline from release to development. A misconfigured Terraform resource caught by Checkov in a pull request takes seconds to fix; the same misconfiguration caught in production may require an emergency change, stakeholder notification, and potential compliance reporting. Shift-left security reduces both remediation cost and risk exposure window."
+
+[[faqs]]
+question = "What tools should I use for Infrastructure as Code (IaC) security scanning?"
+answer = "The primary open-source IaC scanning tools are Checkov (supports Terraform, CloudFormation, Kubernetes, Helm, ARM templates — runs as a GitHub Action or pre-commit hook), Terrascan (Terraform and Kubernetes with OPA policy support), and tfsec (Terraform-specific, fast). For AWS CloudFormation specifically, cfn-nag provides template analysis with mapped CIS and NIST controls. In a CI/CD pipeline, run IaC scanning as a required check on pull requests, fail builds on HIGH severity findings, and send results to AWS Security Hub via the ASFF integration where supported."
+
+[[faqs]]
+question = "What is the difference between SAST and SCA in a DevSecOps pipeline?"
+answer = "SAST (Static Application Security Testing) analyses source code for security vulnerabilities by inspecting the code itself without running it — detecting SQL injection patterns, insecure function calls, hardcoded credentials, and logic flaws. SCA (Software Composition Analysis) analyses the third-party libraries and dependencies your code uses, identifying components with known CVEs. SAST finds vulnerabilities you wrote; SCA finds vulnerabilities in code you imported. Both are essential: SAST without SCA misses the supply chain risk from vulnerable dependencies; SCA without SAST misses first-party code vulnerabilities."
+
+[[faqs]]
+question = "How do I prevent secrets from being committed to a git repository?"
+answer = "The most effective approach is layered: install a pre-commit hook using detect-secrets or gitleaks that scans staged files before each commit; configure the CI pipeline to run the same secret scanner on every pull request as a blocking check; set up GitGuardian or Trufflehog in your SCM platform for historical and real-time scanning; and rotate any secrets that do reach a repository immediately, treating them as compromised regardless of repository visibility. Never rely on deleting the commit — git history is preserved and the secret should be considered exposed the moment it was committed."
 +++
 
 DevSecOps is the integration of security practices into the software development and delivery lifecycle — shifting security left from a deployment-gate activity into the development process itself, so that vulnerabilities, misconfigurations, and policy violations are caught at the point where they are cheapest to fix. In a cloud-native environment, where infrastructure is code, the same shift-left principle applies to the configuration of cloud resources: a misconfigured S3 bucket in a Terraform file is a security defect, and like all defects, it is orders of magnitude cheaper to fix in code review than in production.

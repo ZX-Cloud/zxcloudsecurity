@@ -7,6 +7,22 @@ keywords = ["cloud security CVE", "CVE-2026-41089", "Netlogon RCE", "Windows DNS
 type = "guides"
 draft = false
 author = "Steve Harrison, Principal Security Architect"
+
+[[faqs]]
+question = "Why do Windows CVEs affecting on-premises infrastructure matter to AWS and Azure cloud teams?"
+answer = "Hybrid cloud estates use on-premises Windows Server domain controllers to authenticate identities that flow into AWS IAM Identity Centre, Azure Entra ID, and federated SaaS applications. A vulnerability in Netlogon or the Windows DNS client on a domain controller is not just a Windows problem — it is a cloud identity problem. An attacker who compromises a domain controller can harvest Kerberos tickets, forge Golden Tickets, and impersonate any user across the entire federated estate, including the cloud control plane. The cloud IAM posture is only as strong as the identity source it trusts."
+
+[[faqs]]
+question = "What is CVE-2026-41089 and why is it critical for hybrid cloud teams?"
+answer = "CVE-2026-41089 is a stack-based buffer overflow in Windows Netlogon that allows an unauthenticated attacker to achieve remote code execution on a domain controller by sending a specially crafted network request. No user interaction is required. CISA added it to the Known Exploited Vulnerabilities (KEV) catalogue with active exploitation confirmed in the wild. For hybrid cloud estates where domain controllers federate identity into AWS or Azure, a compromised DC gives the attacker control over every authenticated identity in the organisation. Patch all domain controllers in a single maintenance window — half-patched forests remain exposed."
+
+[[faqs]]
+question = "How do I patch Windows vulnerabilities across EC2 instances at scale?"
+answer = "Use AWS Systems Manager Patch Manager with a custom patch baseline that sets ApproveAfterDays to 0 for Critical and Important severity Microsoft security updates, removing the default 7-day waiting period for emergency vulnerabilities. Deploy the patch baseline via a Maintenance Window or Run Command across your EC2 fleet, targeting instances by tag. After patching, verify compliance using Patch Manager's compliance dashboard — instances that report 'installed' but have a pending reboot are still vulnerable. Build reboot validation into your patch runbooks. Enable Amazon Inspector to provide continuous CVE scanning across EC2 and ECR images between patch cycles."
+
+[[faqs]]
+question = "What is CVE-2026-45585 (YellowKey) and why should cloud security teams care about a BitLocker bypass?"
+answer = "YellowKey (CVE-2026-45585) allows an attacker with physical access to a device to bypass BitLocker encryption and access data without the user's password. It affects Windows 11 24H2, 25H2, 26H1, and Windows Server 2025 in TPM-only BitLocker mode. The cloud security relevance is cached credentials: developer and analyst laptops running AWS CLI, Azure CLI, or the AWS Console typically cache temporary credentials, SSO tokens, and session cookies locally. A YellowKey attack against a stolen laptop gives the attacker those tokens, enabling cloud account access. The interim fix is switching to TPM+PIN mode; the June 2026 Patch Tuesday includes a full resolution."
 +++
 
 If you run hybrid cloud estates where Windows Server domain controllers on-premises feed identity into AWS or Azure workloads, the CVEs published across May and June 2026 deserve your full attention. This is not a routine Patch Tuesday digest. Several of these vulnerabilities are actively exploited in the wild. At least one carries a CVSS score of 9.8 with zero-click unauthenticated remote code execution against domain controllers, and a researcher-disclosed zero-day has a public proof-of-concept that any threat actor with a USB stick can weaponise. The gap between disclosure and active exploitation is narrowing. AI-enabled adversaries are compressing the time between a CVE's public disclosure and first observed exploitation, which means your patch SLA windows are getting shorter whether you have formally revised them or not.

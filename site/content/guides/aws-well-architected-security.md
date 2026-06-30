@@ -7,6 +7,22 @@ keywords = ["AWS Well-Architected security", "Well-Architected Framework securit
 type = "guides"
 draft = false
 author = "Steve Harrison, Principal Security Architect"
+
+[[faqs]]
+question = "What are the seven best practice areas in the AWS Well-Architected Security Pillar?"
+answer = "The AWS Well-Architected Security Pillar organises its eleven security questions across seven best practice areas: Security Foundations (SEC 1 — operating model and security controls); Identity and Access Management (SEC 2 and SEC 3 — strong identity, least privilege); Detection (SEC 4 — security event detection); Infrastructure Protection (SEC 5 — network and compute controls); Data Protection (SEC 6 and SEC 7 — classification, encryption, data integrity); Incident Response (SEC 10 — IR preparation and simulation); and Application Security (SEC 11 — secure development and threat modelling). Each area maps to specific AWS services and generates High Risk Issue (HRI) findings when not implemented."
+
+[[faqs]]
+question = "What is a Well-Architected Review and how is it conducted?"
+answer = "A Well-Architected Review is a structured evaluation of a workload against the AWS Well-Architected Framework questions, conducted using the AWS Well-Architected Tool in the AWS console. It involves working through each question with the workload team, documenting the current state (implemented / not implemented / not applicable), and identifying High Risk Issues (HRIs) and Medium Risk Issues (MRIs). Reviews are typically run per-workload, not per-account. AWS Well-Architected Partners can conduct formal reviews with an Improvement Plan. The Tool tracks progress across review cycles and shows risk trends over time."
+
+[[faqs]]
+question = "What are High Risk Issues (HRIs) in the AWS Well-Architected Framework?"
+answer = "High Risk Issues (HRIs) are findings that represent significant risks to workload security, reliability, or performance — the Well-Architected questions where the answer indicates a critical gap. For the Security Pillar, common HRIs include: no MFA on root account, no organisation-level CloudTrail, no GuardDuty in all regions, direct internet access to data tier resources, no incident response runbooks, and no encryption at rest for sensitive data. AWS reports HRI counts in the Well-Architected Tool and in AWS Trusted Advisor. Reducing HRI count is the primary KPI for a security improvement programme driven by Well-Architected reviews."
+
+[[faqs]]
+question = "How does the AWS Well-Architected Security Pillar align to UK compliance requirements?"
+answer = "The AWS Well-Architected Security Pillar maps directly to several UK compliance frameworks. SEC 1 (security foundations) aligns to NCSC Cloud Security Principles and ISO 27001 Annex A governance controls. SEC 2 and SEC 3 (identity) align to FCA SYSC 13 access control requirements and Cyber Essentials user access control. SEC 4 (detection) maps to NCSC CAF logging and monitoring objectives. SEC 10 (incident response) aligns to UK GDPR 72-hour breach notification, FCA incident reporting under DORA, and NHS DSPT incident management requirements. A Well-Architected review against the Security Pillar serves as useful pre-audit evidence for these frameworks."
 +++
 
 The AWS Well-Architected Security Pillar is a structured framework for evaluating and improving the security posture of workloads running on AWS. It defines eleven security questions — organised across seven best practice areas — that cover the full range of security decisions an architect must make: identity, detection, network protection, data security, incident response, and application security. A workload that answers all eleven questions with evidence-backed "yes" responses is, by definition, a well-secured workload.

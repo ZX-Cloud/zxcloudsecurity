@@ -7,6 +7,22 @@ keywords = ["AWS WAF", "AWS WAF configuration", "web application firewall AWS", 
 type = "guides"
 draft = false
 author = "Steve Harrison, Principal Security Architect"
+
+[[faqs]]
+question = "What does AWS WAF protect against?"
+answer = "AWS WAF protects against web-layer (Layer 7) threats including SQL injection, cross-site scripting (XSS), path traversal, remote file inclusion, Log4Shell and other known exploit patterns, bot traffic, and HTTP flood attacks. It inspects HTTP/HTTPS requests to CloudFront distributions, Application Load Balancers, API Gateway REST APIs, AppSync GraphQL APIs, Cognito user pools, and Amazon Bedrock AgentCore Gateway endpoints. AWS WAF does not protect against network-layer attacks (use AWS Network Firewall or Shield Advanced for those) and has no visibility into your application's authentication state."
+
+[[faqs]]
+question = "What is the difference between AWS WAF and AWS Shield?"
+answer = "AWS WAF is a web application firewall that inspects and filters HTTP/HTTPS traffic based on rules you define — blocking specific request patterns, rate-limiting IPs, and enforcing geo-restrictions. AWS Shield is a managed DDoS protection service: Shield Standard (free, automatic) protects all AWS resources from common network and transport layer DDoS attacks; Shield Advanced (paid) adds volumetric DDoS protection, automatic attack mitigation, 24/7 access to the AWS DDoS Response Team, and cost protection for scaling events. WAF and Shield Advanced are complementary — Shield handles volumetric attacks; WAF handles application-layer exploitation."
+
+[[faqs]]
+question = "How do I set rate limits in AWS WAF without blocking legitimate users?"
+answer = "Derive your rate limit threshold from actual traffic data rather than guessing. Query your WAF log group in CloudWatch Logs Insights using a 5-minute window, calculate the 95th percentile of request counts per IP, then set your rate limit 20–30% above that figure. Start every rate-based rule in Count mode and monitor sampled requests for at least a week before switching to Block. AWS WAF rate-based rules support a minimum threshold of 10 requests per 5-minute window, giving fine-grained control for login endpoints and sensitive API paths. Use separate rate rules with different thresholds for different URI paths."
+
+[[faqs]]
+question = "What are AWS Managed Rule Groups for WAF?"
+answer = "AWS Managed Rule Groups are pre-built sets of WAF rules maintained by the AWS Threat Research Team, providing immediate protection without requiring you to write custom rules. The core groups are: AWSManagedRulesCommonRuleSet (CRS) — OWASP Top 10 baseline including XSS and SQL injection; AWSManagedRulesKnownBadInputsRuleSet — Log4Shell, Spring4Shell, and SSRF patterns; AWSManagedRulesSQLiRuleSet — advanced SQL injection detection; AWSManagedRulesAdminProtectionRuleSet — blocks access to admin endpoints; and AWSManagedRulesBotControlRuleSet (paid) — bot detection and mitigation. Place managed rules in Count mode for at least a week before switching to Block to identify and handle false positives."
 +++
 
 If you run internet-facing workloads on AWS, getting your WAF configuration right is no longer optional. It is table stakes for FCA-regulated services, GDPR compliance, and the NCSC's Cyber Essentials Plus framework. What has changed in 2026 is the scope of what WAF now needs to protect: not just your ALBs and CloudFront distributions, but agentic AI workloads running on Amazon Bedrock AgentCore Gateway, and APIs that attract a growing volume of automated traffic. Two disclosures in the last 72 hours make this more pressing than usual. One is a major capability release, the other a critical vulnerability bulletin. Both require your attention now.

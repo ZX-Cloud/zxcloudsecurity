@@ -7,6 +7,22 @@ keywords = ["AWS security services", "Azure security services", "GCP security se
 draft = false
 aliases = ["/guides/cross-cloud-security-services-comparison/"]
 author = "Steve Harrison, Principal Security Architect"
+
+[[faqs]]
+question = "What is the AWS equivalent of Microsoft Defender for Cloud?"
+answer = "The closest AWS equivalent to Microsoft Defender for Cloud is a combination of AWS Security Hub and Amazon GuardDuty. Security Hub aggregates findings and evaluates compliance across accounts, while GuardDuty provides threat detection. Microsoft Defender for Cloud bundles both functions into a single product, whereas AWS separates them into distinct services that integrate via the Amazon Security Finding Format (ASFF)."
+
+[[faqs]]
+question = "How does AWS Security Hub compare to Google Security Command Center?"
+answer = "Both services aggregate security findings and evaluate compliance across cloud resources, but their depth differs by domain. AWS Security Hub has native integrations with over 60 third-party products and supports standards including FSBP, CIS, and PCI DSS. Google Security Command Center (SCC) is tightly integrated with Google Workspace and GCP-native services, with strong data risk and container security features via Security Health Analytics. For organisations running workloads on both platforms, neither replaces the other — a third-party CNAPP is typically required for unified visibility."
+
+[[faqs]]
+question = "Which cloud provider has the best native security tooling in 2026?"
+answer = "AWS has the broadest portfolio of discrete security services, with best-in-class tools across identity (IAM Identity Centre), detection (GuardDuty), posture management (Security Hub), logging (CloudTrail, Security Lake), and forensics (Detective). Azure's strength is its tight Entra ID integration and Sentinel SIEM. GCP excels in data security and its Chronicle SIEM. The right answer depends on your workload distribution — most enterprise organisations run multi-cloud estates and need controls at each layer regardless of which native tools they choose."
+
+[[faqs]]
+question = "What is a CNAPP and how does it relate to AWS, Azure, and GCP native security?"
+answer = "A Cloud Native Application Protection Platform (CNAPP) is a category of security tooling that unifies CSPM, CWPP, CIEM, and container security into a single platform. CNAPP vendors such as Wiz, Prisma Cloud, and Lacework provide multi-cloud visibility that individual cloud providers cannot offer natively. For organisations running workloads across AWS, Azure, and GCP, a CNAPP complements — rather than replaces — native provider services, acting as the correlation layer across cloud-specific findings."
 +++
 
 Security architects working across more than one cloud constantly hit the same problem: each provider names equivalent capabilities completely differently, and the equivalences are rarely exact. AWS Security Hub, Microsoft Defender for Cloud and Google Security Command Center occupy roughly the same space, but they differ in scope, pricing model and how much they overlap with neighbouring services.

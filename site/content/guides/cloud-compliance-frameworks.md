@@ -7,6 +7,22 @@ keywords = ["cloud compliance", "ISO 27001 cloud", "SOC 2 AWS", "PCI DSS cloud",
 type = "guides"
 draft = false
 author = "Steve Harrison, Principal Security Architect"
+
+[[faqs]]
+question = "Does AWS have ISO 27001 certification?"
+answer = "Yes — AWS holds ISO 27001 certification across its core infrastructure, covering the data centres, hardware, networking, and managed services in scope. This means AWS's controls for physical security, logical access, availability, and change management are independently audited against ISO 27001 annually. However, ISO 27001 certification for your organisation covers the workloads you build on top of that infrastructure. You must implement your own controls for access management, logging, encryption of data you store, and incident response. AWS provides a shared responsibility model to clarify what is certified at the provider layer and what you own."
+
+[[faqs]]
+question = "What is the difference between ISO 27001 and SOC 2 for cloud deployments?"
+answer = "ISO 27001 is a prescriptive international standard that specifies requirements for an Information Security Management System (ISMS) — it covers the management framework and processes for governing security across the organisation. SOC 2 is an attestation report under the AICPA Trust Services Criteria, scoped to a specific service and evaluated against five trust principles: security, availability, processing integrity, confidentiality, and privacy. ISO 27001 is global and certification-based; SOC 2 is US-originated and report-based (Type I for design, Type II for operating effectiveness over 6–12 months). UK enterprises increasingly need both for customer and regulator assurance."
+
+[[faqs]]
+question = "What does UK GDPR require from a cloud architecture perspective?"
+answer = "UK GDPR requires that personal data is processed lawfully, stored only as long as necessary, protected with appropriate technical controls, and only transferred outside the UK under specific safeguards. For cloud architecture this means: document where personal data is stored and flows (Article 30 Records of Processing Activities); implement encryption at rest and in transit; configure access controls and audit logging to demonstrate accountability; ensure data residency is within the UK or an adequate country if required; implement data retention and deletion controls; and establish a 72-hour ICO notification process for personal data breaches. AWS services like Macie, Config, and CloudTrail provide the technical foundation for these requirements."
+
+[[faqs]]
+question = "What is Cyber Essentials Plus and does it cover AWS deployments?"
+answer = "Cyber Essentials Plus is a UK government-backed certification scheme administered by NCSC that validates five technical controls: firewalls, secure configuration, user access control, malware protection, and patch management. The Plus variant includes an independent technical audit. For AWS deployments, Cyber Essentials Plus applies to the in-scope devices and services — EC2 instances, endpoints, and services in the certification boundary. AWS itself holds Cyber Essentials certification for its managed services. Your certification must cover your workloads and access devices: security groups and NACLs fulfil the firewall requirement; IAM and SCPs fulfil access control; Systems Manager Patch Manager fulfils patch management."
 +++
 
 Compliance in cloud environments is widely misunderstood and frequently mishandled. The misunderstanding takes two forms: organisations that treat cloud compliance as a mapping exercise — draw lines between framework controls and AWS services, tick boxes, file the report — and organisations that treat cloud as a compliance risk and avoid it entirely. Both miss the point. Cloud platforms, when correctly configured, can make compliance significantly more achievable than traditional data centre environments. But "correctly configured" is doing enormous work in that sentence.

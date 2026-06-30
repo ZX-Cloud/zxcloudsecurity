@@ -7,6 +7,22 @@ keywords = ["DSPM", "data security posture management", "data discovery", "class
 type = "guides"
 draft = false
 author = "Steve Harrison, Principal Security Architect"
+
+[[faqs]]
+question = "What is the difference between DSPM and CSPM?"
+answer = "CSPM (Cloud Security Posture Management) focuses on the configuration and posture of cloud infrastructure — detecting misconfigured S3 buckets, open security groups, and compliance drift. DSPM (Data Security Posture Management) focuses on the data itself — discovering where sensitive data lives, classifying it, and identifying whether access to it is appropriate. CSPM asks 'is my infrastructure secure?'; DSPM asks 'is my data exposed?' Modern CNAPP platforms increasingly bundle both capabilities."
+
+[[faqs]]
+question = "What sensitive data does DSPM discover and classify?"
+answer = "DSPM tools scan structured and unstructured data sources including S3 buckets, cloud databases (RDS, BigQuery, Azure SQL), data lakes, SaaS platforms (Salesforce, Microsoft 365), and code repositories. They classify findings by type: PII (names, email addresses, national insurance numbers), financial data (card numbers, bank details), health records, intellectual property, and credentials. This classification enables GDPR Article 30 data mapping and identifies data requiring additional access controls or encryption."
+
+[[faqs]]
+question = "Is Amazon Macie a DSPM tool?"
+answer = "Amazon Macie is a data security service that uses machine learning to discover and classify sensitive data in S3 — it is a DSPM component, not a full DSPM solution. Macie is scoped to S3 only, whereas dedicated DSPM platforms cover multi-cloud storage, SaaS applications, databases, and data pipelines in a single view. For AWS-only environments with S3 as the primary data store, Macie provides strong native coverage. For multi-cloud or SaaS-heavy environments, a dedicated DSPM tool provides the breadth that Macie lacks."
+
+[[faqs]]
+question = "What compliance frameworks does DSPM support?"
+answer = "DSPM supports any framework with data protection or privacy controls. The most directly relevant are UK GDPR and EU GDPR (data discovery supports Article 30 Records of Processing Activities and the right to erasure), PCI DSS (locate and restrict access to cardholder data), HIPAA (PHI location and access controls), and ISO 27001 Annex A controls on information classification. DSPM also reduces audit scope by proving precisely where regulated data resides across cloud and SaaS environments."
 +++
 
 Data Security Posture Management (DSPM) is a security discipline focused on continuously discovering, classifying, and monitoring sensitive data across cloud environments to identify and remediate exposure risks. Unlike perimeter-focused controls, DSPM keeps the data itself at the centre of your security strategy — understanding where it lives, who can access it, and whether those access patterns are appropriate. As organisations spread data across multi-cloud storage, SaaS platforms, and data pipelines, DSPM has become an essential capability for maintaining a defensible security posture.

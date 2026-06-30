@@ -6,6 +6,15 @@ tags: ["aws-kms", "encryption", "cloud-security", "iam", "key-management"]
 slug: "aws-kms-key-management-best-practices"
 author: "Steve Harrison, Principal Security Architect"
 word_count: 2472
+faqs:
+  - question: "What is AWS KMS and how does it work?"
+    answer: "AWS Key Management Service (KMS) is a managed service for creating and controlling encryption keys used to protect data across AWS services and applications. KMS keys never leave the service unencrypted — all cryptographic operations happen within FIPS 140-2 validated hardware security modules (HSMs). Services like S3, EBS, RDS, and Secrets Manager integrate natively with KMS to encrypt data at rest using envelope encryption: data is encrypted with a data key, which is itself encrypted by a KMS key. You call KMS to decrypt the data key, which then decrypts the data — KMS never sees your actual data."
+  - question: "What is the difference between AWS-managed keys and customer-managed keys in KMS?"
+    answer: "AWS-managed keys are created and managed by AWS on your behalf when you enable encryption on a service (e.g., 'aws/s3', 'aws/rds'). You cannot rotate, delete, or apply custom key policies to them. Customer-managed keys (CMKs) are keys you create in KMS with full control over key policy, rotation schedule (manual or automatic), cross-account access, and deletion window. CMKs provide audit visibility via CloudTrail for every use of the key, enable cross-account sharing, and allow you to revoke access immediately by modifying the key policy. Regulated workloads should use CMKs for data requiring audit trail and access revocation."
+  - question: "How do I enable automatic key rotation in AWS KMS?"
+    answer: "Enable automatic key rotation on a KMS key from the console (Key Management Service → your key → Key rotation → Enable), via the CLI with 'aws kms enable-key-rotation --key-id <key-id>', or in Terraform with 'enable_key_rotation = true'. AWS rotates the key material every year automatically, creating new backing material while retaining all previous versions to decrypt data encrypted under earlier versions. Rotation does not require re-encrypting existing data — KMS tracks which key version encrypted each data key. Automatic rotation is available for symmetric customer-managed keys only; asymmetric keys and HMAC keys require manual rotation."
+  - question: "How do I control and audit access to AWS KMS keys?"
+    answer: "KMS key access is controlled by a key policy (required, attached to the key itself) and optionally by IAM policies and grants. The key policy must explicitly allow the AWS account root or specific IAM principals — unlike other AWS resources, IAM policies alone cannot grant KMS access without a corresponding key policy statement. Every KMS API call (Encrypt, Decrypt, GenerateDataKey, DescribeKey) is logged to CloudTrail, providing a complete audit trail of who used which key, when, and from which principal. Use CloudWatch Alarms on CloudTrail events for KMS to alert on unusual key usage patterns, key deletion scheduling, or cross-account access."
 draft: false
 ---
 

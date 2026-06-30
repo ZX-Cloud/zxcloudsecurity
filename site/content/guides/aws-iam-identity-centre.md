@@ -6,6 +6,15 @@ tags: ["aws-iam-identity-centre", "aws-security", "identity-federation", "permis
 slug: "aws-iam-identity-centre-guide"
 author: "Steve Harrison, Principal Security Architect"
 word_count: 2302
+faqs:
+  - question: "What is AWS IAM Identity Centre?"
+    answer: "AWS IAM Identity Centre (formerly AWS Single Sign-On) is the recommended service for centralising workforce access to multiple AWS accounts and applications. It integrates with your existing identity provider (Active Directory, Okta, Entra ID) via SAML 2.0 or SCIM, maps identity provider groups to permission sets (predefined IAM policy bundles), and issues short-lived temporary credentials for each session. Users authenticate once with their corporate identity and gain access to the AWS accounts and applications they are assigned, without managing separate IAM users or long-term access keys."
+  - question: "What is the difference between AWS IAM Identity Centre and IAM users?"
+    answer: "IAM users are long-term identities with permanent credentials (passwords and access keys) stored in individual AWS accounts. AWS IAM Identity Centre provides federated access using your existing corporate directory — users authenticate with their organisational credentials and receive temporary STS credentials scoped to the accounts and permission sets they are assigned. Identity Centre eliminates the need to create and manage IAM users across accounts, ensures leavers are automatically de-provisioned when their corporate account is disabled, enforces MFA at the identity provider layer, and provides a centralised audit trail of all session activity."
+  - question: "How does SCIM work with AWS IAM Identity Centre?"
+    answer: "SCIM (System for Cross-domain Identity Management) is a protocol that enables your identity provider (Okta, Entra ID, JumpCloud) to automatically synchronise user and group changes to IAM Identity Centre in near real-time. When a user is added to or removed from a group in your IdP, SCIM propagates that change to Identity Centre within minutes, updating their account assignments and permission sets without manual intervention. SCIM provision covers create, update, and deprovision events — a user removed from a group loses the associated AWS account access automatically, which is critical for leaver processing."
+  - question: "What is a permission set in AWS IAM Identity Centre?"
+    answer: "A permission set is a collection of IAM policies and access boundaries defined centrally in IAM Identity Centre and deployed as IAM roles in member accounts. You create a permission set (e.g., 'ReadOnly', 'SecurityAudit', 'DeveloperAccess') attaching managed or inline policies, then assign it to specific groups and accounts. When a user in an assigned group authenticates, they can assume the corresponding IAM role in the account. Permission sets decouple role definitions from individual accounts — update a permission set once and it propagates to every account where it is assigned."
 draft: false
 ---
 

@@ -7,6 +7,22 @@ keywords = ["Kubernetes", "K8s security", "container security", "RBAC", "CKS"]
 type = "guides"
 draft = false
 author = "Steve Harrison, Principal Security Architect"
+
+[[faqs]]
+question = "What is the most important Kubernetes security control?"
+answer = "RBAC (Role-Based Access Control) is the single most impactful Kubernetes security control. Overly permissive RBAC — especially ClusterAdmin bindings to service accounts or workloads in the default namespace — is the root cause of most serious Kubernetes compromises. After RBAC, enabling network policies and enforcing Pod Security Standards (PSS) to prevent privileged containers are the highest-priority controls. These three together address the attack surface most commonly exploited in real incidents."
+
+[[faqs]]
+question = "What did Kubernetes Pod Security Standards replace?"
+answer = "Pod Security Standards (PSS) replaced PodSecurityPolicy (PSP), which was deprecated in Kubernetes 1.21 and removed in 1.25. PSS defines three policy levels — Privileged, Baseline, and Restricted — enforced via the Pod Security Admission controller built into Kubernetes 1.23+. For managed clusters (EKS, GKE, AKS), Pod Security Standards are now the recommended mechanism for restricting workload capabilities such as host network access, privilege escalation, and running as root."
+
+[[faqs]]
+question = "How do I secure secrets in Kubernetes?"
+answer = "Kubernetes Secrets are base64-encoded by default, not encrypted. Securing them requires enabling encryption at rest via KMS provider integration — AWS KMS for EKS, Cloud KMS for GKE, Azure Key Vault for AKS. For application-level secret delivery, use the AWS Secrets Manager CSI driver or External Secrets Operator to pull values from a cloud-native secrets manager at pod startup, eliminating Kubernetes Secret objects for sensitive credentials entirely."
+
+[[faqs]]
+question = "What is a Kubernetes NetworkPolicy and why is it required?"
+answer = "A Kubernetes NetworkPolicy controls which pods can communicate with each other and with external endpoints. Without network policies, all pods in a cluster can communicate freely — a compromised workload can reach every other service, database, and API in the cluster. NetworkPolicy implements micro-segmentation at the pod level, requiring a CNI plugin that supports enforcement (Calico, Cilium, or the managed CNI equivalents on EKS, GKE, and AKS). The CIS Kubernetes Benchmark requires a default-deny network policy in every namespace."
 +++
 
 Securing Kubernetes requires a defence-in-depth approach across the control plane, workload configuration, and runtime environment. The most impactful controls are RBAC hardening, network policy enforcement, pod security standards, proper secrets management, and continuous image scanning — the same domains tested in the CKS exam and exploited most frequently in real-world incidents. This guide covers each layer with practical guidance for teams running managed clusters on EKS, GKE, or AKS.

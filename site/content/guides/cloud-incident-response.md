@@ -7,6 +7,22 @@ keywords = ["cloud incident response", "AWS incident response", "security incide
 type = "guides"
 draft = false
 author = "Steve Harrison, Principal Security Architect"
+
+[[faqs]]
+question = "What is the first action to take when an AWS account is compromised?"
+answer = "The first action when an AWS account is compromised is evidence preservation, not containment. Before disabling credentials or isolating resources, take EBS snapshots of affected instances, confirm CloudTrail logs are intact and being retained, and capture current IAM policy state. Containment action — disabling the compromised access key or attaching an explicit Deny policy to the affected principal — should follow immediately after. Do not delete the access key: deletion destroys the key ID needed for forensic correlation with CloudTrail events. Do not terminate EC2 instances before snapshotting: termination destroys volatile evidence."
+
+[[faqs]]
+question = "How is cloud incident response different from traditional incident response?"
+answer = "Cloud incident response differs in four key ways. First, identity is the primary attack vector and containment mechanism — most cloud incidents begin with credential theft and are contained via IAM actions, not network isolation. Second, infrastructure is ephemeral — logs, instance state, and metadata disappear unless explicitly preserved, making evidence capture time-critical. Third, the blast radius of a compromised cloud identity is global and immediate — an attacker with AdministratorAccess can exfiltrate everything via API calls in minutes. Fourth, cloud provides better native tooling — GuardDuty, Detective, Security Lake, and CloudTrail give responders higher-quality forensic data than most on-premises environments can match."
+
+[[faqs]]
+question = "What AWS services are used for cloud incident investigation?"
+answer = "The primary AWS investigation stack is: Amazon GuardDuty for initial threat detection and finding triage; Amazon Detective for behavioural graph analysis, visualising the full timeline of API calls, network connections, and resource interactions by a compromised principal; AWS CloudTrail for raw API event audit trail; Amazon Athena for querying CloudTrail and VPC Flow Logs at scale across time periods and accounts; and AWS Security Lake for centralising all log sources in OCSF format across accounts and regions, enabling single-query investigation across the entire organisation. For forensic analysis of compromised instances, EBS snapshots are shared to an isolated forensic account."
+
+[[faqs]]
+question = "What are the UK regulatory notification deadlines after a cloud security breach?"
+answer = "For UK GDPR (personal data breach): notify the ICO within 72 hours of becoming aware that a personal data breach has likely occurred. This clock starts when you have sufficient information to conclude a breach is probable — not when the investigation is complete. For FCA-regulated firms under DORA (in-scope from January 2025): notify the FCA within 4 hours of classifying an incident as major, submit an intermediate report within 72 hours, and a final report within one month. For NHS Digital organisations: notify NHS England and the ICO within 72 hours. Your incident response runbook must include explicit decision points for these notifications in the first hour, before the investigation is concluded."
 +++
 
 Cloud incident response is the organised process of detecting, containing, investigating, and recovering from security incidents in cloud environments — and then learning from them. It differs from traditional incident response in important ways: there are no physical servers to seize, logs are ephemeral unless explicitly preserved, infrastructure can be destroyed and rebuilt in minutes, and the blast radius of a compromised cloud identity is global rather than local. These differences make cloud IR both more powerful in some respects and more dangerous in others. More powerful because automation can contain incidents faster than any human response. More dangerous because evidence disappears and attackers can move at machine speed.
