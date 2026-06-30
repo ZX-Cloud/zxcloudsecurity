@@ -11,6 +11,10 @@ aws:
     url: "/guides/privileged-access-management-in-aws/"
   - title: "Cloud Incident Response"
     url: "/guides/cloud-incident-response/"
+  - title: "AI Security in the Cloud: A Practitioner's Guide"
+    url: "/guides/ai-security-cloud-guide/"
+  - title: "AWS Security Hub: A Practitioner's Guide"
+    url: "/guides/aws-security-hub-guide/"
 
 azure:
   - title: "AWS vs Azure vs GCP: Cloud Security Service Comparison"
@@ -47,3 +51,5 @@ general:
     url: "/guides/what-is-zero-trust-architecture/"
   - title: "Shared Responsibility Model in Cloud Security"
     url: "/guides/shared-responsibility-model-cloud-security/"
+  - title: "Cloud Compliance Frameworks: What Security Architects Need to Know"
+    url: "/guides/cloud-compliance-frameworks/"
