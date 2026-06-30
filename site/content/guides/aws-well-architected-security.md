@@ -121,7 +121,7 @@ The Well-Architected baseline for network security requires:
 - VPC endpoints for AWS service access, eliminating public internet traversal for S3, DynamoDB, SSM, and other services
 - AWS WAF on internet-facing endpoints (CloudFront, ALB, API Gateway) with managed rule groups enabled
 
-AWS Network Firewall provides stateful packet inspection for traffic flows that security groups alone cannot address — east-west traffic between subnets, DNS filtering, or deep packet inspection requirements. For workloads with regulatory requirements around network monitoring (PCI DSS, UK GDPR), Network Firewall's flow logs provide the evidence of traffic inspection that auditors expect.
+AWS Network Firewall provides stateful packet inspection for traffic flows that security groups alone cannot address — east-west traffic between subnets, DNS filtering, or deep packet inspection requirements. For workloads with regulatory requirements around network monitoring (PCI DSS, UK GDPR), Network Firewall's flow logs provide the evidence of traffic inspection that auditors expect. For detailed implementation guidance across all AWS network controls, the [Cloud Network Security guide](/guides/cloud-network-security/) covers VPC design, security groups, WAF, private connectivity, and network detection in depth.
 
 **Compute protection (SEC 6):**
 
@@ -194,7 +194,7 @@ Application security asks whether security is built into the development and dep
 - **Software Composition Analysis (SCA)**: dependency scanning (AWS Inspector for Lambda, ECR scanning for container images, Dependabot or Snyk for application dependencies) identifying known-vulnerable libraries before they reach production
 - **IaC security scanning**: Checkov, tfsec, or cfn-nag scanning CloudFormation or Terraform before deployment, blocking infrastructure changes that introduce security misconfigurations — security groups open to 0.0.0.0/0, unencrypted S3 buckets, missing CloudTrail configuration
 
-**Amazon CodeGuru Security** provides ML-based code review for Python, Java, JavaScript, TypeScript, and Go, identifying security vulnerabilities, hardcoded credentials, and insecure API usage. It integrates with CodePipeline and can gate deployments on security findings.
+**Amazon CodeGuru Security** provides ML-based code review for Python, Java, JavaScript, TypeScript, and Go, identifying security vulnerabilities, hardcoded credentials, and insecure API usage. It integrates with CodePipeline and can gate deployments on security findings. Workloads using Amazon Bedrock, SageMaker, or other AI/ML services introduce additional threat vectors — prompt injection, model data exfiltration, and supply chain risks in model dependencies — covered in the [AI Security in the Cloud guide](/guides/ai-security-cloud-guide/).
 
 **AWS Secrets Manager** and **Parameter Store** eliminate hardcoded credentials from application code — one of the most common application security failures and one of the easiest to prevent. Applications retrieve secrets at runtime via API; the secret value never appears in source code, logs, or environment variables.
 

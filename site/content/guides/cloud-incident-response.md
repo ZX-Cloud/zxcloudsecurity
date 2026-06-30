@@ -172,7 +172,7 @@ A PIR should be completed within five working days of incident closure while mem
 
 **FCA (regulated firms):** FCA-regulated firms must notify the FCA of material operational incidents under the Senior Managers and Certification Regime (SM&CR). DORA (for in-scope firms from 2025) requires notification of major ICT-related incidents within 4 hours of classification, an intermediate report within 72 hours, and a final report within one month. The FCA also expects firms to maintain a cyber incident response plan and test it.
 
-**Practical implication:** Your IR runbook must include a decision point — "Is personal data likely involved? Who is the designated DPO?" and "Is this firm FCA-regulated? Who is the MLRO/DPO authorised to notify?" These decisions must be made in the first hour of an incident, not after the investigation is complete.
+**Practical implication:** Your IR runbook must include a decision point — "Is personal data likely involved? Who is the designated DPO?" and "Is this firm FCA-regulated? Who is the MLRO/DPO authorised to notify?" These decisions must be made in the first hour of an incident, not after the investigation is complete. The [Cloud Compliance Frameworks guide](/guides/cloud-compliance-frameworks/) covers UK GDPR, FCA, DORA, ISO 27001, and Cyber Essentials Plus obligations in full, including how each maps to AWS, Azure, and GCP controls.
 
 ---
 

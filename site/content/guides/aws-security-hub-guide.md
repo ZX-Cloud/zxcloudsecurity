@@ -70,7 +70,7 @@ Alternatively, use the Security Hub console in the delegated administrator accou
 
 ## Security Standards
 
-Security Hub evaluates your account configuration against security standards — collections of controls that map to industry frameworks. Each control runs periodically (or in near-real-time for some checks) and generates a PASS or FAIL finding for each evaluated resource.
+Security Hub evaluates your account configuration against security standards — collections of controls that map to industry frameworks. Each control runs periodically (or in near-real-time for some checks) and generates a PASS or FAIL finding for each evaluated resource. The frameworks these standards map to — ISO 27001, PCI DSS, NIST CSF, and UK-specific requirements — are explained in the [Cloud Compliance Frameworks guide](/guides/cloud-compliance-frameworks/), including how each applies to AWS environments in UK regulated industries.
 
 ### AWS Foundational Security Best Practices (FSBP)
 
@@ -122,7 +122,7 @@ Macie discovers and classifies sensitive data in S3 — PII, credentials, financ
 
 ### IAM Access Analyzer
 
-IAM Access Analyzer analyses resource-based policies — S3 buckets, IAM roles, KMS keys, Lambda functions, SQS queues, Secrets Manager secrets — for external access paths. Findings indicate resources accessible from outside your account or organisation. Access Analyzer sends findings to Security Hub automatically.
+IAM Access Analyzer analyses resource-based policies — S3 buckets, IAM roles, KMS keys, Lambda functions, SQS queues, Secrets Manager secrets — for external access paths. Findings indicate resources accessible from outside your account or organisation. Access Analyzer sends findings to Security Hub automatically. For the broader identity architecture these findings surface, the [Cloud Identity and Access Management guide](/guides/cloud-identity-and-access-management/) covers IAM principals, federation, least-privilege controls, and the PAM patterns that prevent credential-based breaches.
 
 ---
 
