@@ -49,6 +49,11 @@ CATCH_UP_AGE_HOURS   = 24         # hours before catch-up email fires
 DYNAMODB_TABLE       = os.environ.get("DYNAMODB_TABLE", "guide-approval-tokens")
 AWS_REGION           = os.environ.get("AWS_REGION", "eu-west-2")
 
+# Email send window: only send immediately if UTC hour falls within this range.
+# Outside this window the email is stored in DynamoDB and drained at next window open.
+EMAIL_SEND_HOUR_UTC  = int(os.environ.get("EMAIL_SEND_HOUR_UTC", "7"))   # 07:00 UTC
+EMAIL_SEND_WINDOW_H  = int(os.environ.get("EMAIL_SEND_WINDOW_H",  "2"))  # open for 2 hours
+
 # ---------------------------------------------------------------------------
 # Dataclasses
 # ---------------------------------------------------------------------------
@@ -514,6 +519,114 @@ def _build_email_html(
 
 
 # ---------------------------------------------------------------------------
+# Email send-window gating and deferred delivery via DynamoDB
+# ---------------------------------------------------------------------------
+
+def _is_send_window() -> bool:
+    """Return True if the current UTC hour falls within the permitted send window."""
+    hour = _now_utc().hour
+    return EMAIL_SEND_HOUR_UTC <= hour < EMAIL_SEND_HOUR_UTC + EMAIL_SEND_WINDOW_H
+
+
+def _next_send_at() -> datetime:
+    """Return the next 07:00 UTC datetime (today if still ahead, tomorrow otherwise)."""
+    now = _now_utc()
+    candidate = now.replace(hour=EMAIL_SEND_HOUR_UTC, minute=0, second=0, microsecond=0)
+    if candidate <= now:
+        candidate += timedelta(days=1)
+    return candidate
+
+
+def _store_pending_email(
+    html: str,
+    text: str,
+    subject: str,
+    from_addr: str,
+    to_addr: str,
+) -> bool:
+    """
+    Persist a deferred email to DynamoDB.
+    Uses token = 'pending_email_<uuid>' so it shares the approval table
+    without colliding with guide approval tokens.
+    """
+    send_at = _next_send_at()
+    item_id = str(uuid.uuid4())
+    try:
+        dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
+        table = dynamodb.Table(DYNAMODB_TABLE)
+        table.put_item(Item={
+            "token":      f"pending_email_{item_id}",
+            "type":       "pending_email",
+            "send_at":    send_at.isoformat(),
+            "subject":    subject,
+            "html":       html,
+            "text":       text,
+            "from_addr":  from_addr,
+            "to_addr":    to_addr,
+            "sent":       False,
+            "created_at": _now_utc().isoformat(),
+        })
+        log.info(f"  Email deferred — will send at {send_at.strftime('%Y-%m-%dT%H:%M UTC')}")
+        return True
+    except Exception as e:
+        log.error(f"  DynamoDB error storing pending email: {e}")
+        return False
+
+
+def drain_pending_emails(from_addr: str, to_addr: str) -> int:
+    """
+    Scan DynamoDB for pending_email items whose send_at has passed and send them.
+    Marks each as sent after delivery. Returns count of emails sent.
+    """
+    now = _now_utc()
+    sent_count = 0
+    try:
+        dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
+        table = dynamodb.Table(DYNAMODB_TABLE)
+        # FilterExpression: type = pending_email AND sent = false AND send_at <= now
+        result = table.scan(
+            FilterExpression=(
+                "attribute_exists(#t) AND #t = :ptype"
+                " AND #sent = :false"
+                " AND send_at <= :now"
+            ),
+            ExpressionAttributeNames={
+                "#t":    "type",
+                "#sent": "sent",
+            },
+            ExpressionAttributeValues={
+                ":ptype": "pending_email",
+                ":false": False,
+                ":now":   now.isoformat(),
+            },
+        )
+        items = result.get("Items", [])
+        if not items:
+            return 0
+
+        log.info(f"  Draining {len(items)} pending email(s) ...")
+        for item in items:
+            ok = send_ses_email(
+                item["html"],
+                item["text"],
+                item["subject"],
+                item.get("from_addr", from_addr),
+                item.get("to_addr", to_addr),
+            )
+            if ok:
+                table.update_item(
+                    Key={"token": item["token"]},
+                    UpdateExpression="SET #sent = :true, sent_at = :ts",
+                    ExpressionAttributeNames={"#sent": "sent"},
+                    ExpressionAttributeValues={":true": True, ":ts": now.isoformat()},
+                )
+                sent_count += 1
+    except Exception as e:
+        log.error(f"  Error draining pending emails: {e}")
+    return sent_count
+
+
+# ---------------------------------------------------------------------------
 # SES: send email
 # ---------------------------------------------------------------------------
 
@@ -662,6 +775,11 @@ def run(
         log.error(str(e))
         return []
 
+    # Drain any previously deferred emails whose send_at window has now arrived
+    drained = drain_pending_emails(from_addr, to_addr)
+    if drained:
+        log.info(f"  Drained {drained} deferred email(s)")
+
     # Load quality report
     p = Path(quality_report_path)
     if not p.exists():
@@ -709,14 +827,24 @@ def run(
             r.guide_id = guide_id
             r.token    = token
 
-    # Step 4: Build and send email digest
-    log.info("[5/5] Sending SES email digest ...")
+    # Step 4: Build and send (or defer) email digest
+    log.info("[5/5] Building SES email digest ...")
     actionable = [r for r in records if r.outcome in ("pass", "flag")]
     if actionable:
         html, text, subject = _build_email_html(records, lambda_url, github_repo)
-        sent = send_ses_email(html, text, subject, from_addr, to_addr)
-        for r in actionable:
-            r.email_sent = sent
+        if _is_send_window():
+            log.info("  Within send window — sending now ...")
+            sent = send_ses_email(html, text, subject, from_addr, to_addr)
+            for r in actionable:
+                r.email_sent = sent
+        else:
+            send_at = _next_send_at()
+            log.info(
+                f"  Outside send window (current UTC hour: {_now_utc().hour:02d}:xx, "
+                f"window: {EMAIL_SEND_HOUR_UTC:02d}:00-{EMAIL_SEND_HOUR_UTC + EMAIL_SEND_WINDOW_H:02d}:00). "
+                f"Deferring to {send_at.strftime('%Y-%m-%dT%H:%M UTC')} ..."
+            )
+            _store_pending_email(html, text, subject, from_addr, to_addr)
     else:
         log.warning("  No actionable guides — skipping email")
 
