@@ -350,7 +350,7 @@ def generate_guide(
             result.success = True
             result.output_path = str(output_path)
             result.word_count = actual_wc
-            log.info(f"    ✓ Saved: {output_path} ({actual_wc} words)")
+            log.info(f"    [OK] Saved: {output_path} ({actual_wc} words)")
             break
 
         except anthropic.RateLimitError as e:
@@ -386,9 +386,9 @@ def run(
     """
     Full guide generation pipeline. Returns list of GenerationResult dicts.
     """
-    log.info("─" * 60)
-    log.info("guide_generator.py — ZX Cloud Security")
-    log.info("─" * 60)
+    log.info("-" * 60)
+    log.info("guide_generator.py - ZX Cloud Security")
+    log.info("-" * 60)
 
     # 1. Load topic queue
     p = Path(topic_queue_path)
@@ -409,7 +409,7 @@ def run(
     # 2. Load existing guide slugs for internal linking hints
     log.info("[2/3] Loading existing guide index ...")
     existing_slugs = _load_existing_slugs(guides_dir)
-    log.info(f"  → {len(existing_slugs)} existing guide slugs loaded")
+    log.info(f"  -> {len(existing_slugs)} existing guide slugs loaded")
 
     # 3. Initialise API client (reads ANTHROPIC_API_KEY from environment)
     api_key = os.environ.get("ANTHROPIC_API_KEY")
@@ -441,12 +441,12 @@ def run(
     # Summary
     successes = sum(1 for r in results if r.success)
     failures = len(results) - successes
-    log.info(f"\n{'─'*60}")
+    log.info(f"\n{'-'*60}")
     log.info(f"  Generated: {successes}/{len(results)} guides")
     if failures:
-        log.warning(f"  Failed:    {failures} guide(s) — see {output_report_path}")
+        log.warning(f"  Failed:    {failures} guide(s) - see {output_report_path}")
     log.info(f"  Report:    {output_report_path}")
-    log.info(f"{'─'*60}")
+    log.info(f"{'-'*60}")
 
     return results
 
@@ -461,7 +461,7 @@ def _save_report(results: list, path: str) -> None:
     }
     with open(path, "w") as f:
         json.dump(report, f, indent=2, default=str)
-    log.info(f"  Saved generation report → {path}")
+    log.info(f"  Saved generation report -> {path}")
 
 
 # ---------------------------------------------------------------------------
@@ -485,12 +485,12 @@ if __name__ == "__main__":
         output_report_path=args.report,
     )
 
-    print(f"\n{'─'*60}")
+    print(f"\n{'-'*60}")
     for r in results:
-        status = "✓" if r.success else "✗"
+        status = "[OK]" if r.success else "[FAIL]"
         print(f"  {status} [{r.tier}] {r.topic_label}")
         if r.success:
             print(f"      {r.output_path} ({r.word_count} words, {r.attempts} attempt(s))")
         else:
             print(f"      FAILED: {r.error}")
-    print(f"{'─'*60}\n")
+    print(f"{'-'*60}\n")
