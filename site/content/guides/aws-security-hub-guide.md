@@ -9,9 +9,9 @@ draft = false
 author = "Steve Harrison, Principal Security Architect"
 +++
 
-AWS Security Hub is often described as a security findings aggregator, which understates what it actually does. It is the centralised control plane for your AWS security posture: a single location where findings from GuardDuty, Amazon Inspector, Amazon Macie, IAM Access Analyzer, and dozens of third-party tools arrive in a normalised format, where compliance against security standards is continuously evaluated across your entire account estate, and from which automated response workflows can be triggered. Used correctly, it compresses the time between a misconfiguration appearing and being detected or remediated from weeks to minutes.
+AWS Security Hub is the centralised security posture management service within AWS, functioning as both a findings aggregator and a compliance evaluation engine across your entire AWS organisation. Findings from native services — GuardDuty, Amazon Inspector, Amazon Macie, IAM Access Analyzer, and AWS Config — are ingested alongside findings from over 60 third-party security products, all normalised into the Amazon Security Finding Format (ASFF). Security Hub continuously evaluates account configuration against security standards including the AWS Foundational Security Best Practices (FSBP), CIS AWS Foundations Benchmark, and PCI DSS, generating PASS or FAIL findings for each evaluated resource across every member account.
 
-This guide covers how Security Hub works, how to enable and configure it across an AWS organisation, the standards and integrations that provide immediate value, and the automation patterns that turn findings into action.
+Used correctly, Security Hub compresses the time between a misconfiguration appearing and being detected from weeks to minutes. Its integration with Amazon EventBridge enables automated response workflows — routing critical findings to incident management systems, suppressing known false positives, or triggering Lambda-based remediation — transforming Security Hub from a passive findings dashboard into an active security control at organisation scale.
 
 ---
 

@@ -29,11 +29,9 @@ Cloud Infrastructure Entitlement Management (CIEM) is a category of security too
 
 ## The Permission Sprawl Problem
 
-Modern cloud environments generate identity complexity at a pace that manual governance cannot match. A single AWS deployment might involve hundreds of IAM roles, dozens of service accounts, federated users from an identity provider, Lambda execution roles, EC2 instance profiles, and cross-account trust relationships. In Azure and GCP the picture is no less complex — custom roles, managed identities, workload identity federation, and group-based access assignments all compound the challenge.
+Permission sprawl is the defining identity risk in cloud environments. A single AWS organisation can involve thousands of IAM roles, Lambda execution roles, EC2 instance profiles, service accounts, and cross-account trust relationships — each accumulating entitlements beyond what their function requires. The same complexity exists in Azure and GCP: custom roles, managed identities, workload identity federation, and group-based access assignments compound the challenge at enterprise scale.
 
-The result is *permission sprawl*: a state where identities accumulate entitlements far beyond what their function requires. This happens for entirely ordinary reasons. A developer needs temporary elevated access to debug a production issue, and the access is never revoked. A CI/CD pipeline is granted broad write access because the specific permissions needed were unclear at the time. A service account created during a proof-of-concept retains production-level entitlements long after the project concluded.
-
-Research consistently shows that the vast majority of granted permissions in cloud environments are never used. AWS's own data has historically suggested that more than 90% of permissions granted to IAM roles go unused within any 90-day window. Those unused entitlements represent latent risk — every unnecessary permission is an opportunity for an attacker with access to a credential to cause damage they otherwise could not.
+Sprawl occurs through ordinary operational patterns. Temporary elevated access granted to debug a production issue is never revoked. A CI/CD pipeline receives broad write permissions because the exact permissions needed were unclear at provisioning time. A service account created for a proof-of-concept carries production-level entitlements long after the project ends. AWS data consistently shows that more than 90% of permissions granted to IAM roles go unused within any 90-day window. Every unused entitlement represents latent risk: an attacker who compromises a credential inherits every permission attached to it, used or not.
 
 ## Where Traditional IAM Governance Falls Short
 
