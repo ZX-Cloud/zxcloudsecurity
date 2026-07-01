@@ -38,7 +38,7 @@ jobs:
           aws-region: eu-west-2
 
       - name: Deploy to S3
-        run: aws s3 sync site/public/ s3://zxcloudsecurity-site --delete
+        run: aws s3 sync site/public/ s3://zxcloudsecurity-site --delete --exclude "enriched_feed.json"
 
       - name: Invalidate CloudFront cache
         run: |
