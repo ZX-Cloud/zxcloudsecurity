@@ -1,22 +1,22 @@
 {
-  "updated": "30 Jun 2026 09:58 UTC",
-  "total": 464,
+  "updated": "01 Jul 2026 06:06 UTC",
+  "total": 480,
   "severity": {
-    "critical": 46,
-    "high": 291,
-    "medium": 106
+    "critical": 48,
+    "high": 303,
+    "medium": 108
   },
   "categories": {
-    "aws": 28,
-    "azure": 193,
+    "aws": 29,
+    "azure": 194,
     "gcp": 1,
-    "general": 242
+    "general": 256
   },
   "top_critical": {
-    "title": "CVE-2026-8037: Kemp LoadMaster Pre-Auth RCE Flaw",
-    "summary": "A critical unauthenticated remote code execution vulnerability (CVE-2026-8037) in Progress Kemp LoadMaster allows an attacker to run arbitrary commands as root simply by sending a crafted API request ",
-    "architects_take": "Prioritise emergency patching of all LoadMaster appliances immediately; if patching cannot be completed right away, disable the management API and restrict access to it via network controls or firewall rules to trusted management IP ranges only.",
-    "slug": "progress-kemp-loadmaster-pre-auth-rce-cve-2026-8037",
+    "title": "SimpleHelp CVE-2026-48558 Exploited: New Malware Deployed",
+    "summary": "Attackers are actively exploiting CVE-2026-48558, a critical authentication bypass flaw (CVSS 10.0) in SimpleHelp remote support software, to deploy two newly discovered malware families: TaskWeaver a",
+    "architects_take": "If SimpleHelp is deployed anywhere in your environment or supply chain, patch immediately to the vendor's remediated version and review authentication logs for anomalous OIDC requests. Additionally, audit third-party remote support tooling access paths and consider isolating SimpleHelp instances behind a VPN or zero-trust gateway to reduce exposure of the OIDC endpoint to unauthenticated traffic.",
+    "slug": "simplehelp-cve-2026-48558-taskweaver-djinn-stealer-exploit",
     "source": "The Hacker News",
     "category": "general"
   }
