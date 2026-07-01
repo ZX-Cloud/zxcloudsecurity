@@ -192,9 +192,14 @@ def handler(event, context):
 
     date_str = datetime.now(timezone.utc).strftime("%d %b %Y")
 
-    # Get confirmed subscribers
-    subscribers = get_confirmed_subscribers()
-    print(f"Sending digest to {len(subscribers)} confirmed subscribers")
+    # Support test_email override: restrict send to a single address without touching DynamoDB
+    test_email = event.get('test_email', '').strip().lower()
+    if test_email:
+        subscribers = [{'email': test_email, 'categories': ['all']}]
+        print(f"TEST MODE: sending only to {test_email}")
+    else:
+        subscribers = get_confirmed_subscribers()
+        print(f"Sending digest to {len(subscribers)} confirmed subscribers")
 
     sent = 0
     failed = 0
