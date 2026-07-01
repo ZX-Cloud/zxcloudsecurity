@@ -162,6 +162,12 @@ def _save_draft(token: str, original: dict, reply_body: str) -> None:
 
     draft = {
         'subject': subject,
+        'from': {
+            'emailAddress': {
+                'address': MAILBOX,
+                'name':    'ZX Cloud Security',
+            }
+        },
         'body': {
             'contentType': 'Text',
             'content': reply_body,
