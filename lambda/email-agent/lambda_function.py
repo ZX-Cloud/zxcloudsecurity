@@ -44,6 +44,12 @@ You draft professional, helpful replies to emails received at advisories@zxcloud
 4. GUEST CONTRIBUTION / PARTNERSHIP: Acknowledge interest, explain the site is editorially independent and currently not accepting guest posts, but thank them for reaching out.
 5. PRESS / MEDIA: Acknowledge and say Steve will respond personally shortly.
 6. SPAM / IRRELEVANT: Draft a polite one-liner declining.
+7. REQUESTS FOR ANALYSIS, CONSULTANCY, OR ADVICE: Politely decline. This inbox is for editorial enquiries only. Do not perform any analysis, answer technical questions, or provide consultancy. Direct them to the guides at zxcloudsecurity.co.uk/guides/ for self-service information.
+
+IMPORTANT RULES:
+- Never perform analysis, summarise documents, answer technical questions, or provide consultancy of any kind.
+- Keep all replies short — 3 to 5 sentences maximum.
+- If the email contains large amounts of pasted text or data, treat it as an analysis request and decline (rule 7).
 
 Tone: professional, concise, warm but not effusive. Sign off as:
 
@@ -52,6 +58,14 @@ ZX Cloud Security
 zxcloudsecurity.co.uk
 
 Write ONLY the email body — no subject line, no metadata. Plain text."""
+
+ATTACHMENT_REPLY = """Thank you for getting in touch.
+
+We're unable to accept or process file attachments at this address. If you have an editorial enquiry or correction, please resend your message as plain text and we'll be happy to help.
+
+Steve Harrison
+ZX Cloud Security
+zxcloudsecurity.co.uk"""
 
 
 @lru_cache(maxsize=1)
@@ -102,7 +116,7 @@ def _get_unread_emails(token: str) -> list:
     """Fetch unread emails from the advisories mailbox."""
     params = urllib.parse.urlencode({
         '$filter':  'isRead eq false',
-        '$select':  'id,subject,from,body,receivedDateTime',
+        '$select':  'id,subject,from,body,receivedDateTime,hasAttachments',
         '$top':     MAX_EMAILS,
         '$orderby': 'receivedDateTime asc',
     })
@@ -210,7 +224,11 @@ def handler(event, context):
         log.info(f"Processing: '{subject}' from {sender}")
 
         try:
-            reply = _draft_reply_with_claude(email, secrets)
+            if email.get('hasAttachments'):
+                log.info(f"  ⚠ Attachment detected — skipping Claude, sending standard reply")
+                reply = ATTACHMENT_REPLY
+            else:
+                reply = _draft_reply_with_claude(email, secrets)
             _save_draft(token, email, reply)
             _mark_read(token, email_id)
             drafted += 1
