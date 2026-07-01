@@ -17,17 +17,20 @@ const msg = document.getElementById('status-message');
 const box = document.getElementById('status-box');
 
 if (status === 'success') {
-  msg.textContent = "✅ You've been unsubscribed successfully. You won't receive any further emails from ZX Cloud Security.";
+  msg.innerHTML = "<strong style='font-size:17px;'>✅ Unsubscribed successfully</strong><br><span style='color:#374151;'>You won't receive any further emails from ZX Cloud Security.</span>";
   box.style.background = '#f0fdf4';
   box.style.borderColor = '#16a34a';
+  msg.style.color = '#14532d';
 } else if (status === 'invalid') {
-  msg.textContent = "⚠️ Invalid unsubscribe link. Please contact advisories@zxcloudsecurity.co.uk if you need help.";
+  msg.innerHTML = "<strong style='font-size:17px;'>⚠️ Invalid link</strong><br><span style='color:#374151;'>Please contact <a href='mailto:advisories@zxcloudsecurity.co.uk'>advisories@zxcloudsecurity.co.uk</a> if you need help.</span>";
   box.style.background = '#fffbeb';
   box.style.borderColor = '#d97706';
+  msg.style.color = '#78350f';
 } else if (status === 'error') {
-  msg.textContent = "❌ Something went wrong. Please contact advisories@zxcloudsecurity.co.uk to unsubscribe manually.";
+  msg.innerHTML = "<strong style='font-size:17px;'>❌ Something went wrong</strong><br><span style='color:#374151;'>Please contact <a href='mailto:advisories@zxcloudsecurity.co.uk'>advisories@zxcloudsecurity.co.uk</a> to unsubscribe manually.</span>";
   box.style.background = '#fef2f2';
   box.style.borderColor = '#dc2626';
+  msg.style.color = '#7f1d1d';
 } else {
   msg.textContent = "Use the unsubscribe link in your daily digest email to unsubscribe.";
 }
