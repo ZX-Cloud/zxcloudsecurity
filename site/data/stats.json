@@ -1,22 +1,22 @@
 {
-  "updated": "02 Jul 2026 06:07 UTC",
-  "total": 513,
+  "updated": "03 Jul 2026 06:06 UTC",
+  "total": 538,
   "severity": {
-    "critical": 52,
-    "high": 325,
-    "medium": 115
+    "critical": 58,
+    "high": 340,
+    "medium": 119
   },
   "categories": {
     "aws": 34,
-    "azure": 209,
+    "azure": 215,
     "gcp": 1,
-    "general": 269
+    "general": 288
   },
   "top_critical": {
-    "title": "CVE-2026-8037: Kemp LoadMaster RCE Actively Exploited",
-    "summary": "A critical pre-authentication remote code execution vulnerability (CVE-2026-8037, CVSS 9.6) in Progress Kemp LoadMaster is being actively exploited in the wild. The flaw is an OS command injection iss",
-    "architects_take": "If you have internet-facing Kemp LoadMaster instances, apply the vendor patch immediately and review access logs for exploitation indicators flagged by eSentire's TRU advisory. Consider restricting management interface access to trusted IP ranges or placing it behind a VPN as an interim control if patching cannot be completed immediately.",
-    "slug": "progress-kemp-loadmaster-pre-auth-rce-cve-2026-8037-active-exploitation",
+    "title": "SharePoint RCE CVE-2026-45659: CISA KEV Active Exploit",
+    "summary": "A high-severity remote code execution vulnerability in Microsoft SharePoint Server (CVE-2026-45659, CVSS 8.8) has been added to CISA's Known Exploited Vulnerabilities catalogue following confirmed act",
+    "architects_take": "Prioritise patching all internet-facing and internally accessible SharePoint Server instances immediately, treating CISA KEV listing as a hard deadline trigger \u2014 US federal agencies must comply within CISA's binding deadline, but all organisations should treat this with equivalent urgency. Additionally, review network segmentation to ensure SharePoint servers cannot be reached directly from untrusted networks, and check WAF or reverse-proxy rules for deserialisation-based attack patterns as a temporary mitigating control.",
+    "slug": "sharepoint-rce-cve-2026-45659-cisa-kev-active-exploitation",
     "source": "The Hacker News",
     "category": "general"
   }
