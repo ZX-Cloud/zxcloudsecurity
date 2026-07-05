@@ -51,8 +51,10 @@ AWS_REGION           = os.environ.get("AWS_REGION", "eu-west-2")
 
 # Email send window: only send immediately if UTC hour falls within this range.
 # Outside this window the email is stored in DynamoDB and drained at next window open.
-EMAIL_SEND_HOUR_UTC  = int(os.environ.get("EMAIL_SEND_HOUR_UTC", "7"))   # 07:00 UTC
-EMAIL_SEND_WINDOW_H  = int(os.environ.get("EMAIL_SEND_WINDOW_H",  "2"))  # open for 2 hours
+# Defaults to the full day — GitHub Actions' scheduled cron fires at an unpredictable
+# offset from the configured time, so a narrow window was routinely missed entirely.
+EMAIL_SEND_HOUR_UTC  = int(os.environ.get("EMAIL_SEND_HOUR_UTC", "0"))   # 00:00 UTC
+EMAIL_SEND_WINDOW_H  = int(os.environ.get("EMAIL_SEND_WINDOW_H",  "24")) # open all day
 
 # ---------------------------------------------------------------------------
 # Dataclasses
