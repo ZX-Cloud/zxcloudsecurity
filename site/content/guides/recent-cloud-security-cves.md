@@ -1,209 +1,159 @@
-+++
-title = "Recent Cloud Security CVEs: What Hybrid Cloud Teams Need to Act On Now"
-date = "2026-06-30T08:30:00Z"
-slug = "recent-cloud-security-cves"
-description = "A practitioner's breakdown of recent cloud security CVEs impacting hybrid AWS and Azure estates — covering Netlogon, Defender, BitLocker, and DNS RCE flaws."
-keywords = ["cloud security CVE", "CVE-2026-41089", "Netlogon RCE", "Windows DNS RCE", "BitLocker bypass", "Microsoft Defender CVE", "hybrid cloud patching", "Amazon Inspector CVE"]
-type = "guides"
-draft = false
-author = "Steve Harrison, Principal Security Architect"
+---
+title: "Recent Cloud Security CVEs: July 2026 Threat Briefing for Cloud Architects"
+date: 2026-07-05
+description: "A practitioner's breakdown of recent cloud security CVEs including Bad Epoll, AKS RCE, and PHP buffer flaws — with detection, remediation, and AWS controls."
+tags: ["cloud security", "cve", "vulnerability management", "linux kernel", "kubernetes", "aws security"]
+slug: "recent-cloud-security-cves"
+author: "Steve Harrison & AI - Principal Security Architect"
+word_count: 2234
+draft: false
+---
 
-[[faqs]]
-question = "Why do Windows CVEs affecting on-premises infrastructure matter to AWS and Azure cloud teams?"
-answer = "Hybrid cloud estates use on-premises Windows Server domain controllers to authenticate identities that flow into AWS IAM Identity Centre, Azure Entra ID, and federated SaaS applications. A vulnerability in Netlogon or the Windows DNS client on a domain controller is not just a Windows problem — it is a cloud identity problem. An attacker who compromises a domain controller can harvest Kerberos tickets, forge Golden Tickets, and impersonate any user across the entire federated estate, including the cloud control plane. The cloud IAM posture is only as strong as the identity source it trusts."
+# Recent Cloud Security CVEs: July 2026 threat briefing for cloud architects
 
-[[faqs]]
-question = "What is CVE-2026-41089 and why is it critical for hybrid cloud teams?"
-answer = "CVE-2026-41089 is a stack-based buffer overflow in Windows Netlogon that allows an unauthenticated attacker to achieve remote code execution on a domain controller by sending a specially crafted network request. No user interaction is required. CISA added it to the Known Exploited Vulnerabilities (KEV) catalogue with active exploitation confirmed in the wild. For hybrid cloud estates where domain controllers federate identity into AWS or Azure, a compromised DC gives the attacker control over every authenticated identity in the organisation. Patch all domain controllers in a single maintenance window — half-patched forests remain exposed."
+If you manage cloud infrastructure right now, whether on AWS, Azure, or a hybrid estate, the CVEs disclosed over the past four weeks are worth treating as something other than a routine patch cycle. We have a critical container-escape vulnerability in Azure Kubernetes Service, a publicly exploited Linux kernel local privilege escalation with a 99% reliable public exploit, and a heap corruption flaw in PHP's OpenSSL extension affecting every major PHP 8.x branch. All three touch the shared Linux underpinnings that power most cloud workloads. This is a threat briefing, not a summary. I am going to give you what you need to act.
 
-[[faqs]]
-question = "How do I patch Windows vulnerabilities across EC2 instances at scale?"
-answer = "Use AWS Systems Manager Patch Manager with a custom patch baseline that sets ApproveAfterDays to 0 for Critical and Important severity Microsoft security updates, removing the default 7-day waiting period for emergency vulnerabilities. Deploy the patch baseline via a Maintenance Window or Run Command across your EC2 fleet, targeting instances by tag. After patching, verify compliance using Patch Manager's compliance dashboard — instances that report 'installed' but have a pending reboot are still vulnerable. Build reboot validation into your patch runbooks. Enable Amazon Inspector to provide continuous CVE scanning across EC2 and ECR images between patch cycles."
-
-[[faqs]]
-question = "What is CVE-2026-45585 (YellowKey) and why should cloud security teams care about a BitLocker bypass?"
-answer = "YellowKey (CVE-2026-45585) allows an attacker with physical access to a device to bypass BitLocker encryption and access data without the user's password. It affects Windows 11 24H2, 25H2, 26H1, and Windows Server 2025 in TPM-only BitLocker mode. The cloud security relevance is cached credentials: developer and analyst laptops running AWS CLI, Azure CLI, or the AWS Console typically cache temporary credentials, SSO tokens, and session cookies locally. A YellowKey attack against a stolen laptop gives the attacker those tokens, enabling cloud account access. The interim fix is switching to TPM+PIN mode; the June 2026 Patch Tuesday includes a full resolution."
-+++
-
-If you run hybrid cloud estates where Windows Server domain controllers on-premises feed identity into AWS or Azure workloads, the CVEs published across May and June 2026 deserve your full attention. This is not a routine Patch Tuesday digest. Several of these vulnerabilities are actively exploited in the wild. At least one carries a CVSS score of 9.8 with zero-click unauthenticated remote code execution against domain controllers, and a researcher-disclosed zero-day has a public proof-of-concept that any threat actor with a USB stick can weaponise. The gap between disclosure and active exploitation is narrowing. AI-enabled adversaries are compressing the time between a CVE's public disclosure and first observed exploitation, which means your patch SLA windows are getting shorter whether you have formally revised them or not.
-
-This guide covers the vulnerabilities that matter most for hybrid cloud estates, their specific cloud impact, and how to operationalise response using AWS Systems Manager, Amazon Inspector, and Azure Update Manager.
+<!-- INTERNAL_LINK: cloud security vulnerability management fundamentals | cloud-security-vulnerability-management -->
 
 ---
 
-## Mid-2026 CVE context
+## CVE-2026-46242 "Bad Epoll": Linux kernel local privilege escalation
 
-Microsoft published 200 vulnerabilities on June 2026 Patch Tuesday. May was similarly intense, with 14 CVEs carrying a CVSS base score of 9.0 or higher and 11 of those also marked Critical.
+This is the one keeping me awake.
 
-The trend is worth flagging to your CISO: 2026 has produced 404 Microsoft vulnerabilities with an average score of 7.2, against 2,727 published across the whole of 2025. Raw count is down sharply, but the average severity score is up. Fewer CVEs, higher average severity. That is not a reassuring trade-off.
+A newly disclosed Linux kernel flaw called Bad Epoll lets an ordinary user with no special access take full control of a machine as root. Linux servers, desktop machines, and Android devices are all in scope, making this one of the more consequential kernel vulnerabilities in recent years.
 
-There is also a disclosure dynamic running underneath the official patch cycle. An independent researcher going by the pseudonym Nightmare Eclipse published details of six Microsoft vulnerabilities, including elevation of privilege flaws in Defender and a Secure Boot disk encryption bypass, providing full proof-of-concept code for some and significant-but-incomplete exploitation detail for others. Microsoft confirmed the disclosures were uncoordinated. Two of them appeared in public in the hours immediately after the previous month's Patch Tuesday, before Microsoft had a patch ready. Your detection and mitigation posture must be capable of responding in that gap.
+### What the bug actually is
 
----
+The vulnerability lives inside the Linux kernel's epoll subsystem, a core I/O event notification mechanism that applications use to monitor multiple file descriptors efficiently.
 
-## CVE-2026-41089: Windows Netlogon RCE
+Bad Epoll is a use-after-free bug. Two parts of the kernel try to clean up the same internal object at the same time. One frees the memory while the other is still writing into it. That collision lets an attacker corrupt kernel memory and climb from a normal account to root.
 
-CVSS: 9.8 | Actively exploited in the wild
+The technical chain is precise: the exploit uses four epoll objects grouped into two pairs. Closing one pair triggers the race while the other becomes the victim object, turning an 8-byte UAF write into a UAF on a file object via a cross-cache attack. From there, the attacker gains arbitrary kernel memory read access through `/proc/self/fdinfo` and hijacks control flow with a ROP chain to obtain a root shell.
 
-CVE-2026-41089 is a stack-based buffer overflow in Windows Netlogon, the service that handles authentication and security within a Windows domain. An attacker can exploit it by sending a specially crafted network request to a domain controller and execute code remotely. No prior authentication, local access, or user interaction is required. That makes it wormable. A compromised domain controller is a compromised domain.
+The National Vulnerability Database rates this 7.8 on the CVSS 3.1 scale. Local, low-complexity, no user interaction required, full control over confidentiality, integrity, and availability.
 
-For hybrid cloud teams specifically: if your domain controllers authenticate identities that flow into AWS IAM Identity Centre, Azure Entra ID, or federated SaaS applications, a Netlogon compromise is not a Windows problem. It is a cloud identity problem. An attacker who achieves SYSTEM on a domain controller can harvest Kerberos tickets, dump NTDS.dit, forge Golden Tickets, and impersonate any user across your entire estate, including your cloud control plane.
+### Why this matters specifically for cloud workloads
 
-Patch all domain controllers in the same maintenance window. Half-patched forests are not a defensible state for a pre-auth domain controller vulnerability.
+What separates a nuisance from a catastrophic breach is often a single privilege escalation step, and Bad Epoll provides exactly that bridge. This is particularly consequential in shared infrastructure: multi-tenant cloud VMs, container escape scenarios where a process runs as a low-privileged host user, developer workstations, and CI/CD build runners.
 
-Beyond patching, increase monitoring for suspicious Netlogon-related activity: anomalous authentication behaviour, unusual domain controller traffic patterns, and any signs of privilege escalation or new administrative account creation following Netlogon events.
+The proof-of-concept can be triggered from inside Chrome's sandboxed renderer process. An attacker who already has renderer code execution, through a separate browser bug, could chain Bad Epoll to break out of the sandbox entirely.
 
-Indicators worth hunting for in your SIEM:
+There is also a sobering subplot to this disclosure. Anthropic's Mythos model, while reviewing the relevant code, caught the first race condition (now tracked as CVE-2026-43074), which is genuinely impressive given how difficult race conditions are to spot even for experienced auditors. But the model missed the second flaw sitting right next to it. AI-assisted vulnerability research is moving fast, but tooling diversity and human review still matter.
 
-- The Netlogon service crashing or restarting unexpectedly
-- Anomalous Netlogon traffic from non-DC source addresses
-- Authentication failures or domain trust errors immediately after suspicious network activity hits a domain controller
+### Affected versions and patch status
 
----
+The flaw affects mainline Linux from version 6.4 onward, plus the backport ranges distributions maintain on older long-term-support branches. On Android, devices running 6.6-series kernels and newer are confirmed vulnerable, including current Pixel hardware. Older 6.1-based kernels, such as those on Pixel 8, predate the 2023 commit that introduced the bug and are not affected.
 
-## CVE-2026-41096: Windows DNS client RCE
+A patch has been in the kernel mainline since 24 April, but many distributions have not yet shipped backports, and the patch itself sat unannounced for 70 days before the public writeup appeared.
 
-CVSS: 9.8 | Patch immediately
+<!-- INTERNAL_LINK: Kubernetes security best practices | kubernetes-security-best-practices -->
 
-CVE-2026-41096 is a heap-based buffer overflow in the Windows DNS client. An attacker sends a specially crafted DNS response to a vulnerable Windows system, causing the DNS client to misprocess the response and corrupt memory. In certain configurations this achieves unauthenticated remote code execution. No authentication or user interaction is required, and the DNS client runs on virtually every Windows machine, which makes the attack surface substantial.
+### Detection on AWS
 
-An attacker with a position to influence DNS responses, via a man-in-the-middle position or a rogue server, can achieve unauthenticated RCE across your enterprise. DNS belongs in the same emergency patch conversation as Netlogon because name resolution sits in the path of authentication, service discovery, software updates, and nearly every other enterprise workflow.
+If you are running EC2 instances, ECS on EC2, or self-managed Kubernetes on Linux, verify the running kernel version, not just the installed package, and check your distribution's security tracker. AWS Systems Manager Patch Manager will surface this once your distribution has backported the fix, but do not wait for a scheduled maintenance window on this one.
 
-In AWS environments, Windows workloads pointing at on-premises DNS resolvers are a common pattern in hybrid VPC deployments using AWS Route 53 Resolver. If those resolvers or the network path to them can be manipulated, those workloads are exposed. Review your DNS resolution topology.
-
----
-
-## CVE-2026-41091 and CVE-2026-45498: Microsoft Defender exploited in the wild
-
-CVSS: 7.8 (41091) / 4.0 (45498) | Both actively exploited
-
-CVE-2026-41091 is a local privilege escalation caused by the Microsoft Malware Protection Engine improperly resolving links before accessing files. Successful exploitation allows an attacker to gain SYSTEM privileges. CVE-2026-45498 causes a denial-of-service condition that can prevent Defender from functioning.
-
-The combination follows a classic attacker pattern: use the DoS flaw to suppress endpoint protection, then use the LPE to escalate to SYSTEM. CISA added both to its Known Exploited Vulnerabilities catalogue. Huntress incident responders have observed attackers leveraging both CVEs alongside BlueHammer (CVE-2026-33825) in the same intrusion chain.
-
-The practical note: systems that have Defender disabled are not susceptible to these specific vulnerabilities, and Defender updates automatically via malware definition and engine updates without requiring manual installation. That said, confirm your Defender update channel is not blocked by a proxy, a GPO misconfiguration, or network segmentation in your cloud VPC. Those are precisely the gaps that leave EC2 instances or Azure VMs sitting on stale definition versions without anyone noticing.
-
----
-
-## CVE-2026-45585 (YellowKey): BitLocker bypass
-
-CVSS: 6.8 | PoC public, patch available
-
-CVE-2026-45585, referred to publicly as YellowKey, allows an attacker with physical access to bypass BitLocker protections and access encrypted data. It affects Windows 11 versions 24H2, 25H2, and 26H1 for x64 systems, and Windows Server 2025 including Server Core.
-
-The CVSS score of 6.8 will cause some teams to deprioritise this. That would be a mistake. A flaw that requires physical access is irrelevant to an internet-facing web server, but it is directly relevant to endpoint theft, executive travel, developer laptops, legal and finance workstations, and any system where local data matters.
-
-The phrase that should concern cloud security architects is "cached cloud tokens". A developer laptop running AWS CLI or Azure CLI caches credentials locally. A YellowKey attack bypasses BitLocker and reads those tokens from disk without the user's password. That is a cloud credential compromise, and depending on what those credentials could access, it is potentially GDPR and FCA reportable.
-
-Microsoft's interim mitigation is to switch BitLocker-encrypted devices from TPM-only to TPM+PIN mode via PowerShell, the command line, or Control Panel. The June 2026 Patch Tuesday includes a full fix. Microsoft also disclosed a second closely related vulnerability, CVE-2026-50507, at roughly the same time. Both primarily affect BitLocker configured in pure TPM mode without a PIN, a configuration that many organisations have treated as sufficient.
-
----
-
-## CVE-2026-21509: Microsoft Office OLE bypass
-
-CVSS: 7.8 | Actively exploited at disclosure
-
-CVE-2026-21509 allows an attacker to craft a document that bypasses OLE validation, causing Office to load a COM object that should have been blocked. The attack targets Shell.Explorer.1, identified by CLSID {EAB22AC3-30C1-11CF-A7EB-0000C05BAE0B}. When loaded inside an Office document, this control can load local files, execute scripts, and connect to remote servers, giving an attacker a foothold to download and execute arbitrary payloads.
-
-The cloud relevance here is straightforward. Initial access via a phishing document lands on a developer or analyst machine that has cloud CLI tools, instance profile credentials, or SSO browser sessions active. Office-borne initial access is consistently the first step in cloud environment compromises I investigate. Your AWS GuardDuty alerting on unusual IAM API calls, and Microsoft Sentinel detection on post-document-open anomalies, are your primary detection layer for this vector.
-
----
-
-## Operationalising response across AWS and Azure
-
-Knowing about CVEs is not the hard part. Scaling the response across a hybrid estate without breaking production is.
-
-### AWS: patch at scale with Systems Manager
-
-AWS Systems Manager Patch Manager works through patch baselines that include rules for auto-approving patches within a set number of days of release, plus explicit approved and rejected patch lists. For emergency response, set the approval delay to zero on your critical and important security classifications.
-
-A minimal working patch baseline that auto-approves critical Windows security patches immediately on availability:
-
-```json
-{
-  "PatchFilters": [
-    {
-      "Key": "CLASSIFICATION",
-      "Values": ["SecurityUpdates", "CriticalUpdates"]
-    },
-    {
-      "Key": "MSRC_SEVERITY",
-      "Values": ["Critical", "Important"]
-    }
-  ],
-  "ApproveAfterDays": 0,
-  "ComplianceLevel": "CRITICAL",
-  "EnableNonSecurity": false
-}
-```
-
-Deploy this as a custom patch baseline via the AWS CLI:
+Use the following AWS CLI command to audit running kernel versions across your fleet via SSM:
 
 ```bash
-aws ssm create-patch-baseline \
-  --name "CriticalSecurityBaseline-Emergency" \
-  --operating-system "WINDOWS" \
-  --approval-rules file://critical-baseline.json \
-  --description "Emergency baseline for critical security patches - zero day auto-approval" \
-  --tags Key=Environment,Value=Production Key=Owner,Value=SecurityTeam
+# Query running kernel versions across your EC2 fleet via SSM
+aws ssm send-command \
+  --document-name "AWS-RunShellScript" \
+  --parameters 'commands=["uname -r && cat /etc/os-release | grep PRETTY_NAME"]' \
+  --targets "Key=tag:Environment,Values=Production" \
+  --output text \
+  --query "Command.CommandId"
+
+# Retrieve results once complete
+aws ssm list-command-invocations \
+  --command-id "<COMMAND_ID>" \
+  --details \
+  --query "CommandInvocations[*].{Instance:InstanceId,Output:CommandPlugins[0].Output}"
 ```
 
-For continuous CVE scanning, enable Amazon Inspector. It automatically discovers and scans EC2 instances and container images in Amazon ECR for software vulnerabilities and unintended network exposure. In multi-account environments, designate a delegated administrator account for Inspector via AWS Organisations to get centralised visibility across the estate.
+Any host running kernel 6.4 or later that has not applied its distribution's Bad Epoll patch is vulnerable. There is no configuration change or module you can disable to mitigate this. Patching is the only path forward.
 
-### Azure: Defender for Cloud and Update Manager
+Until patching is complete, tune `auditd` or your SIEM for suspicious privilege escalation patterns: unexpected `setuid` execution, unusual `/proc` access, or processes rapidly changing effective UIDs.
 
-Defender for Cloud uses update assessment signals from Azure Update Manager to surface recommendations for missing patches across protected machines. For mixed AWS/Azure estates, onboarding AWS machines via Azure Arc brings them into Defender for Cloud's patch visibility plane. It is genuinely useful if you want a single patch compliance dashboard rather than two separate reporting surfaces.
-
----
-
-## NCSC alignment
-
-The NCSC's vulnerability management guidance, updated in May 2026, is direct: where a critical vulnerability is under active exploitation, particularly one affecting an internet-facing system, accelerating the update process is not optional. The NCSC specifically calls out automated patching as a baseline expectation, and states that where automatic secure hot patching is available, it should be enabled as a priority.
-
-An effective vulnerability management process lets your organisation understand which vulnerabilities are present across the estate, where updates are failing, and to actively reduce the impact of both. The validation step, confirming patches actually landed and took effect, is the piece most organisations skip.
-
-For UK financial services firms, the FCA's operational resilience framework reinforces this directly. Delayed patching of vulnerabilities affecting identity infrastructure, Netlogon and Entra ID in particular, threatens the operational continuity of important business services. Document your remediation timeline and rationale regardless of whether you meet the target SLA.
+<!-- INTERNAL_LINK: AWS Security Hub configuration guide | aws-security-hub-guide -->
 
 ---
 
-## Common mistakes when responding to a high-profile CVE wave
+## CVE-2026-32193: Azure Kubernetes Service critical RCE (container escape)
 
-These are the mistakes I see repeatedly across client engagements when a significant CVE lands.
+This is directly relevant if you run multi-cloud or Azure-adjacent workloads, or if your FCA-regulated platform has any third-party AKS-hosted services in its data flow.
 
-1. Treating CVSS score as the sole prioritisation signal. A Critical CVE on an isolated internal workload may be able to wait. A Medium CVE on an internet-facing API touching regulated data may need action today. YellowKey at CVSS 6.8 is the clearest example in this batch: a "medium" severity score on a laptop holding cached AWS credentials is a critical business risk.
+CVE-2026-32193 is a critical RCE vulnerability in Azure Kubernetes Service with a CVSS score of 8.8. A path traversal flaw (CWE-22) allows a low-privileged local attacker to execute code with no user interaction and low attack complexity.
 
-2. Patching EC2 instances and Azure VMs while forgetting the on-premises domain controllers feeding cloud identity. The Netlogon and DNS RCE vulnerabilities affect your AD infrastructure. Your cloud IAM posture is only as strong as the identity source it trusts.
+The exploitation path is the part that should get your attention. An attacker who can run an untrusted container configured with `hostNetwork` could send specially crafted requests to a host-level service that was not intended for unauthenticated access, break out of the container, and gain control of the AKS worker node.
 
-3. Confirming patch deployment but not patch success. Systems Manager Patch Manager can report a patch as "installed" while the reboot required to activate it is still pending. An unrebooted domain controller is still vulnerable. Build reboot compliance checking into your patch validation runbooks.
+Successful exploitation has a changed scope, meaning impact can extend beyond the container to resources managed by a different security authority. In practice: one compromised workload on a shared node pool becomes a node-level compromise. From that foothold, an attacker can target the Kubernetes API server, read secrets from other pods, and pivot laterally.
 
-4. Patching domain controllers in batches rather than a single window. Half-patched forests are not a defensible state for a pre-auth domain controller vulnerability. Patch all DCs together, or accept that you remain exposed until the last one is done.
+The June 2026 Patch Tuesday context matters here. This month's patches include fixes for three publicly disclosed zero-days and 37 critical vulnerabilities. Elevation of privilege accounted for 65 patches (32%), remote code execution for 55 (27%), and information disclosure for 29 (13%).
 
-5. Assuming Defender auto-updates are flowing. Defender definition updates can be blocked silently by proxy misconfiguration, VPC egress rules, or WSUS policy. Verify the update channel for every managed endpoint rather than assuming it is working.
+For AKS customers specifically: AKS patches CVEs with a vendor fix every week. CVEs without an upstream fix are waiting on the vendor before they can be remediated. For AKS Standard, you are more likely to need to monitor and apply upgrades yourself. If you are not on AKS Automatic, check your node image versions now.
 
-6. Treating BitLocker TPM-only mode as sufficient data-at-rest protection. Both YellowKey and CVE-2026-50507 target exactly this configuration. Revisit your device encryption policy baseline.
-
----
-
-## Summary
-
-CVE-2026-41089 (Netlogon RCE, CVSS 9.8) is actively exploited. Patch all domain controllers in a single maintenance window. This is a cloud identity problem, not just a Windows problem.
-
-CVE-2026-41096 (DNS client RCE, CVSS 9.8) affects virtually every Windows machine, including EC2 instances and Azure VMs. An attacker with the ability to manipulate DNS responses achieves unauthenticated RCE with no user interaction required.
-
-CVE-2026-41091 and CVE-2026-45498 (Defender LPE and DoS) are both actively exploited and used together to suppress endpoint protection before privilege escalation. Verify Defender update channels are unobstructed across your cloud environments.
-
-CVE-2026-45585 (YellowKey, BitLocker bypass, CVSS 6.8) will be under-prioritised by most risk processes. Cached cloud tokens on a stolen laptop represent a real cloud credential exposure. Move affected device fleets to TPM+PIN now and apply the June 2026 patch.
-
-Automate patch compliance verification, not just deployment. Use Amazon Inspector for continuous EC2 and ECR CVE scanning, Systems Manager Patch Manager with custom baselines for patching, and Defender for Cloud with Azure Update Manager for Azure and Arc-onboarded workloads.
-
-The NCSC's position is clear: where critical vulnerabilities are under active exploitation, accelerating the update process is not optional. Document your remediation timelines and risk decisions, whether or not you meet the target SLA.
+<!-- INTERNAL_LINK: AWS IAM security best practices | aws-iam-security-best-practices -->
 
 ---
 
-## Related Guides
+## CVE-2026-14355: PHP OpenSSL extension heap corruption (AES-WRAP-PAD)
 
-- [Cloud Security Vulnerability Management](/guides/cloud-security-vulnerability-management/) — The full prioritisation framework for running a vulnerability management programme across AWS, with NCSC and CISA KEV alignment.
-- [Cloud Identity and Access Management](/guides/cloud-identity-and-access-management/) — Netlogon and DNS RCE are cloud identity problems; this guide covers the IAM controls that limit blast radius when identity infrastructure is compromised.
-- [Cloud Incident Response](/guides/cloud-incident-response/) — If a domain controller is compromised, this guide covers the containment, evidence preservation, and regulatory notification steps.
-- [AWS Security Hub: A Practitioner's Guide](/guides/aws-security-hub-guide/) — Centralise Inspector findings and patch compliance results across all accounts in one view.
-- [Cloud Compliance Frameworks](/guides/cloud-compliance-frameworks/) — FCA and NCSC CAF requirements for patch management and vulnerability remediation timelines.
+Lower CVSS score (5.6, Medium), but broader surface area than the headline suggests.
+
+In PHP versions 8.2.x before 8.2.32, 8.3.x before 8.3.32, 8.4.x before 8.4.23, and 8.5.x before 8.5.8, the AES-WRAP-PAD algorithm implementation in the OpenSSL extension contains a buffer allocation flaw. The output buffer for the AES key-wrap-with-padding operation is sized from the plaintext length without accounting for RFC 5649 expansion. This can cause OpenSSL to write beyond allocated memory, corrupting heap metadata and triggering application abort.
+
+A crash-on-abort is the likely worst-case for most deployments, a denial of service against PHP applications performing AES key-wrapping operations. But heap metadata corruption is the class of primitive that, under the right conditions, can be taken further. Do not let "Medium CVSS" translate into "low urgency" for your threat model. Financial services platforms using PHP for any cryptographic key management, or wrapping keys before sending them to a KMS, should treat this as a high-priority patch. The NCSC is clear on this: CVSS base scores are inputs to risk decisions, not the decision itself.
+
+Affected platforms with wide cloud deployment include AWS Elastic Beanstalk environments running PHP, Lambda functions using PHP runtimes via custom layers, and EC2/ECS PHP application stacks. Check your PHP version across Lambda layers and container base images. Pinned PHP minor versions are exactly where this will catch you.
+
+<!-- INTERNAL_LINK: AWS Well-Architected Security Pillar | aws-well-architected-security -->
+
+---
+
+## The broader picture: 2026 Linux kernel CVE density
+
+Bad Epoll does not exist in isolation. The 2026 Linux kernel vulnerability picture is unusually crowded. Copy Fail (CVE-2026-31431), a deterministic privilege escalation in the `algif_aead` module, landed in April and reached CISA's Known Exploited Vulnerabilities list. The DirtyFrag chain followed: Fragnesia (CVE-2026-46300), DirtyClone (CVE-2026-43503), and pedit COW all exploit the same class of deterministic page-cache-write primitive that made Dirty Pipe notorious in 2022.
+
+The average time to remediate a known high- or critical-severity CVE is now 74 days, and CVE volume hit 48,185 entries in 2025. That gap between disclosure and remediation is exactly where threat actors operate.
+
+<!-- INTERNAL_LINK: Cloud incident response planning | cloud-incident-response -->
+
+---
+
+## Common pitfalls when responding to recent cloud security CVEs
+
+This is where I see organisations fail repeatedly, especially under the pressure of a high-severity disclosure.
+
+Trusting "package updated" instead of verifying the running kernel. Installing a patched kernel package does not protect you until you reboot into it. Your SSM inventory will show the new package; `uname -r` will reveal the truth. A package update is not complete until the running kernel has changed.
+
+Conflating AKS Automatic with AKS Standard patch behaviour. AKS Automatic follows managed upgrade behaviour with production-ready defaults and less customer intervention. AKS Standard requires you to monitor and apply upgrades yourself. Check which mode your clusters are in before assuming you are covered.
+
+Dismissing local privilege escalation as low risk in cloud environments. The prevailing assumption is that local-only exploits do not matter because "the attacker has to get in first." That ignores phishing, compromised CI pipelines, supply chain attacks, and web application vulnerabilities, all of which routinely hand an adversary a low-privileged shell. A compromised web app, a malicious CI job, a browser sandbox escape, or a container workload can give an attacker enough kernel reach. That is why local-root bugs keep mattering.
+
+Relying exclusively on CVSS base scores for prioritisation. CVE-2026-14355's score of 5.6 does not mean low urgency if your architecture wraps cryptographic keys in PHP. Use CISA's Known Exploited Vulnerabilities catalogue and EPSS scores alongside CVSS to build a prioritised patch order that reflects your actual attack surface.
+
+Not auditing CI/CD runners. The Bad Epoll exploit is well suited to being triggered by a malicious pull request on an unpatched GitHub Actions self-hosted runner. Treat build runners as high-value targets. Patch them first, isolate them from production networks, and run them with minimal kernel capabilities.
+
+Missing the Android attack surface in enterprise device fleets. BYOD and managed Android devices that access cloud management consoles or corporate resources are in scope for CVE-2026-46242. Push MDM updates promptly and flag non-compliant devices as restricted from sensitive resource access.
+
+<!-- INTERNAL_LINK: What is Cloud Security Posture Management | what-is-cspm-cloud-security-posture-management -->
+
+---
+
+## Takeaways
+
+Patch the kernel, then reboot. CVE-2026-46242 has a public, 99%-reliable exploit targeting Linux 6.4+ kernels. A package update without a reboot leaves you exposed. Prioritise EC2, ECS on EC2, self-managed Kubernetes nodes, and CI/CD runners immediately.
+
+AKS Standard tier requires active customer action for CVE-2026-32193. A low-privileged attacker who can run a `hostNetwork`-configured container can escape to the worker node. Verify your node image versions and apply the June 2026 security update.
+
+CVE-2026-14355 affects all PHP 8.x branches. Patch to 8.2.32, 8.3.32, 8.4.23, or 8.5.8 respectively. Check Lambda layers and container base images; pinned runtimes are where this will catch you.
+
+Local privilege escalation is not a low-risk vulnerability class in cloud environments. Phishing, CI/CD compromise, and web application vulnerabilities routinely deliver unprivileged shells. Bad Epoll and Copy Fail are the difference between a contained breach and a node-level compromise.
+
+Use EPSS and CISA KEV, not CVSS alone. Recent CVEs demonstrate that a Medium CVSS rating can map to high operational urgency depending on your architecture. Build a risk-contextualised prioritisation process, not a score-threshold filter.
+
+AI-assisted vulnerability research has limits. Anthropic's Mythos found one of two race conditions in the same code block and missed the sibling. Human-led review, tooling diversity, and a robust patch cadence remain necessary. Monitoring NVD, CISA KEV, and your distribution's security tracker is non-negotiable.
+
+<!-- INTERNAL_LINK: AWS CloudTrail configuration best practices | aws-cloudtrail-configuration-best-practices -->
+<!-- INTERNAL_LINK: Shared responsibility model in cloud security | shared-responsibility-model-cloud-security -->
