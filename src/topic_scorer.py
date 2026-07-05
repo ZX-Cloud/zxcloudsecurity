@@ -25,6 +25,7 @@ import hashlib
 import logging
 import os
 import re
+import subprocess
 import time
 from collections import defaultdict
 from dataclasses import dataclass, asdict, field
@@ -480,6 +481,44 @@ def load_existing_guide_index(guides_dir: Path = GUIDES_DIR) -> list:
     return terms
 
 
+def load_drafts_branch_guide_index(branch: str = "drafts", guides_prefix: str = "drafts/guides/") -> list:
+    """
+    Scan the `drafts` branch (via git, without checking it out) for guides
+    already generated and awaiting approval, so a topic isn't regenerated
+    and re-billed on every run until Steve approves or rejects it.
+    Returns list of lowercase strings to match against candidate topics.
+    """
+    terms: list = []
+    try:
+        subprocess.run(
+            ["git", "fetch", "origin", branch],
+            check=False, capture_output=True, text=True,
+        )
+        listing = subprocess.run(
+            ["git", "ls-tree", "-r", "--name-only", f"origin/{branch}", "--", guides_prefix],
+            check=False, capture_output=True, text=True,
+        )
+        if listing.returncode != 0:
+            log.warning(f"  Could not read '{branch}' branch — skipping pending-drafts coverage check")
+            return terms
+
+        filenames = [f for f in listing.stdout.splitlines() if f.strip()]
+        for filename in filenames:
+            terms.append(Path(filename).stem.lower().replace("-", " "))
+            show = subprocess.run(
+                ["git", "show", f"origin/{branch}:{filename}"],
+                check=False, capture_output=True, text=True,
+            )
+            if show.returncode == 0:
+                match = re.search(r"^title:\s*['\"]?(.+?)['\"]?\s*$", show.stdout, re.MULTILINE | re.IGNORECASE)
+                if match:
+                    terms.append(match.group(1).lower())
+        log.info(f"  → {len(filenames)} pending draft(s) loaded from '{branch}' branch")
+    except Exception as e:
+        log.warning(f"  Error loading '{branch}' branch index: {e}")
+    return terms
+
+
 # ---------------------------------------------------------------------------
 # Clustering: group signals into topics by keyword overlap
 # ---------------------------------------------------------------------------
@@ -803,9 +842,11 @@ def run(
         _save_queue([], output_path)
         return []
 
-    # 2. Load existing guide index for coverage gap scoring
+    # 2. Load existing guide index for coverage gap scoring — published guides
+    #    plus anything already drafted and awaiting approval on the drafts branch
     log.info("[2/5] Loading existing guide index ...")
     existing_terms = load_existing_guide_index(guides_dir)
+    existing_terms += load_drafts_branch_guide_index()
 
     # 3. Cluster signals into topics
     log.info("[3/5] Clustering signals into topics ...")

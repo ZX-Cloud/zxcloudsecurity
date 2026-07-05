@@ -24,7 +24,9 @@ import json
 import logging
 import os
 import re
+import shutil
 import subprocess
+import tempfile
 import uuid
 from dataclasses import dataclass, asdict, field
 from datetime import datetime, timezone, timedelta
@@ -127,27 +129,46 @@ def _git(args: list, check: bool = True) -> subprocess.CompletedProcess:
 def commit_drafts_to_branch(records: list) -> list:
     """
     Stage and commit all passing/flagged draft files to the drafts branch.
+    Merges onto the branch's existing remote history instead of resetting
+    from main, so drafts pending approval from earlier runs aren't wiped out.
     Returns updated records with committed=True on success.
     """
-    files_to_commit = [r.draft_path for r in records if Path(r.draft_path).exists()]
+    files_to_commit = [Path(r.draft_path) for r in records if Path(r.draft_path).exists()]
     if not files_to_commit:
         log.warning("No draft files to commit")
         return records
+
+    # Stash this run's freshly generated drafts — the branch switch below may
+    # bring back an older, differently-named version of the working tree, and
+    # a same-named file already tracked on the drafts branch would otherwise
+    # block `git checkout` on an untracked-file-would-be-overwritten error.
+    tmp_dir = Path(tempfile.mkdtemp(prefix="guide-drafts-"))
+    stashed = [(tmp_dir / path.name, path) for path in files_to_commit]
+    for stash_path, original_path in stashed:
+        shutil.copy2(original_path, stash_path)
 
     try:
         # Configure git identity for Actions runner
         _git(["config", "user.email", "actions@github.com"])
         _git(["config", "user.name", "ZX Guide Agent"])
 
-        # Ensure we're on the drafts branch
-        current = _git(["branch", "--show-current"], check=False).stdout.strip()
-        if current != DRAFTS_BRANCH:
+        # Base the drafts branch on its existing remote state (if any) so
+        # previously-committed, not-yet-approved drafts are preserved.
+        _git(["fetch", "origin", DRAFTS_BRANCH], check=False)
+        remote_exists = _git(
+            ["rev-parse", "--verify", f"origin/{DRAFTS_BRANCH}"], check=False
+        ).returncode == 0
+        if remote_exists:
+            _git(["checkout", "-B", DRAFTS_BRANCH, f"origin/{DRAFTS_BRANCH}"])
+        else:
             _git(["checkout", "-B", DRAFTS_BRANCH])
 
-        # Stage draft files and quality report
-        for path in files_to_commit:
-            _git(["add", path])
-        
+        # Restore this run's drafts on top of whatever was already on the branch
+        DRAFTS_DIR.mkdir(parents=True, exist_ok=True)
+        for stash_path, original_path in stashed:
+            shutil.copy2(stash_path, original_path)
+            _git(["add", str(original_path)])
+
         # Build commit message
         titles = [r.title or r.slug for r in records if r.outcome != "reject"]
         commit_msg = f"chore: add {len(titles)} guide draft(s) for review\n\n"
@@ -156,7 +177,7 @@ def commit_drafts_to_branch(records: list) -> list:
         commit_msg += f"\n[guide-agent] {_now_utc().strftime('%Y-%m-%dT%H:%M:%SZ')}"
 
         _git(["commit", "-m", commit_msg])
-        _git(["push", "origin", DRAFTS_BRANCH, "--force-with-lease"])
+        _git(["push", "origin", DRAFTS_BRANCH])
 
         log.info(f"  ✓ Committed {len(files_to_commit)} draft(s) to branch '{DRAFTS_BRANCH}'")
         for r in records:
@@ -167,6 +188,8 @@ def commit_drafts_to_branch(records: list) -> list:
         log.error(f"  Git error: {e.stderr}")
         for r in records:
             r.error = f"Git commit failed: {e.stderr[:200]}"
+    finally:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
 
     return records
 
