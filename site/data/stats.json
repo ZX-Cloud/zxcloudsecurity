@@ -1,23 +1,16 @@
 {
-  "updated": "04 Jul 2026 06:06 UTC",
-  "total": 568,
+  "updated": "05 Jul 2026 06:01 UTC",
+  "total": 571,
   "severity": {
     "critical": 64,
-    "high": 360,
-    "medium": 123
+    "high": 362,
+    "medium": 124
   },
   "categories": {
     "aws": 34,
-    "azure": 235,
+    "azure": 236,
     "gcp": 1,
-    "general": 298
+    "general": 300
   },
-  "top_critical": {
-    "title": "CVE-2026-56645: Microsoft Edge RCE Vulnerability",
-    "summary": "A heap-based buffer overflow vulnerability in Microsoft Edge (Chromium-based) allows an unauthenticated attacker to execute arbitrary code remotely over a network. This type of flaw can be exploited w",
-    "architects_take": "Prioritise rapid patching of Microsoft Edge across all endpoints, with particular urgency for privileged users and those accessing Azure or other cloud consoles \u2014 consider enforcing browser version compliance via Intune or equivalent MDM tooling until patched versions are confirmed deployed.",
-    "slug": "microsoft-edge-remote-code-execution-cve-2026-56645",
-    "source": "Microsoft Security Response Center",
-    "category": "azure"
-  }
+  "top_critical": null
 }
