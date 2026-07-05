@@ -63,6 +63,11 @@ jobs:
       - name: Quality check
         run: python src/quality_checker.py --guides-dir site/content/guides
 
+      - name: Technical accuracy review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python src/technical_reviewer.py
+
       - name: Publish drafts and email digest
         env:
           GH_REPO:             ${{ secrets.GH_REPO }}

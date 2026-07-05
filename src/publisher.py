@@ -72,6 +72,7 @@ class PublishRecord:
     word_count: int
     description: str
     draft_path: str
+    technical_review: dict = field(default_factory=dict)  # from technical_reviewer.py
     guide_id: str = ""    # UUID, set after token generation
     token: str = ""
     committed: bool = False
@@ -294,6 +295,35 @@ def _guide_card_html(record: PublishRecord, lambda_url: str, github_repo: str) -
 
     # Flag reasons (shown for flagged guides)
     flags_html = ""
+
+    # Technical accuracy review (from technical_reviewer.py)
+    tech = record.technical_review or {}
+    if tech.get("issues_found"):
+        findings = tech.get("findings", [])
+        findings_html = "".join(
+            f"<li style='margin-bottom:4px;'>"
+            f"<b style='color:{_C['amber']};'>{f.get('severity', 'minor').upper()}</b> — {f.get('description', '')}"
+            f"</li>"
+            for f in findings
+        )
+        flags_html += f"""
+        <div style="margin-top:14px;padding:10px 12px;background:{_C['card_flag']};
+                    border:1px solid {_C['border_flag']};border-radius:8px;">
+          <div style="font-size:13px;font-weight:700;color:{_C['amber']};margin-bottom:6px;">
+            ⚠ Technical review — {len(findings)} concern(s)
+          </div>
+          <ul style="margin:0;padding-left:18px;font-size:13px;color:{_C['text']};">{findings_html}</ul>
+        </div>"""
+    elif tech.get("review_error"):
+        flags_html += f"""
+        <div style="margin-top:14px;font-size:12px;color:{_C['muted']};">
+          Technical review unavailable ({tech['review_error']}) — check the content manually
+        </div>"""
+    elif tech:
+        flags_html += f"""
+        <div style="margin-top:14px;font-size:13px;color:{_C['green']};">
+          ✓ Technical review: no issues found
+        </div>"""
 
     # Action buttons — only for non-rejected guides
     buttons_html = ""
@@ -532,6 +562,19 @@ def _build_email_html(
         lines.append("")
         lines.append(_short_summary(r.description))
         lines.append("")
+        tech = r.technical_review or {}
+        if tech.get("issues_found"):
+            findings = tech.get("findings", [])
+            lines.append(f"⚠ Technical review — {len(findings)} concern(s):")
+            for f in findings:
+                lines.append(f"  - [{f.get('severity', 'minor').upper()}] {f.get('description', '')}")
+            lines.append("")
+        elif tech.get("review_error"):
+            lines.append(f"Technical review unavailable ({tech['review_error']}) — check manually")
+            lines.append("")
+        elif tech:
+            lines.append("✓ Technical review: no issues found")
+            lines.append("")
         if r.guide_id and r.token:
             filename = Path(r.draft_path).name
             lines.append(f"Edit:    https://github.com/{github_repo}/edit/{DRAFTS_BRANCH}/drafts/guides/{filename}")
@@ -832,6 +875,7 @@ def run(
             word_count  = g.get("word_count", 0),
             description = g.get("description", ""),
             draft_path  = g.get("draft_path", ""),
+            technical_review = g.get("technical_review", {}),
         )
         for g in guides
     ]
