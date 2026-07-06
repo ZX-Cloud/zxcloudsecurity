@@ -146,7 +146,9 @@ def commit_drafts_to_branch(records: list) -> list:
     tmp_dir = Path(tempfile.mkdtemp(prefix="guide-drafts-"))
     stashed = [(tmp_dir / path.name, path) for path in files_to_commit]
     for stash_path, original_path in stashed:
-        shutil.copy2(original_path, stash_path)
+        # Move (not copy) — the file must be gone from the working tree,
+        # otherwise it's still untracked cruft that blocks the checkout below.
+        shutil.move(str(original_path), str(stash_path))
 
     try:
         # Configure git identity for Actions runner
@@ -325,9 +327,11 @@ def _guide_card_html(record: PublishRecord, lambda_url: str, github_repo: str) -
           ✓ Technical review: no issues found
         </div>"""
 
-    # Action buttons — only for non-rejected guides
+    # Action buttons — only for non-rejected guides that actually committed
+    # and got a real token. Otherwise the links would carry an empty id/token
+    # and the approval Lambda would reject them outright.
     buttons_html = ""
-    if record.outcome != "reject":
+    if record.outcome != "reject" and record.committed and record.guide_id and record.token:
         buttons_html = f"""
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;">
           <tr>
@@ -357,6 +361,14 @@ def _guide_card_html(record: PublishRecord, lambda_url: str, github_repo: str) -
             </td>
           </tr>
         </table>"""
+    elif record.outcome != "reject":
+        buttons_html = f"""
+        <div style="margin-top:14px;padding:10px 12px;background:{_C['card_reject']};
+                    border:1px solid {_C['border_rej']};border-radius:8px;
+                    font-size:13px;color:{_C['red']};">
+          Not committed this run — {record.error or 'check GitHub Actions logs'}.
+          It will be retried on the next run.
+        </div>"""
 
     return f"""
     <div style="background:{card_bg};border:1.5px solid {card_border};border-radius:12px;
