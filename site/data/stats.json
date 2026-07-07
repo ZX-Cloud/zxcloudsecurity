@@ -1,16 +1,23 @@
 {
-  "updated": "06 Jul 2026 06:01 UTC",
-  "total": 571,
+  "updated": "07 Jul 2026 06:04 UTC",
+  "total": 587,
   "severity": {
-    "critical": 64,
-    "high": 362,
-    "medium": 124
+    "critical": 66,
+    "high": 372,
+    "medium": 128
   },
   "categories": {
-    "aws": 34,
+    "aws": 36,
     "azure": 236,
     "gcp": 1,
-    "general": 300
+    "general": 314
   },
-  "top_critical": null
+  "top_critical": {
+    "title": "CVE-2026-20896: Gitea Docker Auth Bypass Exploited",
+    "summary": "A critical vulnerability (CVE-2026-20896, CVSS 9.8) in Gitea Docker images allows unauthenticated attackers to gain elevated privileges by spoofing the X-WEBAUTH-USER HTTP header, which Gitea trusts f",
+    "architects_take": "Patch Gitea Docker deployments to the latest version immediately and, as a belt-and-braces measure, ensure X-WEBAUTH-USER header stripping is enforced at your ingress or reverse proxy layer so external traffic cannot inject trusted authentication headers. Audit your container registry and CI/CD pipelines for any exposed Gitea instances and review access logs for anomalous authentication events dating back to initial disclosure.",
+    "slug": "gitea-docker-auth-bypass-cve-2026-20896-active-exploitation",
+    "source": "The Hacker News",
+    "category": "general"
+  }
 }
