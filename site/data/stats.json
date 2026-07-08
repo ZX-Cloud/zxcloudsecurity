@@ -1,23 +1,23 @@
 {
-  "updated": "07 Jul 2026 06:04 UTC",
-  "total": 587,
+  "updated": "08 Jul 2026 06:07 UTC",
+  "total": 625,
   "severity": {
-    "critical": 66,
-    "high": 372,
-    "medium": 128
+    "critical": 75,
+    "high": 395,
+    "medium": 134
   },
   "categories": {
-    "aws": 36,
-    "azure": 236,
+    "aws": 38,
+    "azure": 250,
     "gcp": 1,
-    "general": 314
+    "general": 336
   },
   "top_critical": {
-    "title": "CVE-2026-20896: Gitea Docker Auth Bypass Exploited",
-    "summary": "A critical vulnerability (CVE-2026-20896, CVSS 9.8) in Gitea Docker images allows unauthenticated attackers to gain elevated privileges by spoofing the X-WEBAUTH-USER HTTP header, which Gitea trusts f",
-    "architects_take": "Patch Gitea Docker deployments to the latest version immediately and, as a belt-and-braces measure, ensure X-WEBAUTH-USER header stripping is enforced at your ingress or reverse proxy layer so external traffic cannot inject trusted authentication headers. Audit your container registry and CI/CD pipelines for any exposed Gitea instances and review access logs for anomalous authentication events dating back to initial disclosure.",
-    "slug": "gitea-docker-auth-bypass-cve-2026-20896-active-exploitation",
-    "source": "The Hacker News",
+    "title": "CVE-2026-48908: JoomShaper SP Page Builder RCE Flaw",
+    "summary": "A critical vulnerability in the JoomShaper SP Page Builder plugin for Joomla allows unauthenticated attackers to upload arbitrary files, including malicious PHP scripts, which can then be executed on ",
+    "architects_take": "Any internet-facing Joomla instance running SP Page Builder should be patched immediately or taken offline; additionally, review web server configurations to ensure uploaded file directories are non-executable, and implement a web application firewall (WAF) rule to block unauthenticated file upload requests as an interim control.",
+    "slug": "cve-2026-48908-joomshaper-sp-page-builder-unrestricted-file-upload-rce",
+    "source": "CISA Known Exploited Vulnerabilities",
     "category": "general"
   }
 }
