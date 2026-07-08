@@ -1,198 +1,180 @@
 ---
-title: "Recent Cloud Security CVEs: What Architects Need to Know Right Now (July 2026)"
+title: "Recent Cloud Security CVEs: What Practitioners Need to Know in 2026"
 date: 2026-07-08
-description: "A practitioner's breakdown of the most critical recent cloud security CVEs in 2026, covering Linux kernel LPEs, RHACS GraphQL DoS, and nation-state exploitation patterns."
-tags: ["cloud security", "CVE", "vulnerability management", "Linux kernel", "Kubernetes", "AWS", "privilege escalation"]
+description: "A practitioner's guide to recent cloud security CVEs in 2026 — covering GhostLock, AWS bulletins, RHACS GraphQL DoS, and the NVD enrichment crisis."
+tags: ["cloud-security", "cve", "vulnerability-management", "aws-security", "linux-kernel"]
 slug: "recent-cloud-security-cves"
 author: "Steve Harrison & AI - Principal Security Architect"
-word_count: 2560
+word_count: 2423
 draft: false
 ---
 
-# Recent cloud security CVEs: what every cloud architect needs to know right now
+# Recent Cloud Security CVEs: what practitioners need to know in 2026
 
-If you run workloads on Linux-backed cloud infrastructure, and virtually every AWS, Azure, or GCP customer does, then the wave of Linux kernel vulnerabilities disclosed in the first half of 2026 deserves structured attention from your security team. We are in an unusually active period for kernel-level privilege escalation. At least three of these CVEs have working public exploit code and confirmed real-world exploitation. Add a newly disclosed denial-of-service flaw in Red Hat's Kubernetes security platform, and a confirmed China-aligned threat actor actively exploiting N-day flaws against cloud-connected infrastructure, and the case for prioritised response rather than reactive scrambling becomes straightforward.
-
-This guide covers the CVEs that actually matter for cloud environments right now, explains what real-world impact looks like, and gives you concrete detection and remediation steps.
-
-<!-- INTERNAL_LINK: cloud vulnerability management programme | cloud-security-vulnerability-management -->
+If you are running workloads in AWS, or on any Linux-based cloud infrastructure, the stream of recent cloud security CVEs in 2026 is not background noise you can safely deprioritise. The threat surface underneath cloud environments is shifting, and it is doing so faster than most vulnerability management programmes were designed to handle. This guide covers the vulnerabilities that materially affect cloud estates right now, the AWS-specific bulletins that require action, and the structural change happening at NIST that is quietly breaking the tooling most teams rely on for triage.
 
 ---
 
-## The 2026 Linux kernel LPE cluster: why cloud teams should care
+## The Linux kernel privilege-escalation wave hitting cloud workloads
 
-The most significant theme running through this year's disclosures is a sustained wave of local privilege escalation (LPE) vulnerabilities in the Linux kernel. Individually, each is serious. Together, they point to a systemic problem: old, heavily used kernel subsystems that went unreviewed for years until automated tooling started auditing them.
+2026 has been an unusually bad year for Linux kernel security, and cloud environments are squarely in the blast radius.
 
-### CVE-2026-31431: "Copy Fail" (CVSS 7.8, High)
+### GhostLock (CVE-2026-43499): container escape and root on unpatched nodes
 
-Copy Fail turns a Linux `AF_ALG` flaw into a 4-byte page cache write that achieves local root across major Linux distributions, including Ubuntu, Amazon Linux, RHEL, and SUSE.
+Researchers at Nebula Security disclosed GhostLock (CVE-2026-43499), a 15-year-old Linux kernel flaw that lets any logged-in user take full root control of an unpatched machine.
 
-The mechanics are worth understanding. A 2017 performance optimisation made AEAD operations run in-place by setting the source and destination buffers to the same memory. When a readable file is spliced into an `AF_ALG` socket, the kernel passes references to the file's page cache pages rather than making copies. Because the source and destination buffers are shared, those normally read-only page cache pages become writable. The `authencesn` algorithm then uses the destination buffer as temporary scratch space and writes four bytes beyond the intended output boundary, directly into the page cache of the spliced file.
+The vulnerable code has shipped by default in essentially every mainstream distribution since 2011.
 
-The exploit is deterministic, does not rely on race conditions, and fits in a 732-byte script. Because the page cache is shared across containers and the host, the vulnerability also enables cross-container impacts and container escape.
+What makes this one uncomfortable is the reliability and breadth of the exploit. It needs no special permission, no unusual settings, and no network access. Ordinary threading calls from any local programme are sufficient. Nebula turned it into a working root exploit that is 97% reliable in testing, and it also escapes containers.
 
-Copy Fail is on CISA's Known Exploited Vulnerabilities catalogue with confirmed real-world attacks. CERT-EU flagged it explicitly, recommending the interim mitigation be applied immediately and prioritising Kubernetes nodes and CI/CD runners exposed to untrusted workloads.
+That container-escape capability is the critical concern for cloud engineers. Patch shared and multi-tenant machines first: cloud servers, containers, and CI runners are where an attacker is most likely to find the local foothold this bug needs. On EKS or self-managed Kubernetes clusters running unpatched node AMIs, a compromised pod could escalate to node root and then pivot to the broader cluster. <!-- INTERNAL_LINK: Kubernetes security hardening guide | kubernetes-security-best-practices -->
 
-On cloud-specific impact: cloud providers patch their hypervisor-level infrastructure independently of guest OS kernels. You are responsible for patching the kernel inside your EC2, GCE, or Azure VM. Managed services like AWS Fargate, Google Cloud Run, or Azure Container Instances abstract the kernel entirely, but shared-kernel managed node pools (EKS, GKE, AKS) still expose tenant containers to the host kernel.
+Patching is not as straightforward as it sounds. The original fix introduced a separate crash bug (CVE-2026-53166), and the resolution for that was still settling upstream in early July, so early builds may lack the final version. Ubuntu, for example, had patched its newest release and some cloud kernels, but as of early July still listed 24.04, 22.04, and 20.04 LTS as vulnerable or in progress. Check your distribution's advisory and confirm the fixed package version rather than assuming one is available.
 
-<!-- INTERNAL_LINK: Kubernetes security hardening | kubernetes-security-best-practices -->
+GhostLock does not stand alone. It joins a run of 2026 Linux privilege-escalation bugs, several of which share a common thread: old, heavily used kernel machinery that few had re-read in years, until automated tools started combing it. The Copy.fail / DirtyFrag family follows the same pattern.
 
-### CVE-2026-43499: "GhostLock" (futex use-after-free)
+### The Copy.fail / DirtyFrag family: direct AWS impact
 
-Researchers at Nebula Security disclosed GhostLock, a 15-year-old kernel flaw that lets any logged-in user take full root control of an unpatched machine. The vulnerable code has shipped by default in essentially every mainstream distribution since 2011. It requires no special permissions, no unusual configuration, and no network access. Ordinary threading calls from any local process are sufficient.
+AWS published a consolidated bulletin (2026-030-AWS) covering the Copy.fail class of privilege-escalation issues, confirming awareness of a set of privilege escalation vulnerabilities affecting the Linux kernel.
 
-Nebula published a working root exploit that is 97% reliable in their testing and also escapes containers. Google awarded the team $92,337 through its kernelCTF bug-bounty programme. No exploitation in the wild has been confirmed, but Nebula has published the exploit code, so that situation could change quickly.
+CVE-2026-31431 is a privilege escalation issue affecting the Linux kernel module `algif_aead`. Amazon Linux kernels 4.14, 5.4, 5.10, 5.15, 6.1, 6.12, and 6.18 are all affected. AWS has released updates to Amazon Linux addressing this issue.
 
-The patching picture is uneven. Ubuntu, for example, had patched its newest release and some cloud kernels, but as of early July still listed 24.04, 22.04, and 20.04 LTS as vulnerable or in progress. Check your distribution's advisory and confirm the fixed package version rather than assuming one is available.
+The impact reaches into managed services. SageMaker has rolled out patched compute environments across all services: any notebook instance created or restarted after 20 May 2026 automatically includes the patched kernel. If you are running long-lived SageMaker notebook instances, restarting them is a concrete action item, not a theoretical one.
 
-Two build options, `RANDOMIZE_KSTACK_OFFSET` and `STATIC_USERMODE_HELPER`, make this exploit harder to execute, but they are mitigations, not fixes.
+Theori has also noted that CVE-2026-31431 represents a potential container escape primitive that could affect Kubernetes nodes, because the page cache is shared across the host.
 
-GhostLock is also the second half of a chain Nebula calls IonStack. The first half, CVE-2026-10702, is a Firefox flaw that runs code inside the browser and escapes its sandbox. GhostLock carries it the rest of the way to root.
-
-### CVE-2026-46333: ptrace credential disclosure (Qualys TRU)
-
-The Qualys Threat Research Unit found a logic flaw in the Linux kernel's `__ptrace_may_access()` function that permits an unprivileged local user to read sensitive files and execute arbitrary commands as root on default installations of several major distributions. The bug has been in mainline Linux since November 2016 (v4.10-rc1).
-
-Any unprivileged shell on a vulnerable host is enough to read `/etc/shadow`, exfiltrate SSH host private keys, or execute arbitrary commands as root through hijacked dbus connections to systemd. The practical consequence is that the distinction between an unprivileged foothold and full host compromise collapses. A phished developer account, a constrained CI runner, a low-privilege service account, or a user on a shared multi-tenant host all become direct paths to root.
-
-If you cannot patch immediately, raise `kernel.yama.ptrace_scope` to 2 (admin-only attach). This blocks the public exploits because their `pidfd_getfd(2)` path is gated by `__ptrace_may_access()`.
-
-<!-- INTERNAL_LINK: AWS Inspector for vulnerability scanning | aws-inspector-vulnerability-management -->
+<!-- INTERNAL_LINK: AWS Inspector for vulnerability scanning on EC2 and containers | aws-inspector-vulnerability-management -->
 
 ---
 
-## CVE-2026-9165: RHACS GraphQL unbounded query depth (CVSS 7.7, High)
+## CVE-2026-9165: GraphQL DoS against your Kubernetes security platform
 
-Separate from the kernel cluster, a flaw was found in Red Hat Advanced Cluster Security for Kubernetes (RHACS). Central does not limit the depth of GraphQL queries on its authenticated API. An authenticated user with a valid API token can send deeply nested queries that cause excessive resource consumption in Central, resulting in denial of service for the management plane.
+This one is worth calling out specifically because it targets the tooling you are using to defend your Kubernetes clusters.
 
-This is classified as CWE-400 (Uncontrolled Resource Consumption). The attack surface is limited to authenticated users with valid API tokens, which makes it a post-compromise risk rather than an unauthenticated one. The operational consequence, though, is significant: if an attacker has compromised a service account holding an RHACS API token, they can blind your Kubernetes security monitoring platform before making their next move. In any environment using RHACS as a detective control, that is a material gap.
+CVE-2026-9165 affects Red Hat Advanced Cluster Security for Kubernetes (RHACS). Central does not limit the depth of GraphQL queries served on the authenticated GraphQL API. An authenticated user with a valid API token can send deeply nested queries that cause excessive resource consumption in Central, resulting in a denial of service for the management plane.
 
-The vulnerability was published on 6 July 2026 with a CVSS 3.1 score of 7.7. Remediation is covered in Red Hat security advisory RHSA-2026:36319. Upgrade RHACS Central as soon as your change management process allows.
+The practical implication is that this does not just disrupt the GraphQL endpoint in isolation. The denial-of-service condition can affect the entire Central component's ability to process legitimate requests and maintain security monitoring. Kubernetes clusters under the platform's management could be left with undetected threats while administrators lose access to the security information and controls they need.
 
-<!-- INTERNAL_LINK: AWS Security Hub for centralised findings | aws-security-hub-guide -->
+The attack surface is bounded: you need a valid API token. But in a large organisation where API tokens are provisioned liberally, or where a token has been exfiltrated, this is a realistic insider or post-compromise vector. Rotate RHACS API tokens regularly and apply the Red Hat advisory (`RHSA-2026:36319`) now.
 
----
-
-## Nation-state actors weaponising N-day cloud CVEs
-
-These CVEs are not sitting quietly in patch queues. Sophisticated threat actors, particularly China-aligned groups, are actively exploiting them.
-
-Proofpoint is tracking a suspected China-aligned cluster, designated UNK_MassTraction, observed exploiting Roundcube webmail belonging to physics and engineering departments at US and Canadian universities. The activity involved exploitation of CVE-2024-42009 (CVSS 9.3), a critical cross-site scripting flaw in Roundcube, to siphon credentials. That was followed by either web shell deployment for persistent access or use of a post-exploitation tool called VShell.
-
-The cross-site scripting exploit requires only that the recipient opens the email in the Roundcube client. The targeted departments were running versions of Roundcube susceptible to these N-day flaws, and the campaign emails used a mix of compromised sender accounts and domains with permissive DMARC policies that allowed spoofing.
-
-The post-exploitation tooling connects this activity to a broader pattern. SNOWLIGHT, an ELF loader used in the intrusion chain, has previously been attributed to a China-linked cluster tracked as UNC5174. The wider campaign also demonstrates how attackers are using cloud platforms' own legitimate features to obscure their activity, specifically using API calls to SaaS applications as command-and-control channels so that malicious traffic blends with normal SaaS usage.
-
-For UK financial services and public sector organisations operating under NCSC guidance, the lesson is that email infrastructure and cloud-adjacent SaaS tools are attack surface. They are not separate from your cloud security posture.
-
-<!-- INTERNAL_LINK: cloud incident response playbooks | cloud-incident-response -->
-<!-- INTERNAL_LINK: zero trust architecture for lateral movement prevention | what-is-zero-trust-architecture -->
+<!-- INTERNAL_LINK: AWS Security Hub for centralised findings management | aws-security-hub-guide -->
 
 ---
 
-## Detection: finding exploitation evidence in AWS environments
+## AWS-specific bulletins requiring customer action
 
-If you are running EC2 instances or EKS node groups, the following AWS CLI query surfaces instances that have not had a kernel update applied in more than 30 days, which is a reasonable proxy for LPE exposure:
+Beyond the kernel issues, AWS has published several service-level bulletins in 2026 that require direct customer remediation.
+
+### AWS Research and Engineering Studio (RES): command injection and privilege escalation
+
+CVE-2026-5707 covers unsanitised input in OS command handling within the virtual desktop session name component of AWS Research and Engineering Studio (RES). A remote authenticated actor could execute arbitrary commands as root on the virtual desktop host via a crafted session name.
+
+CVE-2026-5708 involves improper control of user-modifiable attributes in the session creation component. An authenticated remote user could escalate privileges and assume the Virtual Desktop Host instance profile permissions.
+
+Both issues are resolved in RES version 2026.03. AWS recommends upgrading to the latest version and ensuring any forked or derivative code is patched to incorporate the fixes. If your organisation has customised RES deployments, which is common in research-intensive regulated environments, this means auditing your forks explicitly.
+
+### AWS-LC cryptographic library: certificate chain bypass and timing side-channel
+
+CVE-2026-3336 covers improper certificate validation in `PKCS7_verify()` in AWS-LC. An unauthenticated user can bypass certificate chain verification when processing PKCS7 objects with multiple signers, except the final signer.
+
+CVE-2026-3337 identifies an observable timing discrepancy in AES-CCM decryption in AWS-LC that allows an unauthenticated user to potentially determine authentication tag validity via timing analysis.
+
+These are lower-profile than the kernel issues, but if you consume AWS-LC directly, or if your dependencies pull it in transitively, you need to be on a patched build. This is exactly the class of vulnerability that gets missed when teams only triage high-CVSS items with recognisable names.
+
+<!-- INTERNAL_LINK: Cloud security vulnerability management programme | cloud-security-vulnerability-management -->
+
+---
+
+## The nation-state exploitation context
+
+A China-aligned threat activity cluster has been observed exploiting Roundcube webmail software, first detected in May 2026 and targeting administrators and academics in departments with national security ties or research into astrophysics and particle physics.
+
+The pattern is worth noting even for enterprises well outside the academic sector. The cross-site scripting exploit requires only that the recipient open the email in the Roundcube client to give the attacker access to the mail server.
+
+More relevant to cloud security architects is the broader campaign targeting telecommunications companies and government agencies across 42 countries, where attackers used legitimate cloud service API calls as command-and-control infrastructure to blend malicious traffic with normal application behaviour.
+
+Legitimate cloud service APIs used as C2 channels will not be caught by traditional network-layer controls. You need behavioural detection, CloudTrail anomaly alerting, and egress inspection that understands application-layer context. <!-- INTERNAL_LINK: CloudTrail configuration for detection | aws-cloudtrail-configuration-best-practices -->
+
+---
+
+## The NVD enrichment crisis: why your scanner is now missing things
+
+This is the structural shift that sits underneath everything above, and most teams have not adjusted their workflows yet.
+
+NIST has changed how it handles CVE enrichment in the National Vulnerability Database. Previously, the NVD programme aimed to analyse all CVEs and add details such as severity scores and product lists. Going forward, NIST will only enrich CVEs that meet specific criteria. CVEs that do not meet those criteria will still be listed in the NVD but marked as lowest priority and will not be enriched.
+
+The driver is volume: CVE submissions increased 263% between 2020 and 2025. Approximately 29,000 backlogged CVEs have been reclassified as "Not Scheduled". From April 2026, only CVEs in the CISA Known Exploited Vulnerabilities catalogue, federal government software, and EO 14028 critical software categories will receive full NVD enrichment. That covers an estimated 15 to 20% of anticipated CVE volume.
+
+The remaining roughly 80% of CVEs will arrive without the CPE identifiers, CVSS scores, and CWE classifications that vulnerability scanners and compliance tools depend on to surface and prioritise findings.
+
+For FCA-regulated firms, the downstream effect is concrete. If your patching SLAs reference CVSS thresholds derived from NVD, and NVD is no longer providing those scores, your programme has a compliance gap you need to document and address. The playbook of governing risk through NVD-enriched CVSS scores is no longer reliable, and patching policies built on it may not survive an audit.
+
+<!-- INTERNAL_LINK: AWS Security Hub for compliance posture | aws-security-hub-guide -->
+<!-- INTERNAL_LINK: AWS compliance and governance overview | aws-compliance-and-governance -->
+
+---
+
+## Automating CVE detection with AWS Inspector and EventBridge
+
+Manually tracking recent cloud security CVEs against your estate does not scale. The EventBridge rule below routes AWS Inspector findings for critical and high vulnerabilities to a security SNS topic, giving you near-real-time alerting on newly detected CVEs across your EC2 and container workloads:
+
+```json
+{
+  "Comment": "Route Inspector critical/high CVE findings to security SNS",
+  "source": ["aws.inspector2"],
+  "detail-type": ["Inspector2 Finding"],
+  "detail": {
+    "severity": ["CRITICAL", "HIGH"],
+    "type": ["PACKAGE_VULNERABILITY"],
+    "status": ["ACTIVE"]
+  }
+}
+```
+
+Pair this rule with an SNS topic that fans out to your SIEM, Slack security channel, and a Lambda that auto-creates Jira tickets with the CVE ID, CVSS score, affected resource ARN, and recommended remediation. The Lambda should also check whether the CVE appears on the CISA KEV catalogue. That single check tells you whether an adversary has a working exploit in the wild, which is a far more actionable signal than CVSS alone.
+
+For container workloads on EKS, enable Inspector continuous scanning on your ECR repositories. New CVEs matching your existing images trigger findings within minutes of the vulnerability being added to the Inspector database, well before a scheduled scan cycle would catch it.
 
 ```bash
-#!/bin/bash
-# List EC2 instances by launch time and AMI age to surface stale kernels
-# Requires: aws cli v2, jq, appropriate IAM permissions (ec2:DescribeInstances, ssm:DescribeInstanceInformation)
-
-echo "=== EC2 Instances with SSM Agent (kernel visibility) ==="
-aws ssm describe-instance-information \
-  --query "InstanceInformationList[*].{
-    InstanceId:InstanceId,
-    PlatformName:PlatformName,
-    PlatformVersion:PlatformVersion,
-    KernelVersion:PlatformVersion,
-    LastPingDateTime:LastPingDateTime
-  }" \
-  --output table
-
-echo ""
-echo "=== Run this on target instances to check kernel version ==="
-cat <<'EOF'
-aws ssm send-command \
-  --instance-ids "i-XXXXXXXXXXXXXXXXX" \
-  --document-name "AWS-RunShellScript" \
-  --parameters 'commands=["uname -r && rpm -q --last kernel 2>/dev/null || dpkg -l linux-image-* 2>/dev/null | grep ^ii"]' \
-  --query "Command.CommandId" \
-  --output text
-EOF
-
-echo ""
-echo "=== Check AWS Inspector findings for CVE-2026-31431 ==="
-aws inspector2 list-findings \
-  --filter-criteria '{"vulnerabilityId":[{"comparison":"EQUALS","value":"CVE-2026-31431"}]}' \
-  --query "findings[*].{Resource:resources[0].id,Severity:severity,Title:title}" \
+# Confirm Inspector scanning is enabled for ECR on a given account/region
+aws inspector2 get-configuration \
+  --query 'ec2Configuration.scanMode,ecrConfiguration.rescanDuration' \
   --output table
 ```
 
-AWS Inspector v2 will surface Copy Fail findings against your EC2 fleet and ECR images automatically, provided you have it enabled. If you do not, enabling it is the single highest-value action you can take this week.
-
-<!-- INTERNAL_LINK: AWS Inspector setup and configuration | aws-inspector-vulnerability-management -->
-<!-- INTERNAL_LINK: AWS CloudTrail for post-compromise audit trails | aws-cloudtrail-configuration-best-practices -->
-
-For container escape attempts, look for anomalous `execve` calls to setuid binaries (`/usr/bin/su`, `/usr/bin/sudo`, `/usr/bin/passwd`) from processes that do not normally invoke them. AWS GuardDuty Runtime Monitoring will generate `PrivilegeEscalation:Runtime/UsurpedDomainName` and related findings if exploitation succeeds.
+<!-- INTERNAL_LINK: AWS Inspector vulnerability management guide | aws-inspector-vulnerability-management -->
 
 ---
 
-## Common pitfalls when responding to cloud CVEs
+## Common mistakes and pitfalls
 
-These are mistakes I see repeatedly in incident response engagements. All of them are avoidable.
+Treating CVSS as the only prioritisation signal is the most widespread problem I see. CVSS was designed to characterise the technical properties of a vulnerability: attack vector, complexity, required privileges, potential impact. It was not designed with patch prioritisation as a primary concern. Supplement it with EPSS scores, KEV catalogue membership, and whether exploit code is publicly available.
 
-### 1. Assuming managed services are fully patched on your behalf
+Assuming managed AWS services patch themselves is the second mistake. The DirtyFrag bulletins make this concrete: SageMaker notebook instances, EKS nodes, and Deep Learning AMIs all required explicit customer action, whether that was a restart, node replacement, or AMI update. "Managed" does not mean automatically patched on your behalf across all surfaces.
 
-Fargate and Lambda abstract the kernel. EKS managed node groups do not. I have seen teams assume their EKS cluster was protected because they used "managed" nodes. It is not the same thing. Apply kernel patches to your managed node groups through your cloud provider's node image update mechanism as soon as an advisory is published.
+Ignoring your security tooling's own CVE exposure follows directly from that. CVE-2026-9165 in RHACS is a reminder that the platform you use to detect threats has its own attack surface. Treat security tooling with the same patching urgency you apply to production workloads.
 
-### 2. Treating local-only CVEs as low priority
+Relying on NVD as your sole enrichment source is now a real programme risk. Industry estimates put the prioritised categories at 15 to 20% of anticipated CVE volume going forward. If your scanner feeds exclusively from NVD, roughly 80% of new CVEs will arrive without CVSS scores or product mappings. Add CISA KEV, EPSS, and vendor advisory feeds.
 
-Local privilege escalation sounds less alarming than remote code execution. In practice, attackers rarely go from zero to root in a single step. They gain a foothold through phishing, a vulnerable web application, or a compromised CI/CD credential, and then use an LPE to convert limited access into full system control. The distinction matters less than it appears on paper.
+Skipping the fork audit is a gap that catches teams repeatedly. If you have forked or customised AWS open-source components such as RES, SageMaker SDKs, or AWS-LC, your fork does not inherit upstream patches automatically. You need an explicit process to track upstream security commits and backport them.
 
-### 3. Reading the advisory synopsis without mapping assets
+Not subscribing to AWS Security Bulletins via RSS is an easy fix with outsized value. The bulletins are the most direct signal for customer-actionable AWS issues. Feeding them into your vulnerability management tooling is straightforward and means you are not waiting for a scanner to surface something AWS has already documented.
 
-Too many teams stop at the synopsis and never complete version-to-asset mapping, which is the step that determines whether anything actually changes in the environment. For each CVE, you need a definitive list of affected instance types, AMIs, and container base images before you can claim the risk is addressed.
-
-### 4. Ignoring the CISA KEV catalogue
-
-CISA's Known Exploited Vulnerabilities catalogue is the authoritative list of flaws with confirmed real-world exploitation. Any CVE that lands on it should be treated as a breach-imminent event, not a next-sprint ticket. Build the KEV feed into your vulnerability management workflow as an input that overrides CVSS-based prioritisation.
-
-### 5. Relying on CVSS score alone for prioritisation
-
-Filtering by CVSS score will cause you to miss things. A CVSS 7.7 denial-of-service against your Kubernetes security monitoring platform (CVE-2026-9165) may have higher operational impact than a CVSS 8.x flaw in software you do not run. Context determines priority.
-
-### 6. Not rotating credentials after exposure
-
-On hosts that allowed untrusted local users during the exposure window, treat SSH host keys and locally cached credentials as potentially disclosed. Rotate host keys and review any administrative material that lived in the memory of setuid processes. This applies equally to AWS instance profile credentials accessible via the metadata service on a compromised host.
-
-<!-- INTERNAL_LINK: IAM security best practices | aws-iam-security-best-practices -->
-
----
-
-## Subscribing to the right feeds: AWS security bulletins
-
-AWS Security Bulletins cover current vulnerabilities and threats affecting AWS services and customer workloads. Subscribe the RSS feed at `https://aws.amazon.com/security/security-bulletins/rss/` into your SIEM or ticketing system and build a process to act on new entries. For teams running Amazon Linux 2 or AL2023 on EC2 or EKS worker nodes, the Amazon Linux Security Advisories (ALAS) feeds at `alas.aws.amazon.com` are equally important.
-
-Neither feed requires anything complicated to operationalise. If you are not already ingesting both, that is the gap to close this week.
-
-<!-- INTERNAL_LINK: AWS compliance and governance fundamentals | aws-compliance-and-governance -->
+<!-- INTERNAL_LINK: Cloud incident response planning | cloud-incident-response -->
+<!-- INTERNAL_LINK: What is CSPM and how it catches misconfigurations | what-is-cspm-cloud-security-posture-management -->
 
 ---
 
 ## Key takeaways
 
-The 2026 Linux kernel LPE cluster is your highest-priority patching task. CVE-2026-31431 (Copy Fail) is on CISA's KEV list with public exploit code and confirmed real-world attacks. CVE-2026-43499 (GhostLock) has a published 97%-reliable exploit that escapes containers. Both affect EKS managed node groups. Patch your node AMIs and roll your node groups now.
+- GhostLock (CVE-2026-43499) is a container-escape and root-access risk on any unpatched Linux host since 2011. Patch cloud nodes urgently, verify the package version explicitly, and check that you are not on an early build that introduced the secondary bug CVE-2026-53166.
 
-"Local-only" does not mean low risk. Attackers chain initial access (phished credentials, CI runner compromise) with LPE to achieve full host takeover. Treat any LPE with public proof-of-concept code as equivalent in urgency to a remotely exploitable flaw.
+- The Copy.fail / DirtyFrag family has direct AWS service impact. If you are running long-lived SageMaker notebooks, EKS nodes, or Deep Learning AMIs, restart or replace them now to pick up patched kernels. AWS Security Bulletin 2026-030-AWS has the full service matrix.
 
-CVE-2026-9165 in RHACS is a detective-control blind-spot risk. A compromised API token can silence your Kubernetes security monitoring before an attacker pivots further. Audit RHACS token scope, rotate tokens, and upgrade Central per Red Hat advisory RHSA-2026:36319.
+- CVE-2026-9165 targets RHACS itself. A denial-of-service against your security management plane removes your visibility while an attack is in progress. Apply the Red Hat advisory, rotate API tokens, and treat your security tooling's CVE posture as a first-class concern.
 
-Nation-state actors are exploiting N-day cloud CVEs within days of disclosure. The UNK_MassTraction campaign targeting university and research infrastructure shows that patched-but-not-yet-applied flaws are operationally weaponised at speed. Patch velocity is your primary defensive lever.
+- The NVD enrichment model has changed. From April 2026, approximately 80% of new CVEs will not receive CVSS scores or product mappings from NIST. Any vulnerability management programme that relies solely on NVD now has blind spots that need addressing with CISA KEV, EPSS, and vendor advisory feeds.
 
-Enable AWS Inspector v2 across your entire account organisation. It is the fastest way to get a definitive list of EC2 instances and ECR images affected by specific CVEs, including Copy Fail and GhostLock. Pipe findings into AWS Security Hub for centralised triage.
+- Nation-state actors are using legitimate cloud APIs as C2 channels. Network-layer controls will not detect this. Invest in CloudTrail anomaly detection, behavioural baselines, and egress inspection with application-layer awareness.
 
-Subscribe to the AWS Security Bulletins RSS feed and the CISA KEV catalogue. Build an automated process to ingest both into your vulnerability management workflow. Any CVE on the KEV list triggers an immediate P1 response, regardless of CVSS score.
-
-<!-- INTERNAL_LINK: Cloud Security Posture Management overview | what-is-cspm-cloud-security-posture-management -->
-<!-- INTERNAL_LINK: AWS Well-Architected Security Pillar | aws-well-architected-security -->
+- Automate CVE ingestion end-to-end. AWS Inspector with EventBridge-to-SNS routing, KEV catalogue checks in your triage Lambda, and automatic ticket creation removes the human latency that keeps exploitable windows open for days.
