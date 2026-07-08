@@ -27,7 +27,10 @@ log = logging.getLogger(__name__)
 
 MODEL = "claude-fable-5"
 FALLBACK_MODEL = "claude-opus-4-8"
-MAX_TOKENS = 2000
+# Fable 5 always thinks before answering, and thinking tokens count against
+# max_tokens — 2000 was getting fully consumed by thinking, truncating the
+# response before it ever reached the JSON review.
+MAX_TOKENS = 16000
 
 SYSTEM_PROMPT = """You are a senior cloud security engineer performing a technical accuracy \
 review of a security guide before it is published under a named author's byline.
@@ -85,7 +88,9 @@ def review_guide(client: anthropic.Anthropic, content: str) -> dict:
     try:
         return json.loads(text)
     except json.JSONDecodeError:
-        log.warning(f"    Could not parse review response: {text[:200]}")
+        log.warning(
+            f"    Could not parse review response (stop_reason={response.stop_reason}): {text[:200]}"
+        )
         return {"issues_found": False, "findings": [], "review_error": "parse_failed"}
 
 
