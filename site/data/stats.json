@@ -1,23 +1,23 @@
 {
-  "updated": "08 Jul 2026 06:07 UTC",
-  "total": 625,
+  "updated": "09 Jul 2026 06:05 UTC",
+  "total": 650,
   "severity": {
-    "critical": 75,
-    "high": 395,
-    "medium": 134
+    "critical": 78,
+    "high": 409,
+    "medium": 142
   },
   "categories": {
-    "aws": 38,
-    "azure": 250,
+    "aws": 41,
+    "azure": 252,
     "gcp": 1,
-    "general": 336
+    "general": 356
   },
   "top_critical": {
-    "title": "CVE-2026-48908: JoomShaper SP Page Builder RCE Flaw",
-    "summary": "A critical vulnerability in the JoomShaper SP Page Builder plugin for Joomla allows unauthenticated attackers to upload arbitrary files, including malicious PHP scripts, which can then be executed on ",
-    "architects_take": "Any internet-facing Joomla instance running SP Page Builder should be patched immediately or taken offline; additionally, review web server configurations to ensure uploaded file directories are non-executable, and implement a web application firewall (WAF) rule to block unauthenticated file upload requests as an interim control.",
-    "slug": "cve-2026-48908-joomshaper-sp-page-builder-unrestricted-file-upload-rce",
-    "source": "CISA Known Exploited Vulnerabilities",
+    "title": "CISA KEV: Adobe ColdFusion, Joomla & Langflow Flaws",
+    "summary": "CISA has added four actively exploited vulnerabilities to its Known Exploited Vulnerabilities catalogue, affecting Adobe ColdFusion, Joomla, and Langflow. One flaw in Adobe ColdFusion carries a maximu",
+    "architects_take": "Audit your environment immediately for exposed instances of Adobe ColdFusion, Joomla CMS, and Langflow \u2014 particularly any internet-facing deployments hosted on cloud infrastructure \u2014 and apply available patches or mitigations before CISA's KEV remediation deadline. If patching cannot be completed immediately, consider placing these services behind a WAF or restricting network access as a temporary control.",
+    "slug": "cisa-kev-adobe-coldfusion-joomla-langflow-actively-exploited-cve-2026-48282",
+    "source": "The Hacker News",
     "category": "general"
   }
 }
