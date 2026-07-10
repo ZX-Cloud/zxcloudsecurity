@@ -1,23 +1,16 @@
 {
-  "updated": "09 Jul 2026 06:05 UTC",
-  "total": 650,
+  "updated": "10 Jul 2026 06:06 UTC",
+  "total": 674,
   "severity": {
     "critical": 78,
-    "high": 409,
-    "medium": 142
+    "high": 423,
+    "medium": 152
   },
   "categories": {
     "aws": 41,
-    "azure": 252,
+    "azure": 263,
     "gcp": 1,
-    "general": 356
+    "general": 369
   },
-  "top_critical": {
-    "title": "CISA KEV: Adobe ColdFusion, Joomla & Langflow Flaws",
-    "summary": "CISA has added four actively exploited vulnerabilities to its Known Exploited Vulnerabilities catalogue, affecting Adobe ColdFusion, Joomla, and Langflow. One flaw in Adobe ColdFusion carries a maximu",
-    "architects_take": "Audit your environment immediately for exposed instances of Adobe ColdFusion, Joomla CMS, and Langflow \u2014 particularly any internet-facing deployments hosted on cloud infrastructure \u2014 and apply available patches or mitigations before CISA's KEV remediation deadline. If patching cannot be completed immediately, consider placing these services behind a WAF or restricting network access as a temporary control.",
-    "slug": "cisa-kev-adobe-coldfusion-joomla-langflow-actively-exploited-cve-2026-48282",
-    "source": "The Hacker News",
-    "category": "general"
-  }
+  "top_critical": null
 }
