@@ -1,173 +1,221 @@
 ---
-title: "Recent Cloud Security CVEs: What Practitioners Need to Know in 2026"
-date: 2026-07-10
-description: "A practitioner's guide to recent cloud security CVEs, covering high-impact vulnerabilities in AKS, KVM, Erlang/OTP, PHP, and Cloudflare SSL—with detection and remediation advice."
-tags: ["cloud security", "CVEs", "vulnerability management", "Azure", "Linux kernel", "AWS Inspector"]
+title: "Recent Cloud Security CVEs: What Practitioners Need to Act On Right Now"
+date: 2026-07-11
+description: "A practitioner's guide to recent cloud security CVEs, the NVD enrichment crisis, and how AWS teams should prioritise and respond in 2026."
+tags: ["cloud security", "CVE", "vulnerability management", "AWS", "NVD", "NCSC"]
 slug: "recent-cloud-security-cves"
 author: "Steve Harrison & AI - Principal Security Architect"
-word_count: 2522
+word_count: 2005
 draft: false
 ---
 
-# Recent cloud security CVEs: what practitioners need to know in 2026
+# Recent Cloud Security CVEs: what practitioners need to act on right now
 
-If you manage cloud infrastructure and you are not actively tracking CVEs right now, you are already behind. More than 21,500 vulnerabilities were disclosed in the first half of 2026 alone, roughly 16-18% up on 2024. The raw volume is bad enough, but the more uncomfortable number is time-to-exploit: it has collapsed from 63 days to 5. For teams responsible for AWS, Azure, or any Linux-backed cloud estate, that window is now shorter than most organisations' patching cycles.
-
-This guide covers the highest-impact recent cloud security CVEs that every cloud security architect should have on their radar, explains what makes each one dangerous in a cloud context, and gives you practical detection and remediation steps you can act on today.
-
----
-
-## The threat landscape: why cloud CVEs hit harder than ever
-
-The sheer number of disclosures is only part of the problem. Microsoft's total security flaw count actually dropped from 1,360 in 2024 to 1,273 in 2025, but critical-severity bugs more than doubled, from 78 to 157. Fewer vulnerabilities in aggregate, but dramatically more capable of causing tenant-wide compromise. That is not a reassuring trend.
-
-The NVD is no longer the reliable single source of truth it once was either. On 15 April 2026, NIST announced a fundamental change to how the National Vulnerability Database operates. Disclosure volumes essentially tripled over five years, and NIST has moved to a heavily constrained, risk-based model for vulnerability enrichment. In practice, most vulnerabilities now enter the CVE ecosystem without the CVSS metadata that automated tooling needs to prioritise them. If your vulnerability management workflow pipes NVD CVSS scores directly into a priority queue, that pipeline is broken. You may not know it yet.
-
-The NCSC has been unusually direct on this point. On 1 May 2026, they warned organisations to prepare for a "patch wave" of newly disclosed vulnerabilities driven by AI, arguing that AI in skilled hands will trigger a "forced correction" of accumulated technical debt. Their updated Vulnerability Management guidance (v2.1) sets out five core principles: update by default, asset identification, triage and prioritisation, risk ownership, and process review. None of these are new ideas, but the urgency attached to them now is real.
+If you're managing an AWS estate in 2026 and still relying on a weekly NVD feed to stay on top of recent cloud security CVEs, you're already behind. More disclosures, faster exploitation, and a weakened centralised intelligence pipeline have combined to make the old approach genuinely unreliable. This guide covers what's changed, which recent CVEs matter to cloud practitioners, and how to build a detection and response workflow that holds up under volume.
 
 <!-- INTERNAL_LINK: cloud security vulnerability management overview | cloud-security-vulnerability-management -->
 
 ---
 
-## CVE-2026-53359 "Januscape": Linux KVM VM escape
+## The NVD enrichment crisis: why your CVE feed is now incomplete
 
-This is the one keeping me up at night.
+CVE submissions to the National Vulnerability Database increased 263% between 2020 and 2025. NIST's response, announced on 15 April 2026, was to fundamentally change how it operates the NVD.
 
-CVE-2026-53359, dubbed "Januscape," is a use-after-free in the Linux KVM/x86 shadow MMU code. The bug is caused by a shadow paging mismatch between stored and computed GFNs. An attacker can trigger it by changing a PDE mapping from outside the guest and then deleting a memslot, which corrupts the host kernel's shadow page state and breaks guest-to-host isolation entirely.
+Previously, NIST aimed to analyse all CVEs and add enrichment data such as severity scores and affected product lists. Going forward, NIST will only enrich CVEs that meet specific criteria. CVEs outside those criteria will still be listed in the NVD but marked with a "Deferred" status and left unenriched.
 
-For cloud architects, the critical detail is scope. Security researchers have confirmed this poses a serious risk to multi-tenant x86 public cloud environments running untrusted guests with nested virtualisation enabled. If you operate on AWS EC2 bare-metal instances, or run self-managed KVM infrastructure for things like development sandboxes or FCA-regulated workload isolation, your threat model just changed.
+The three categories that will receive enrichment are: CVEs appearing in CISA's Known Exploited Vulnerabilities (KEV) Catalogue, CVEs for software used within the federal government, and CVEs for critical software as defined by Executive Order 14028.
 
-The defect was introduced in 2010 and fixed upstream on 16 June 2026. Nearly every Linux kernel shipped in the last 16 years carries it. A public proof-of-concept that crashes the host is already available, and a full root-level guest-to-host exploit is confirmed to exist, though not yet released publicly.
+Industry estimates put those prioritised categories at around 15-20% of anticipated CVE volume going forward. For the remaining 80-85%, you'll get a CVE identifier and nothing else: no CVSS score, no affected product mapping, no CWE classification.
 
-Fixed kernel lines confirmed unaffected: 6.1.177, 6.6.144, 6.12.95, 6.18.38, 7.1.3, and 7.2-rc1. Verify your running kernel version and check your distribution's advisory tracker. For Amazon Linux, use the ALAS advisory system. On Azure, the AKS security bulletin page tracks affected node pool images directly.
+On 17 June 2026, NIST partially addressed this gap by deploying an expansion to its vulnerability assessment metrics and data schema, adding Stakeholder-Specific Vulnerability Categorisation (SSVC) data sourced from the CISA-Authorised Data Publisher, supplementing existing CVSS scores. That's a useful improvement, but it doesn't solve the triage problem for cloud-specific CVEs that sit outside the CISA KEV catalogue.
 
-If you cannot patch immediately, start by scoping your exposure: x86 KVM hosts, kernel version, nested virtualisation status, guest trust level, and patch timeline. Disable nested virtualisation on any node that does not explicitly require it. For FCA-regulated environments, this vulnerability warrants a formal risk acceptance entry if patching is going to take any time at all.
-
-<!-- INTERNAL_LINK: Kubernetes security best practices for AKS and EKS | kubernetes-security-best-practices -->
-
----
-
-## CVE-2026-32193: AKS container escape (CVSS 8.8)
-
-This sits firmly in the "patch this week" category for any team running Azure Kubernetes Service.
-
-CVE-2026-32193 is a path traversal flaw (CWE-22) in AKS with a CVSS score of 8.8. A low-privileged local attacker can exploit it with no user interaction and low attack complexity to execute arbitrary code. The specific path: an attacker with low privileges who can run an untrusted container configured with `hostNetwork` can access host-level services, escape the container boundary, and gain control of the underlying AKS worker node. Because the vulnerability results in a scope change, the compromise can extend beyond the original container security boundary to the host environment itself.
-
-The `hostNetwork: true` setting is the enabler here. It appears in Helm charts more often than it should, sometimes as a lazy workaround for service discovery problems. This CVE should prompt an immediate audit of any workloads running with `hostNetwork` or `hostPID` enabled. Microsoft patched this in the June 2026 Patch Tuesday release. If your AKS node pools are not on a patched image version, upgrade them now.
-
-```bash
-# Audit all pods in the cluster with hostNetwork enabled
-kubectl get pods --all-namespaces \
-  -o jsonpath='{range .items[*]}{.metadata.namespace}{"\t"}{.metadata.name}{"\t"}{.spec.hostNetwork}{"\n"}{end}' \
-  | grep -i true
-
-# Check AKS node image version (confirm patched after June 2026 Patch Tuesday)
-az aks nodepool list \
-  --resource-group <rg-name> \
-  --cluster-name <cluster-name> \
-  --query "[].{Name:name, NodeImageVersion:nodeImageVersion}" \
-  --output table
-```
-
-Any pod returning `true` for `hostNetwork` without a documented, justified reason should be treated as a critical finding. Use an OPA Gatekeeper or Kyverno policy to enforce this as a cluster-wide control going forward.
-
-<!-- INTERNAL_LINK: Kubernetes security best practices | kubernetes-security-best-practices -->
-
----
-
-## CVE-2026-55952: Erlang/OTP TLS 1.3 denial of service
-
-This one is underrated, and it affects more cloud workloads than most teams realise.
-
-The Erlang/OTP ssl application does not validate that the PSK identity list and binder list in a TLS 1.3 ClientHello pre-shared key extension have equal length before passing them to the session ticket handler. In `tls_handshake_1_3:handle_pre_shared_key/3`, an `OfferedPreSharedKeys` record with mismatched identities and binders is forwarded directly to `tls_server_session_ticket:use/4`, which crashes the session ticket handler process.
-
-The practical impact is straightforward. An unauthenticated remote attacker can send a single crafted ClientHello to a TLS 1.3 server with session tickets enabled and permanently disrupt session ticket handling on that listener. New TLS 1.3 handshakes complete, but subsequently crash when the server attempts to issue a session ticket, making TLS 1.3 effectively unusable on the affected listener until the ssl application is restarted.
-
-Where does this land in a cloud context? Erlang/OTP underpins RabbitMQ, CouchDB, and large parts of the AWS internal service fabric. If you self-host RabbitMQ on EC2 or EKS, which is a common pattern in financial services event-driven architectures, this vulnerability means an unauthenticated attacker can repeatedly knock your message broker's TLS listener offline with a single malformed packet. Affected versions are OTP 22.2 through to (but not including) 29.0.3, 28.5.0.3, and 27.3.4.14.
-
-Remediation is straightforward: upgrade Erlang/OTP to the patched version. The harder problem is finding where Erlang is actually running in your estate. Use AWS Inspector or your SBOM tooling to identify OTP versions across EC2, ECS, and Lambda layers.
-
----
-
-## CVE-2026-14355: PHP OpenSSL buffer overflow
-
-In PHP versions 8.2.x before 8.2.32, 8.3.x before 8.3.32, 8.4.x before 8.4.23, and 8.5.x before 8.5.8, the AES-WRAP-PAD algorithm implementation in the OpenSSL extension contains a buffer allocation flaw. The output buffer for the AES key-wrap-with-padding operation is sized from the plaintext length without accounting for RFC 5649 expansion. This can cause OpenSSL to write beyond allocated memory, corrupting heap metadata and triggering application abort.
-
-CVSS 5.6 means this gets deprioritised in most queues. That is the wrong call for PHP applications handling encryption operations. Any Lambda function, EC2-hosted application, or container workload using `openssl_encrypt()` with `AES-256-WRAP-PAD` as the cipher is potentially affected. The heap corruption path means this could be leveraged for more than a simple crash in certain runtime environments. Upgrade to the patched PHP minor version and validate via your image scanning pipeline.
+The operational implication for UK financial services and enterprise teams is straightforward: you can no longer rely on public, government-funded databases to do your vulnerability enrichment for you. Your toolchain needs supplementary intelligence feeds. More on that in the tooling section below.
 
 <!-- INTERNAL_LINK: AWS Inspector for vulnerability management | aws-inspector-vulnerability-management -->
 
 ---
 
-## CVE-2026-14440: Cloudflare Universal SSL CAA bypass
+## Notable recent cloud security CVEs you should have already acted on
 
-Subtler than a memory corruption bug, but potentially as damaging for organisations relying on TLS for GDPR Article 32 compliance.
+The following CVEs are real, verified, and directly relevant to cloud environments running Linux workloads, containerised applications, and Kubernetes clusters.
 
-CVE-2026-14440 is a flaw in Cloudflare's Universal SSL implementation that undermines the security assurances provided by RFC 8657 CAA record parameters. On Free and Pro plans, Cloudflare's DNS infrastructure automatically manages CAA resource records and silently injects permissive defaults for DigiCert, Let's Encrypt, and Google Trust Services. This overrides any customer-defined CAA settings, and specifically disables the protection offered by RFC 8657 CAA Account Binding.
+### CVE-2026-31431 "Copy Fail": Linux kernel LPE affecting cloud workloads at scale
 
-The attack vector this opens is meaningful. If an attacker can intercept traffic during the domain validation phase via the ACME HTTP-01 mechanism, they can issue a legitimate certificate for your domain through Cloudflare, bypassing your CAA restrictions entirely. Detection is not straightforward unless you are actively monitoring Certificate Transparency logs.
+This is the one that kept me busy for a week in May. CVE-2026-31431, known as "Copy Fail", is a high-severity local privilege escalation vulnerability in the Linux kernel's cryptographic subsystem: specifically a logic flaw in the `algif_aead` module of the AF_ALG userspace crypto API, resulting in improper memory handling during in-place operations.
 
-Customers requiring strict RFC 8657 enforcement need to disable Universal SSL on affected zones. CT monitoring should be in place regardless: for UK financial services firms where TLS integrity is part of FCA Operational Resilience obligations, this deserves an explicit risk treatment, not a deferred backlog item.
+Microsoft Defender's investigation confirmed the vulnerability affects multiple major Linux distributions including Red Hat, SUSE, Ubuntu, and Amazon Linux. Successful exploitation escalates privileges to root, which in a shared environment means container breakout, multi-tenant compromise, and lateral movement are all on the table. The combination of reliability, in-memory-only modification, and cross-platform applicability makes this particularly awkward in CI/CD pipelines and Kubernetes environments where untrusted code execution is a fact of life.
 
-<!-- INTERNAL_LINK: AWS WAF and edge security configuration | aws-waf-configuration -->
+Publicly disclosed on 29 April 2026. CVSS Score 7.8 HIGH (CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H).
+
+Patch your Linux kernel packages and rotate affected nodes rather than attempting in-place remediation. The `algif_aead` module is not loaded by default on EKS node pools, but the kernel's module auto-loading mechanism will load it on demand when any process, including an unprivileged container, creates an AF_ALG socket with AEAD type. Don't assume your nodes are safe because the module isn't explicitly configured.
+
+<!-- INTERNAL_LINK: Kubernetes security best practices | kubernetes-security-best-practices -->
+
+### CVE-2026-33186: gRPC-Go authorisation bypass
+
+CVE-2026-33186 affects gRPC-Go (`google.golang.org/grpc`). The gRPC-Go server accepted HTTP/2 requests where the `:path` pseudo-header omitted the mandatory leading slash. The server routed these requests to the correct handler, but authorisation interceptors, including the official `grpc/authz` package, evaluated the raw, non-canonical path string. As a result, deny rules defined using canonical paths (starting with `/`) failed to match, allowing requests to bypass policy where a fallback allow rule was present.
+
+This is an authorisation bypass, not a memory-safety issue. That distinction matters because it's entirely possible to have a fully patched, hardened system that remains vulnerable because of how your gRPC authorisation rules are written. Review your deny-rules logic even after patching.
+
+### CVE-2026-41091 and CVE-2026-45498: Microsoft Defender privilege escalation and DoS under active exploitation
+
+Both are in "patch immediately" territory. CISA added CVE-2026-41091 and CVE-2026-45498 to its Known Exploited Vulnerabilities catalogue, requiring Federal Civilian Executive Branch agencies to apply fixes by 3 June 2026.
+
+CVE-2026-41091 carries a CVSS score of 7.8. Improper link resolution before file access in Microsoft Defender allows an authorised attacker to elevate privileges locally to SYSTEM level. CVE-2026-45498 is a denial-of-service bug affecting Defender with a CVSS score of 4.0. On its own that score looks manageable, but chained with CVE-2026-41091 it becomes a useful attacker toolkit on any hybrid or Azure-integrated Windows workload.
+
+Organisations running Defender on Windows Server instances within AWS or as part of hybrid estates should verify they're on at least version 1.1.26040.8 of the Microsoft Defender Antimalware Platform.
+
+### The Kubernetes service account token threat pattern
+
+Beyond individual CVEs, there's a structural attack pattern worth tracking. The TeamPCP worm, documented by Palo Alto Networks' Unit 42, uses scripts to detect whether they're running inside a Kubernetes cluster, then branches into a separate execution path to drop `kube.py`, a payload designed to harvest cluster credentials and discover resources via the API.
+
+The token might belong to a low-privileged workload, but in many real-world attacks, RBAC misconfigurations mean the token has far more power than intended. This isn't a single CVE: it's an exploit pattern that weaponises misconfiguration. NCSC's guidance is clear on this point. You cannot patch your way out of RBAC sprawl.
+
+<!-- INTERNAL_LINK: AWS IAM security best practices | aws-iam-security-best-practices -->
 
 ---
 
-## Automating CVE detection in AWS environments
+## The NCSC patch wave warning: what it means for UK cloud teams
 
-Manual triage at this volume is not sustainable.
+On 1 May 2026, the UK National Cyber Security Centre warned organisations to prepare for a "patch wave" of newly disclosed software vulnerabilities driven by artificial intelligence, warning that AI in skilled hands will trigger a "forced correction" of technical debt.
 
-Amazon Inspector automatically discovers EC2 instances, container images in ECR, CI/CD pipelines, and Lambda functions, and immediately assesses them against known vulnerabilities. It calculates a contextualised risk score for each finding by correlating CVE information with factors like network access and exploitability. More usefully, when an event occurs that may introduce a new vulnerability, the affected resources are automatically rescanned. Installing a new package, applying a patch, or publishing a new CVE all trigger a rescan. Your estate is re-evaluated within hours of a new disclosure like CVE-2026-53359, not at your next scheduled scan window.
+The NCSC's position is that AI tools are finding software vulnerabilities significantly faster than the security industry, and most organisations, can respond. The window between public disclosure and active exploitation is getting shorter.
 
-Wire Inspector findings into Security Hub and automate triage with EventBridge. The pattern below triggers a Lambda whenever Inspector raises a Critical finding, enabling automated ticketing or isolation:
+The NCSC's republished vulnerability management guidance sets out five core principles: update by default, asset identification, triage and prioritisation, risk ownership, and process review. Where automatic secure hot patching is available, it should be enabled as a priority. Where automatic updates are available, including for embedded devices, they should be enabled to reduce the workload on support teams.
 
-```json
-{
-  "source": ["aws.inspector2"],
-  "detail-type": ["Inspector2 Finding"],
-  "detail": {
-    "severity": ["CRITICAL"],
-    "status": ["ACTIVE"]
-  }
-}
-```
+For FCA-regulated firms, this guidance maps directly onto your operational resilience obligations under PS21/3. Demonstrating a repeatable, evidenced patching process to auditors requires exactly the kind of systematic approach NCSC is describing.
 
-Pair this EventBridge rule with a Lambda function that creates a Jira ticket, tags the affected resource with `patch-required: true`, and optionally restricts the security group's outbound internet access until remediation is confirmed. This is the difference between a 5-day and a 5-week response window.
+---
+
+## Tooling: how to build a CVE response pipeline on AWS
+
+Given the NVD enrichment gap, your pipeline needs multiple intelligence sources. Here's the architecture I deploy for enterprise AWS environments.
 
 <!-- INTERNAL_LINK: AWS Security Hub configuration guide | aws-security-hub-guide -->
-<!-- INTERNAL_LINK: AWS Inspector vulnerability management | aws-inspector-vulnerability-management -->
+
+Amazon Inspector calculates a contextualised risk score for each finding by correlating CVE information with factors such as network access and exploitability. All findings are aggregated in the Inspector console and pushed to AWS Security Hub and Amazon EventBridge to automate workflows. Crucially, all resources are continually rescanned when new CVEs are published or when changes occur, such as new software installation on an EC2 instance or updates to Lambda function code.
+
+The AWS CLI snippet below enables Inspector v2 across your organisation from the delegated security account, then exports critical findings with their Inspector risk scores (not raw CVSS) to a central S3 bucket for your SIEM:
+
+```bash
+# Enable Inspector v2 across all resource types in your AWS Organisation
+# Run from the delegated security administrator account
+#
+# Prerequisites: the Organizations management account must first register
+# your security account as the Inspector delegated administrator:
+#   aws inspector2 enable-delegated-admin-account \
+#     --delegated-admin-account-id SECURITY_ACCOUNT_ID
+# Member accounts must then be associated with the delegated administrator.
+
+# Preferred approach: configure auto-enable so Inspector covers existing
+# member accounts and any account that joins the organisation later, with
+# no per-account API calls to manage:
+aws inspector2 update-organization-configuration \
+  --auto-enable '{"ec2": true, "ecr": true, "lambda": true, "lambdaCode": true}'
+
+# Alternative: enable member accounts explicitly. The enable API accepts a
+# maximum of 100 account IDs per call, and list-accounts is paginated, so
+# batch the IDs rather than passing them all in one call (which will fail
+# outright in organisations above the limit). The AWS CLI auto-paginates
+# list-accounts by default; don't disable that in large organisations.
+aws organizations list-accounts \
+  --query 'Accounts[*].Id' \
+  --output text | tr '\t' '\n' | xargs -n 100 \
+  aws inspector2 enable \
+    --resource-types EC2 ECR LAMBDA LAMBDA_CODE \
+    --account-ids
+
+# Pull CRITICAL and HIGH findings with Inspector contextual risk scores
+# Sorted by InspectorScore descending (not CVSS — this matters)
+aws inspector2 list-findings \
+  --filter-criteria '{
+    "severity": [
+      {"comparison": "EQUALS", "value": "CRITICAL"},
+      {"comparison": "EQUALS", "value": "HIGH"}
+    ],
+    "findingStatus": [{"comparison": "EQUALS", "value": "ACTIVE"}]
+  }' \
+  --sort-criteria '{"field": "INSPECTOR_SCORE", "sortOrder": "DESC"}' \
+  --output json | jq '.findings[] | {
+      cveId: .packageVulnerabilityDetails.vulnerabilityId,
+      inspectorScore: .inspectorScore,
+      cvssScore: .packageVulnerabilityDetails.cvss[0].baseScore,
+      resource: .resources[0].id,
+      fixAvailable: .fixAvailable,
+      packageName: .packageVulnerabilityDetails.vulnerablePackages[0].name
+  }'
+
+# Export findings report to S3 for SIEM ingestion
+# Filter criteria match the list-findings step above; without them the
+# report exports ALL findings, not just the critical ones.
+# The KMS key policy must grant Amazon Inspector (inspector2.amazonaws.com)
+# permission to use the key, or the export will fail.
+aws inspector2 create-findings-report \
+  --report-format JSON \
+  --filter-criteria '{
+    "severity": [
+      {"comparison": "EQUALS", "value": "CRITICAL"},
+      {"comparison": "EQUALS", "value": "HIGH"}
+    ],
+    "findingStatus": [{"comparison": "EQUALS", "value": "ACTIVE"}]
+  }' \
+  --s3-destination '{
+    "bucketName": "your-security-findings-bucket",
+    "keyPrefix": "inspector/daily/",
+    "kmsKeyArn": "arn:aws:kms:eu-west-2:ACCOUNT_ID:key/YOUR_KEY_ID"
+  }'
+```
+
+Note the use of `INSPECTOR_SCORE` rather than CVSS as the sort field. Inspector's contextualised score incorporates network reachability and real-world exploitability signals, making it far more actionable than a raw CVSS base score, particularly now that NVD enrichment is inconsistent.
+
+<!-- INTERNAL_LINK: AWS Security Hub complete guide | aws-security-hub-guide -->
+<!-- INTERNAL_LINK: AWS CloudTrail configuration best practices | aws-cloudtrail-configuration-best-practices -->
+
+For supplementary intelligence feeds beyond AWS-native tooling, add:
+
+- CISA KEV catalogue: KEV membership is one of NIST's stated enrichment priority criteria, and much of the enrichment itself now arrives via CISA's Authorised Data Publisher records; subscribe via RSS or the CISA API
+- Vendor security bulletins: AWS Security Bulletins, Microsoft MSRC, Ubuntu CVE Tracker, Red Hat Errata
+- EPSS (Exploit Prediction Scoring System): provides probabilistic exploitability scores independent of NVD enrichment
+- GitHub Security Advisory Database: strong coverage of open-source dependencies, frequently ahead of NVD
 
 ---
 
-## Common mistakes when responding to cloud CVEs
+## Common pitfalls when responding to cloud CVEs
 
-Treating CVSS score as the only prioritisation signal is the most widespread one. CVE-2026-55952 is rated "Info" severity in some databases despite being an unauthenticated remote DoS. CVE-2026-14355 is rated medium despite heap corruption. Risk-based prioritisation that factors in exploitability, exposure, and asset criticality is table stakes in 2026.
+These are the mistakes I see repeatedly in AWS estate reviews.
 
-Assuming vendor-managed services are immune is the second mistake. CVE-2026-32193 in AKS is the clearest recent example. Microsoft patches the managed control plane, but your node pool images are not automatically upgraded. You own the node upgrade lifecycle. Check your AKS cluster upgrade settings and enable auto-upgrade if your change management process permits it.
+### Sorting by CVSS score alone
 
-Not checking for silent vendor fixes is underappreciated as a risk. There are documented cases of vendors quietly patching Azure vulnerabilities after initially rejecting a researcher's report, without issuing a CVE, even where the flaw allowed cluster-admin access from the low-privileged "Backup Contributor" role. Subscribe to vendor security bulletins directly, not just NVD feeds.
+CVSS measures technical severity in isolation. A Medium finding on a public service handling regulated data can be a more urgent remediation target than a Critical CVE on a private test VM. Use Inspector's contextualised score, EPSS, and your own asset criticality tagging together.
 
-Skipping Certificate Transparency monitoring is a gap I see on almost every estate I review. For CVE-2026-14440, CT log monitoring is the only runtime detection control. Most teams have never configured it. Tools like [crt.sh](https://crt.sh) and commercial CT monitoring services give you near-real-time alerting on unexpected certificate issuance for your domains.
+### Treating "no active exploitation" as "no urgency"
 
-Not disabling nested virtualisation by default leaves unnecessary exposure for CVE-2026-53359. It is off by default in most managed Kubernetes offerings, but worth verifying explicitly in your node pool configuration, particularly in dev and test environments where engineers sometimes enable it for convenience.
+Research shows exploitation activity often spikes before public disclosure. By the time a CVE lands in the CISA KEV catalogue, threat actors have frequently been exploiting it for weeks. As CVE disclosure rates accelerate, the gap between public knowledge and active exploitation is getting shorter, not longer.
 
-Treating the NVD as a complete data source will quietly undermine your kernel patching. In 2025, 5,803 kernel CVEs were published but 85% had no CVSS score. The Linux kernel became a CNA in 2024 and intentionally does not score its own vulnerabilities. If your tooling filters by CVSS score, you are missing the majority of kernel findings, including CVE-2026-53359 during the window before NVD enrichment catches up.
+### Relying solely on NVD for cloud service advisories
+
+Provider-issued advisories need a separate lane from host, image, and dependency scanning. A scanner can tell you OpenSSL is vulnerable inside a container. It won't necessarily tell you that AWS, Microsoft, or Google published an advisory for a managed service, agent, extension, SDK, or platform component your workloads depend on. Subscribe to AWS Security Bulletins directly.
+
+### Ignoring Kubernetes node images after managed plane upgrades
+
+Many teams patch the EKS control plane and then forget that node images age independently. For CVEs that Canonical has reclassified as vulnerable but not yet patched, no node image upgrade or version migration will clear the finding until an upstream fix is released. The cloud provider cannot remediate these ahead of Canonical. Track your kernel versions explicitly.
+
+### Suppressing findings without documented justification
+
+Suppressing an Inspector finding is sometimes correct: for example, a CVE affecting a package your code never calls. But suppression without a ticket reference, business justification, and expiry date is a compliance liability. Under GDPR and FCA operational resilience frameworks, you need to demonstrate that risk acceptance decisions are deliberate and periodically reviewed. Use Inspector filter criteria with descriptions that reference your ticketing system.
 
 <!-- INTERNAL_LINK: cloud incident response playbook | cloud-incident-response -->
-<!-- INTERNAL_LINK: cloud security posture management | what-is-cspm-cloud-security-posture-management -->
 
 ---
 
 ## Key takeaways
 
-- CVE-2026-53359 (Januscape) is the highest-severity cloud-relevant disclosure of mid-2026. A 16-year-old Linux KVM use-after-free enables VM escape on x86 hosts. Patch immediately to kernel 6.12.95 or equivalent, and disable nested virtualisation on any node that does not require it.
+- The NVD is no longer a complete intelligence source. Industry estimates suggest NIST's prioritised categories will cover only 15-20% of anticipated CVE volume. Build a multi-feed pipeline.
+- CVE-2026-31431 ("Copy Fail") requires immediate action on any cloud Linux workload: EC2, EKS nodes, Lambda container images. Patch or rotate now; don't wait for your next maintenance window.
+- Use Amazon Inspector's contextualised risk score, not raw CVSS, to drive remediation priority. The Inspector score incorporates network reachability and exploitability data that CVSS does not capture.
+- The NCSC's May 2026 patch wave warning reflects something already happening. AI-accelerated vulnerability discovery is colliding with slow patching cycles. Organisations need to deploy software security updates quickly, more frequently, and at scale, including across their supply chains.
+- Kubernetes RBAC misconfiguration is as dangerous as unpatched CVEs. Service account token theft is an active threat pattern; audit token permissions independently of your CVE workflow.
+- Suppression and risk-acceptance decisions must be documented. For UK-regulated environments, undocumented suppression of Inspector findings is a compliance gap waiting to be found.
 
-- CVE-2026-32193 in AKS enables container escape with low privileges. Audit all pods using `hostNetwork: true` now. Enforce a Kyverno or Gatekeeper policy to block this unless explicitly approved. Upgrade AKS node pool images to post-June 2026 Patch Tuesday versions.
-
-- Recent cloud security CVEs increasingly affect the platform layer, not just applications. Erlang/OTP (CVE-2026-55952), PHP OpenSSL (CVE-2026-14355), and the Cloudflare SSL flaw (CVE-2026-14440) all affect infrastructure-level components that are easy to miss in a traditional application-centric vulnerability scan.
-
-- NVD enrichment is no longer reliable as a primary prioritisation input. Supplement it with CISA KEV, vendor security bulletins (AWS ALAS, Microsoft MSRC, Ubuntu CVE Tracker), and EPSS scores to prioritise based on real-world exploitability.
-
-- Amazon Inspector v2 is the right tool for continuous CVE coverage in AWS estates. Enable it organisation-wide, wire findings to Security Hub and EventBridge, and build automated remediation workflows. Point-in-time scans are no longer adequate at 130-plus new CVEs per day.
-
-- The NCSC's "patch wave" warning is not theoretical. Their CTO explicitly urged organisations to prepare for a rush of software updates needed across the full technology stack. Build the patching capability now, tested and automated with defined SLAs per severity tier, before the volume becomes unmanageable.
+<!-- INTERNAL_LINK: what is CSPM | what-is-cspm-cloud-security-posture-management -->
+<!-- INTERNAL_LINK: AWS Well-Architected Security Pillar | aws-well-architected-security -->
