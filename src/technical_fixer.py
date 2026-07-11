@@ -35,7 +35,7 @@ log = logging.getLogger(__name__)
 MODEL = "claude-fable-5"
 FALLBACK_MODEL = "claude-opus-4-8"
 MAX_TOKENS = 16000
-MAX_FIX_ATTEMPTS = 2
+MAX_FIX_ATTEMPTS = 1
 RETRY_DELAY_SECONDS = 5
 
 FIXER_SYSTEM_PROMPT = """You are a senior cloud security editor fixing factual errors in a \
