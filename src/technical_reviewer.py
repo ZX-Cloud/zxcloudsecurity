@@ -8,10 +8,9 @@ inaccuracies quality_checker.py cannot catch: wrong AWS/Azure/GCP service
 names or API calls, malformed IAM policy JSON, fabricated or outdated CVE
 references, and factually incorrect security claims.
 
-Uses Claude Fable 5 rather than Haiku — accuracy matters more than cost here,
-and guide volume is low enough (a handful per day) that the higher per-token
-price is immaterial in absolute terms. Falls back to Opus 4.8 if Fable 5
-declines the request.
+Uses Claude Sonnet 5 at medium effort rather than Haiku — accuracy matters
+more than cost here, and guide volume is low enough (a handful per day) that
+the extra spend is immaterial in absolute terms.
 
 Reads/writes: quality_report.json (adds a "technical_review" field per guide)
 """
@@ -25,11 +24,9 @@ import anthropic
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
 
-MODEL = "claude-fable-5"
-FALLBACK_MODEL = "claude-opus-4-8"
-# Fable 5 always thinks before answering, and thinking tokens count against
-# max_tokens — 2000 was getting fully consumed by thinking, truncating the
-# response before it ever reached the JSON review.
+MODEL = "claude-sonnet-5"
+# Sonnet 5 runs adaptive thinking by default (thinking tokens count against
+# max_tokens), so keep the same generous budget the Fable 5 version needed.
 MAX_TOKENS = 16000
 
 SYSTEM_PROMPT = """You are a senior cloud security engineer performing a technical accuracy \
@@ -70,13 +67,14 @@ OUTPUT_SCHEMA = {
 
 def review_guide(client: anthropic.Anthropic, content: str) -> dict:
     """Run the technical review for a single guide. Returns the parsed findings dict."""
-    response = client.beta.messages.create(
+    response = client.messages.create(
         model=MODEL,
         max_tokens=MAX_TOKENS,
         system=SYSTEM_PROMPT,
-        betas=["server-side-fallback-2026-06-01"],
-        fallbacks=[{"model": FALLBACK_MODEL}],
-        output_config={"format": {"type": "json_schema", "schema": OUTPUT_SCHEMA}},
+        output_config={
+            "effort": "medium",
+            "format": {"type": "json_schema", "schema": OUTPUT_SCHEMA},
+        },
         messages=[{"role": "user", "content": f"Review this guide:\n\n{content}"}],
     )
 
