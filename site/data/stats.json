@@ -1,16 +1,23 @@
 {
-  "updated": "10 Jul 2026 06:06 UTC",
-  "total": 674,
+  "updated": "11 Jul 2026 06:06 UTC",
+  "total": 698,
   "severity": {
-    "critical": 78,
-    "high": 423,
-    "medium": 152
+    "critical": 82,
+    "high": 436,
+    "medium": 159
   },
   "categories": {
-    "aws": 41,
-    "azure": 263,
+    "aws": 42,
+    "azure": 266,
     "gcp": 1,
-    "general": 369
+    "general": 389
   },
-  "top_critical": null
+  "top_critical": {
+    "title": "CVE-2026-56291: Balbooa Forms RCE via File Upload",
+    "summary": "A critical vulnerability in Balbooa Forms allows unauthenticated attackers to upload executable files to affected servers, leading to full remote code execution (RCE). The flaw requires no login or pr",
+    "architects_take": "Identify any internet-facing deployments of Balbooa Forms within your environment or those of managed tenants and apply vendor patches immediately \u2014 the CISA remediation deadline is 13 July 2026. If patching cannot be completed promptly, restrict public access to the forms endpoint via WAF rules or network controls and implement file upload scanning to block executable content.",
+    "slug": "balbooa-forms-unrestricted-file-upload-rce-cve-2026-56291",
+    "source": "CISA Known Exploited Vulnerabilities",
+    "category": "general"
+  }
 }
