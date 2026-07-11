@@ -298,8 +298,10 @@ def _guide_card_html(record: PublishRecord, lambda_url: str, github_repo: str) -
     # Flag reasons (shown for flagged guides)
     flags_html = ""
 
-    # Technical accuracy review (from technical_reviewer.py)
+    # Technical accuracy review (from technical_reviewer.py), possibly auto-corrected
+    # by technical_fixer.py before this record was built
     tech = record.technical_review or {}
+    fixed_count = tech.get("fixed_count", 0)
     if tech.get("issues_found"):
         findings = tech.get("findings", [])
         findings_html = "".join(
@@ -308,13 +310,21 @@ def _guide_card_html(record: PublishRecord, lambda_url: str, github_repo: str) -
             f"</li>"
             for f in findings
         )
+        heading = f"⚠ Technical review — {len(findings)} concern(s)"
+        if tech.get("auto_fix_applied"):
+            heading += f" ({fixed_count} auto-fixed, {len(findings)} still need review)"
         flags_html += f"""
         <div style="margin-top:14px;padding:10px 12px;background:{_C['card_flag']};
                     border:1px solid {_C['border_flag']};border-radius:8px;">
           <div style="font-size:13px;font-weight:700;color:{_C['amber']};margin-bottom:6px;">
-            ⚠ Technical review — {len(findings)} concern(s)
+            {heading}
           </div>
           <ul style="margin:0;padding-left:18px;font-size:13px;color:{_C['text']};">{findings_html}</ul>
+        </div>"""
+    elif tech.get("auto_fix_applied") and fixed_count:
+        flags_html += f"""
+        <div style="margin-top:14px;font-size:13px;color:{_C['green']};">
+          ✓ Technical review: {fixed_count} issue(s) found and corrected automatically before publishing
         </div>"""
     elif tech.get("review_error"):
         flags_html += f"""
@@ -575,11 +585,16 @@ def _build_email_html(
         lines.append(_short_summary(r.description))
         lines.append("")
         tech = r.technical_review or {}
+        fixed_count = tech.get("fixed_count", 0)
         if tech.get("issues_found"):
             findings = tech.get("findings", [])
-            lines.append(f"⚠ Technical review — {len(findings)} concern(s):")
+            suffix = f" ({fixed_count} auto-fixed, {len(findings)} still need review)" if tech.get("auto_fix_applied") else ""
+            lines.append(f"⚠ Technical review — {len(findings)} concern(s){suffix}:")
             for f in findings:
                 lines.append(f"  - [{f.get('severity', 'minor').upper()}] {f.get('description', '')}")
+            lines.append("")
+        elif tech.get("auto_fix_applied") and fixed_count:
+            lines.append(f"✓ Technical review: {fixed_count} issue(s) found and corrected automatically before publishing")
             lines.append("")
         elif tech.get("review_error"):
             lines.append(f"Technical review unavailable ({tech['review_error']}) — check manually")

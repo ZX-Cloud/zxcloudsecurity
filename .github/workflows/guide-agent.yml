@@ -68,6 +68,11 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python src/technical_reviewer.py
 
+      - name: Fix flagged technical issues
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python src/technical_fixer.py
+
       - name: Publish drafts and email digest
         env:
           GH_REPO:             ${{ secrets.GH_REPO }}
