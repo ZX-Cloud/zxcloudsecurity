@@ -5,15 +5,17 @@ ZX Cloud Security — Technical Accuracy Auto-Fix
 Takes guides flagged with technical inaccuracies by technical_reviewer.py and
 asks Claude to correct them in the draft file itself, then re-reviews (reusing
 technical_reviewer.review_guide) to confirm the fix actually worked before
-moving on. Guides that still have unresolved findings after MAX_FIX_ATTEMPTS
-are left with those findings intact in quality_report.json, so the digest
-email still surfaces them — this only removes the manual work Claude can do
-reliably; it never hides a problem it couldn't fix.
+moving on. A major finding that survives the standard fix gets one escalated
+attempt at higher effort; if a major is still unresolved after that, the guide
+is rejected outright (outcome set to "reject") rather than published with a
+known-inaccurate claim — publisher.py's existing reject pathway then deletes
+the draft and excludes it from the digest email. Only minor findings, or none,
+ever reach Steve's inbox.
 
 Must run after technical_reviewer.py and before publisher.py.
 
-Reads/writes: quality_report.json (updates "technical_review" and "word_count"
-per guide)
+Reads/writes: quality_report.json (updates "technical_review", "word_count",
+and possibly "outcome" per guide)
 """
 
 import json
@@ -35,7 +37,12 @@ log = logging.getLogger(__name__)
 MODEL = "claude-fable-5"
 FALLBACK_MODEL = "claude-opus-4-8"
 MAX_TOKENS = 16000
-MAX_FIX_ATTEMPTS = 1
+# Two phases, not two blind retries: attempt 1 is the standard fix at effort=high;
+# attempt 2 only fires if a major finding survives attempt 1, at effort=max. A
+# single-cycle run can leave real progress on the table, but two identical-strength
+# retries risk compounding edits into a regression (observed in testing) — escalating
+# only for majors, at meaningfully higher effort, avoids both failure modes.
+MAX_FIX_ATTEMPTS = 2
 RETRY_DELAY_SECONDS = 5
 
 FIXER_SYSTEM_PROMPT = """You are a senior cloud security editor fixing factual errors in a \
@@ -147,16 +154,21 @@ class FixResult:
     attempted: bool = False
     auto_fix_applied: bool = False
     fully_resolved: bool = False
+    escalated: bool = False
     attempts: int = 0
     findings_before: int = 0
     findings_after: int = 0
     fixed_count: int = 0
+    unresolved_majors: int = 0
+    rejected: bool = False
     word_count: int = 0
     error: str = ""
     fixed_at: str = ""
 
 
-def _call_fixer(client: anthropic.Anthropic, content: str, findings: list) -> str:
+def _call_fixer(
+    client: anthropic.Anthropic, content: str, findings: list, effort: str = "high"
+) -> str:
     """One fixer API call. Returns extracted, preamble-stripped text (may be empty)."""
     user_prompt = _build_fixer_user_prompt(content, findings)
     response = client.beta.messages.create(
@@ -165,6 +177,7 @@ def _call_fixer(client: anthropic.Anthropic, content: str, findings: list) -> st
         system=FIXER_SYSTEM_PROMPT,
         betas=["server-side-fallback-2026-06-01"],
         fallbacks=[{"model": FALLBACK_MODEL}],
+        output_config={"effort": effort},
         tools=[{"type": "web_search_20260209", "name": "web_search"}],
         messages=[{"role": "user", "content": user_prompt}],
     )
@@ -209,18 +222,31 @@ def fix_guide(
     fixed_any = False
 
     for attempt in range(1, MAX_FIX_ATTEMPTS + 1):
-        result.attempts = attempt
         current_findings = current_review.get("findings", [])
         if not current_findings:
             break
 
+        if attempt == 1:
+            effort = "high"
+        else:
+            remaining_majors = [f for f in current_findings if f.get("severity") == "major"]
+            if not remaining_majors:
+                break
+            effort = "max"
+            result.escalated = True
+            log.info(
+                f"    {len(remaining_majors)} major finding(s) remain — "
+                f"escalating to max effort ..."
+            )
+
+        result.attempts = attempt
         log.info(
-            f"    Fix attempt {attempt}/{MAX_FIX_ATTEMPTS} — "
+            f"    Fix attempt {attempt}/{MAX_FIX_ATTEMPTS} (effort={effort}) — "
             f"{len(current_findings)} finding(s) ..."
         )
 
         try:
-            fixed = _call_fixer(client, content, current_findings)
+            fixed = _call_fixer(client, content, current_findings, effort=effort)
         except anthropic.RateLimitError as e:
             log.warning(f"    Attempt {attempt}: rate limited — waiting 30s: {e}")
             time.sleep(30)
@@ -269,9 +295,14 @@ def fix_guide(
             f"attempt {attempt}"
         )
 
+    final_findings = current_review.get("findings", [])
+    unresolved_majors = [f for f in final_findings if f.get("severity") == "major"]
+
     result.auto_fix_applied = fixed_any
-    result.findings_after = len(current_review.get("findings", []))
+    result.findings_after = len(final_findings)
+    result.unresolved_majors = len(unresolved_majors)
     result.fully_resolved = fixed_any and not current_review.get("issues_found", True)
+    result.rejected = bool(unresolved_majors)
 
     current_review = dict(current_review)
     current_review["auto_fix_attempted"] = result.attempted
@@ -341,6 +372,12 @@ def run(quality_report_path: str = "quality_report.json") -> list:
         guide["technical_review"] = updated_review
         if result.auto_fix_applied:
             guide["word_count"] = result.word_count
+        if result.rejected:
+            log.warning(
+                f"    Rejecting — {result.unresolved_majors} major finding(s) "
+                f"still unresolved after escalation"
+            )
+            guide["outcome"] = "reject"
 
         if i < len(candidates):
             time.sleep(3)
@@ -350,10 +387,17 @@ def run(quality_report_path: str = "quality_report.json") -> list:
     log.info(f"\n  Saved → {quality_report_path}")
 
     resolved = sum(1 for r in results if r.fully_resolved)
-    partial = sum(1 for r in results if r.auto_fix_applied and not r.fully_resolved)
-    failed = sum(1 for r in results if not r.auto_fix_applied)
+    rejected = sum(1 for r in results if r.rejected)
+    partial = sum(
+        1 for r in results
+        if r.auto_fix_applied and not r.fully_resolved and not r.rejected
+    )
+    failed = sum(1 for r in results if not r.auto_fix_applied and not r.rejected)
     log.info(f"{'─'*60}")
-    log.info(f"  Fully resolved: {resolved}  |  Partially fixed: {partial}  |  Unfixed: {failed}")
+    log.info(
+        f"  Fully resolved: {resolved}  |  Partially fixed: {partial}  |  "
+        f"Unfixed: {failed}  |  Rejected: {rejected}"
+    )
     log.info(f"{'─'*60}")
 
     return results
@@ -378,7 +422,9 @@ if __name__ == "__main__":
 
     print(f"\n{'-'*60}")
     for r in results:
-        if r.fully_resolved:
+        if r.rejected:
+            status = "REJECTED"
+        elif r.fully_resolved:
             status = "OK"
         elif r.auto_fix_applied:
             status = "PARTIAL"
@@ -386,10 +432,13 @@ if __name__ == "__main__":
             status = "FAILED"
         print(f"  [{status}] {r.title}")
         if r.attempted:
+            escalated_note = " (escalated)" if r.escalated else ""
             print(
                 f"      {r.findings_before} -> {r.findings_after} finding(s) "
-                f"({r.fixed_count} fixed, {r.attempts} attempt(s))"
+                f"({r.fixed_count} fixed, {r.attempts} attempt(s){escalated_note})"
             )
+        if r.rejected:
+            print(f"      {r.unresolved_majors} major finding(s) unresolved — guide rejected")
         if r.error:
             print(f"      {r.error}")
     print(f"{'-'*60}\n")

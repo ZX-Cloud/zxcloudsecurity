@@ -75,6 +75,8 @@ CRITICAL CONSTRAINT: The input is a Hugo markdown file. You must:
 - Preserve all HTML comments (<!-- INTERNAL_LINK: ... -->) exactly
 - Preserve all Hugo shortcodes exactly
 - Only rewrite prose content
+- Do not introduce new facts, figures, dates, or quotations that are not already present in \
+the original text — you are adjusting voice and style only, never adding new claims
 
 OUTPUT: Return only the complete rewritten markdown file. No preamble, no explanation,
 no commentary about what you changed. Start with --- and end with the last line of content.

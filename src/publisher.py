@@ -304,22 +304,46 @@ def _guide_card_html(record: PublishRecord, lambda_url: str, github_repo: str) -
     fixed_count = tech.get("fixed_count", 0)
     if tech.get("issues_found"):
         findings = tech.get("findings", [])
-        findings_html = "".join(
-            f"<li style='margin-bottom:4px;'>"
-            f"<b style='color:{_C['amber']};'>{f.get('severity', 'minor').upper()}</b> — {f.get('description', '')}"
-            f"</li>"
-            for f in findings
-        )
-        heading = f"⚠ Technical review — {len(findings)} concern(s)"
-        if tech.get("auto_fix_applied"):
-            heading += f" ({fixed_count} auto-fixed, {len(findings)} still need review)"
-        flags_html += f"""
+        remaining_majors = [f for f in findings if f.get("severity") == "major"]
+
+        if remaining_majors:
+            # Defensive — technical_fixer.py rejects any guide with an unresolved
+            # Major, so this branch should never fire for a guide that reaches the
+            # digest. Keep it loud if it ever does, since that means the reject
+            # gate itself failed, not just that a finding is unresolved.
+            findings_html = "".join(
+                f"<li style='margin-bottom:4px;'>"
+                f"<b style='color:{_C['amber']};'>{f.get('severity', 'minor').upper()}</b> — {f.get('description', '')}"
+                f"</li>"
+                for f in findings
+            )
+            heading = f"⚠ Technical review — {len(findings)} concern(s)"
+            if tech.get("auto_fix_applied"):
+                heading += f" ({fixed_count} auto-fixed, {len(findings)} still need review)"
+            flags_html += f"""
         <div style="margin-top:14px;padding:10px 12px;background:{_C['card_flag']};
                     border:1px solid {_C['border_flag']};border-radius:8px;">
           <div style="font-size:13px;font-weight:700;color:{_C['amber']};margin-bottom:6px;">
             {heading}
           </div>
           <ul style="margin:0;padding-left:18px;font-size:13px;color:{_C['text']};">{findings_html}</ul>
+        </div>"""
+        else:
+            # Minor-only — worth a glance while reading, not something to fact-check
+            findings_html = "".join(
+                f"<li style='margin-bottom:4px;'>{f.get('description', '')}</li>"
+                for f in findings
+            )
+            note = f"{len(findings)} minor note(s) — not blocking"
+            if tech.get("auto_fix_applied") and fixed_count:
+                note += f" ({fixed_count} auto-fixed)"
+            flags_html += f"""
+        <div style="margin-top:14px;padding:10px 12px;background:{_C['card']};
+                    border:1px solid {_C['border']};border-radius:8px;">
+          <div style="font-size:12px;font-weight:600;color:{_C['muted']};margin-bottom:6px;">
+            {note}
+          </div>
+          <ul style="margin:0;padding-left:18px;font-size:12px;color:{_C['muted']};">{findings_html}</ul>
         </div>"""
     elif tech.get("auto_fix_applied") and fixed_count:
         flags_html += f"""
@@ -588,11 +612,20 @@ def _build_email_html(
         fixed_count = tech.get("fixed_count", 0)
         if tech.get("issues_found"):
             findings = tech.get("findings", [])
-            suffix = f" ({fixed_count} auto-fixed, {len(findings)} still need review)" if tech.get("auto_fix_applied") else ""
-            lines.append(f"⚠ Technical review — {len(findings)} concern(s){suffix}:")
-            for f in findings:
-                lines.append(f"  - [{f.get('severity', 'minor').upper()}] {f.get('description', '')}")
-            lines.append("")
+            remaining_majors = [f for f in findings if f.get("severity") == "major"]
+            if remaining_majors:
+                # Defensive — see the matching branch in _guide_card_html
+                suffix = f" ({fixed_count} auto-fixed, {len(findings)} still need review)" if tech.get("auto_fix_applied") else ""
+                lines.append(f"⚠ Technical review — {len(findings)} concern(s){suffix}:")
+                for f in findings:
+                    lines.append(f"  - [{f.get('severity', 'minor').upper()}] {f.get('description', '')}")
+                lines.append("")
+            else:
+                suffix = f" ({fixed_count} auto-fixed)" if tech.get("auto_fix_applied") and fixed_count else ""
+                lines.append(f"{len(findings)} minor note(s) — not blocking{suffix}:")
+                for f in findings:
+                    lines.append(f"  - {f.get('description', '')}")
+                lines.append("")
         elif tech.get("auto_fix_applied") and fixed_count:
             lines.append(f"✓ Technical review: {fixed_count} issue(s) found and corrected automatically before publishing")
             lines.append("")
