@@ -1,169 +1,196 @@
 ---
-title: "Post-Quantum Cryptography and AWS Migration: A Practitioner's Guide for 2025–2035"
-date: 2026-07-07
-description: "A practical guide to post-quantum cryptography and AWS migration covering NIST standards, NCSC timelines, ML-KEM, ML-DSA, and common pitfalls for UK cloud teams."
-tags: ["post-quantum cryptography", "aws security", "cryptography", "cloud security", "ncsc", "aws kms"]
+title: "Post-Quantum Cryptography and AWS Migration: A Practical Guide for Cloud Security Architects"
+date: 2026-07-12
+description: "A practitioner's guide to post-quantum cryptography and AWS migration — covering NIST standards, NCSC timelines, hybrid TLS, and the pitfalls to avoid."
+tags: ["post-quantum cryptography", "aws security", "encryption", "cloud security", "kms", "tls", "ncsc", "crypto agility"]
 slug: "post-quantum-cryptography-aws-migration"
 author: "Steve Harrison & AI - Principal Security Architect"
-word_count: 2276
+word_count: 2173
 draft: false
 ---
 
-# Post-Quantum cryptography and AWS migration: a practitioner's guide for 2025-2035
+# Post-Quantum cryptography and AWS migration: what UK cloud security architects need to do now
 
-The regulatory and threat environment around post-quantum cryptography has shifted meaningfully in the past twelve months, and if you are a cloud security architect in UK financial services or government, the window for comfortable, unhurried planning is closing. France's ANSSI announced it will stop certifying security products that lack quantum-resistant encryption from 2027, with businesses expected to purchase only quantum-safe products by 2030. ANSSI approval is required for use in French government agencies and critical infrastructure, making this a de facto phase-out of older encryption. The UK's NCSC is not far behind. This guide tells you what decisions to make right now inside AWS.
+If you work in regulated cloud environments -- financial services, government, healthcare -- post-quantum cryptography is no longer a research topic. It belongs on your security roadmap today. NIST finalised its first three post-quantum cryptographic (PQC) standards in August 2024. The NCSC published its migration timelines in March 2025. AWS has already deployed hybrid post-quantum TLS across KMS, ACM, and Secrets Manager. The standards are settled. The clock is running. What most organisations lack is a clear-eyed view of what they actually need to do on their side of the shared responsibility model, and the practical steps to get there.
 
-<!-- INTERNAL_LINK: AWS compliance and governance overview | aws-compliance-and-governance -->
-
----
-
-## Why the urgency is real, not theoretical
-
-The classic objection is that quantum computers powerful enough to break RSA do not exist yet, so there is time. That argument misunderstands the threat model.
-
-The concern is "harvest now, decrypt later": adversaries collect encrypted data today expecting future quantum computers to unlock it. For UK financial services firms holding customer data under long GDPR retention periods, or government agencies managing multi-decade classified records, data encrypted today with RSA-2048 or ECDH P-256 is potentially already being collected by nation-state adversaries. The NCSC has explicitly warned that organisations must assume sensitive encrypted data is already being collected and will eventually be decrypted. That is not hedged language from a standards body. It is a direct operational warning.
-
-On the standards side, the foundation is now solid. On 13 August 2024, NIST published three post-quantum cryptographic algorithms as Federal Information Processing Standards, concluding a standardisation process begun in 2016. Those three standards are:
-
-- FIPS 203 (ML-KEM, Module-Lattice-Based Key-Encapsulation Mechanism): the primary standard for key exchange, replacing ECDH and RSA key transport.
-- FIPS 204 (ML-DSA, Module-Lattice-Based Digital Signature Standard): replacement for ECDSA and RSA signatures.
-- FIPS 205 (SLH-DSA, Stateless Hash-Based Digital Signature Standard): a conservative, hash-based signature option that does not rely on lattice hardness assumptions.
-
-In August 2024, the NCSC updated their PQC white paper to endorse the NIST quantum-safe algorithms. The UK was the first major regulatory jurisdiction to reflect NIST's algorithms and embed them within national guidance.
-
-<!-- INTERNAL_LINK: What is Zero Trust Architecture | what-is-zero-trust-architecture -->
+This guide covers the threat model, the current AWS capability landscape, what crypto agility actually demands of your architecture, and the pitfalls that will stall your programme before it gets moving.
 
 ---
 
-## The NCSC migration timeline you need to know
+## Why this is not a 2030 problem
 
-Migration to post-quantum cryptography is a multi-year programme. In March 2025, the NCSC published guidance setting timelines for key migration activities across three phases:
+The instinct to defer is understandable. There is no evidence that a quantum computer powerful enough to break the public-key cryptography in use throughout AWS exists today. So why act now?
 
-Phase 1 runs to 2028 and covers identifying cryptographic services that need upgrading and building a migration plan. Phase 2 runs from 2028 to 2031 and covers executing high-priority upgrades while refining plans as PQC evolves. Phase 3 runs from 2031 to 2035 and requires completing migration to PQC across all systems, services, and products.
+The answer is harvest now, decrypt later (HNDL). Adversaries are collecting encrypted communications today to decrypt once quantum computers mature -- estimated somewhere between 2030 and 2035. The NCSC has warned UK organisations that sensitive encrypted data should be assumed already collected.
 
-For AWS-centric organisations, Phase 1 is largely discovery and inventory work: knowing which workloads rely on public-key cryptography, which data has long-lived sensitivity, and which SDK and TLS client versions are in use. The NCSC guidance specifically calls out regulated sectors including banking, financial services, and telecoms as priorities for early migration. If you are under FCA oversight, treat Phase 2 milestones as constraints on your security roadmap, not aspirations.
+For FCA-regulated firms and UK government agencies processing data that must remain confidential for a decade or more -- legal documents, M&A communications, patient records, national security material -- this is not theoretical. If that traffic is being recorded now, the algorithm protecting it today is on a countdown timer.
 
-The Financial Conduct Authority has been collaborating within the World Economic Forum on quantum security in financial services. Expect FCA Dear CEO letters referencing PQC readiness within the next 12 to 18 months.
-
----
-
-## What AWS is actually doing (and what it is not doing)
-
-AWS's PQC migration covers three workstreams: protecting data in transit, establishing quantum-resistant roots of trust, and authenticating identities in a post-quantum world. Understanding which side of the shared responsibility line you sit on is the most important mental model shift for AWS teams.
-
-### Data in transit: ML-KEM hybrid TLS
-
-AWS has deployed hybrid post-quantum key agreement for TLS across AWS KMS, AWS Certificate Manager, and AWS Secrets Manager endpoints. These now support ML-KEM for hybrid post-quantum key agreement on non-FIPS endpoints.
-
-The hybrid approach combines traditional cryptography such as X25519 with ML-KEM, protecting connections against both classical attacks today and quantum attacks in future. This is the right engineering approach. A pure PQC migration without hybrid fallback would create compatibility problems in enterprise environments with diverse TLS client stacks.
-
-Amazon S3 now supports post-quantum TLS key exchange on regional S3, S3 Tables, and S3 Express One Zone endpoints.
-
-The critical point: AWS enabling PQC on service endpoints does not mean your workloads are using it. You must update your TLS clients and SDKs to advertise ML-KEM when connecting to AWS service HTTPS endpoints. If your Java Lambda functions are running AWS SDK for Java v1, or your Rust workloads are on an older crate, you are falling back to classical TLS even though the endpoint supports ML-KEM.
-
-### Digital signatures: ML-DSA in AWS KMS
-
-AWS KMS supports ML-DSA for post-quantum cryptographic signatures under FIPS 204. All ML-DSA keys and signature operations are created and protected in FIPS 140-3 Security Level 3 validated hardware security modules.
-
-AWS Private CA and AWS KMS together support post-quantum code signing. Consumers of signed code pre-provisioned with post-quantum PKI roots can be confident the software could not have been forged by an adversary with a cryptographically relevant quantum computer. For UK organisations signing software artefacts destined for government or critical infrastructure use, this is a capability you should be adopting in your CI/CD pipelines now, not at Phase 2.
-
-<!-- INTERNAL_LINK: AWS IAM security best practices | aws-iam-security-best-practices -->
+Cryptographic migrations have historically taken far longer than anyone expects. SHA-1 deprecation took more than a decade from the first practical collision attack in 2005 until major browsers finally rejected it in 2017. MD5, 3DES, and RC4 all followed the same pattern: clear technical consensus, slow organisational response. PQC migration will be no different unless you build a programme with teeth today.
 
 ---
 
-## Enabling hybrid post-quantum TLS with the AWS SDK for Java v2
+## The standard landscape: what has actually been agreed
 
-The following snippet enables hybrid ML-KEM post-quantum TLS for calls to AWS KMS using the AWS Common Runtime HTTP client. With s2n-tls, configuring an HTTP client to prefer post-quantum TLS places ECDH with ML-KEM first in the preference list, with classic key exchange algorithms included for compatibility but ranked lower.
+NIST released the final versions of FIPS 203, 204, and 205 in August 2024, concluding an eight-year standardisation process that began in 2016.
+
+The three primary standards are:
+
+- ML-KEM (FIPS 203), derived from CRYSTALS-Kyber, specifies a module-lattice-based key encapsulation mechanism providing IND-CCA2 security under the Module Learning With Errors hardness assumption. This is the primary algorithm for securing key exchange in TLS.
+- ML-DSA (FIPS 204), derived from CRYSTALS-Dilithium, provides a lattice-based digital signature scheme.
+- SLH-DSA (FIPS 205), derived from SPHINCS+, provides a stateless hash-based signature scheme whose security rests solely on hash function properties. SLH-DSA is a useful hedge -- if lattice-based assumptions are broken, your signature infrastructure has a fallback.
+
+The NCSC endorses all three. One thing worth being clear on: properly implemented symmetric encryption is considered quantum-resistant. It is asymmetric cryptography that faces the quantum threat. Your AES-256 envelope encryption is fine. Your RSA and ECDH key exchange is what needs replacing.
+
+### NCSC migration timelines for UK organisations
+
+The NCSC outlines three phases: to 2028, identify cryptographic services needing upgrades and build a migration plan; from 2028 to 2031, execute high-priority upgrades and refine plans as PQC evolves; from 2031 to 2035, complete migration to PQC for all systems and services.
+
+Regulated sectors -- banking, financial services, telecoms -- should prioritise early migration. If you are under FCA supervision or handle CNI, the 2028 deadline for a completed migration plan is the one your board needs to understand.
+
+---
+
+## Where AWS is today under the shared responsibility model
+
+AWS is migrating to post-quantum cryptography and helping customers do the same, but the shared responsibility model applies here as clearly as it does anywhere else. Some PQC capability is being rolled out transparently on the AWS side. Much of the client-side work falls to you.
+
+The transition is starting with systems that communicate over untrusted networks. AWS's workstreams prioritise encryption in transit first, and that is what has been delivered so far.
+
+### Services with live PQC support
+
+AWS KMS, AWS Certificate Manager, and AWS Secrets Manager endpoints now support ML-KEM for hybrid post-quantum key agreement on non-FIPS endpoints across all AWS Regions in the `aws` partition.
+
+AWS KMS and AWS Private CA also support quantum-resistant signatures and roots of trust with ML-DSA.
+
+AWS Transfer Family has upgraded its hybrid quantum-resistant key exchange support to ML-KEM (FIPS 203). The SSH policy names that support post-quantum key exchange are `TransferSecurityPolicy-2025-03` and `TransferSecurityPolicy-FIPS-2025-03`.
+
+The underlying cryptographic foundation is AWS-LC, their FIPS-140-3-validated cryptographic library, which was the first open-source cryptographic module to include ML-KEM in its FIPS validation.
+
+### What AWS does not handle for you
+
+AWS customers must update their TLS clients and SDKs to offer ML-KEM when connecting to AWS service HTTPS endpoints. That includes your Lambda functions, EC2-based services, ECS containers, and anything using an AWS SDK to call KMS or Secrets Manager.
+
+TLS policy updates on customer-owned resources -- ALBs, NLBs -- require manual intervention. That is on your side of the shared responsibility model.
+
+There is also a hard deadline to be aware of. AWS committed to supporting CRYSTALS-Kyber only through the end of 2025, and it is being removed across all AWS service endpoints during 2026 in favour of ML-KEM. Customers currently negotiating CRYSTALS-Kyber who do not upgrade their AWS Java SDK v2 clients before then will see their clients fall back gracefully to classical key agreement. "Graceful fallback to classical" sounds benign until you realise it means your HNDL protection silently disappears.
+
+---
+
+## Enabling hybrid post-quantum TLS: a practical starting point
+
+The hybrid approach combines classical ECDH with ML-KEM, establishing TLS connections that protect against both current classical attacks and future quantum threats. This is the right approach for now -- it does not require you to trust that ML-KEM alone is sufficient, and it maintains compatibility with classical-only peers.
+
+### AWS SDK for Java v2
 
 ```java
-import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.kms.KmsClient;
+import software.amazon.awssdk.http.crt.AwsCrtAsyncHttpClient;
+import software.amazon.awssdk.services.kms.KmsAsyncClient;
 
-// AWS SDK for Java v2 + AWS CRT HTTP client
-// Requires: software.amazon.awssdk:aws-crt-client (2.21.x or later)
-// The CRT client negotiates ML-KEM hybrid TLS by default when supported.
-
-KmsClient kmsClient = KmsClient.builder()
-    .region(Region.EU_WEST_2)   // London region
-    .httpClientBuilder(
-        AwsCrtHttpClient.builder()
-            // postQuantumTlsEnabled() is set to PREFERRED by default
-            // in recent CRT HTTP client versions; set explicitly for clarity.
-            .postQuantumTlsEnabled(true)
-    )
+AwsCrtAsyncHttpClient httpClient = AwsCrtAsyncHttpClient.builder()
+    .postQuantumTlsEnabled(true)
     .build();
 
-// All KMS API calls via this client will now negotiate
-// ECDH + ML-KEM-768 hybrid key exchange where the endpoint supports it,
-// falling back to classical ECDH if not (e.g. FIPS endpoints).
+KmsAsyncClient kmsClient = KmsAsyncClient.builder()
+    .httpClient(httpClient)
+    .build();
+
+// All KMS calls now use X25519MLKEM768 hybrid key exchange
+// Verify by checking TLS handshake negotiated group in CloudWatch / VPC Flow Logs
 ```
 
-> Note on FIPS endpoints: the hybrid ML-KEM cipher suites are currently available on non-FIPS KMS endpoints. These cipher suites protect data in transit between your client and the AWS KMS endpoint. They do not affect how KMS encrypts key material at rest. Your at-rest key material under AES-256-GCM is already quantum-resistant. The hybrid TLS is specifically mitigating the harvest-now-decrypt-later risk on the wire.
+### AWS SDK for Rust
 
-Migrating from ECDH-only to ECDH+ML-KEM hybrid key agreement adds roughly 1,600 bytes to the TLS handshake and 80 to 150 microseconds of additional compute time for ML-KEM operations. In practice, this overhead is negligible for nearly all workloads. Do not let micro-benchmarking block your PQC adoption.
+```toml
+# Cargo.toml
+[dependencies]
+aws-sdk-kms = "1"
+aws-smithy-runtime = { version = "1", features = ["prefer-post-quantum"] }
+```
+
+### Verifying your connection
+
+If the `keyExchange` field in your TLS session metadata shows `X25519MLKEM768`, hybrid post-quantum key exchange is active. If it shows `X25519`, the client is not advertising ML-KEM support. Check the client version and configuration.
+
+You can verify at the OS level using OpenSSL `s_client` or by inspecting TLS session metadata in your application logs. Build this check into your CI pipeline as a regression gate. Silent fallback to classical TLS is a real risk in heterogeneous environments, and you will not catch it without an automated check.
+
+### Performance impact
+
+According to AWS's published measurements, switching from classical to hybrid post-quantum key agreement transfers approximately 1,600 additional bytes during the TLS handshake and requires roughly 80 to 150 microseconds more compute time for the ML-KEM operations. This is a one-time connection startup cost, amortised over the lifetime of the TLS session.
+
+In practice, AWS measurements showed only a 0.05 percent decrease in maximum transactions per second when calling KMS GenerateDataKey with hybrid PQC enabled. If TLS connection reuse is properly configured, the overhead is negligible. There is no credible performance argument for deferring.
 
 ---
 
-## Building a cryptographic inventory on AWS
+## Building a cryptographic inventory for your AWS estate
 
-You cannot migrate what you cannot see. Before touching a single SDK version or TLS policy, you need a cryptographic inventory across your AWS estate. Focus on these four areas:
+Before you can migrate anything, you need to know what you have. A sound quantum-safe transformation starts with assessing existing cryptographic use and classifying data and systems based on sensitivity and longevity.
 
-First, TLS termination points: Application Load Balancers, API Gateway, and CloudFront distributions. Check your TLS security policies. The `ELBSecurityPolicy-TLS13-1-2-2021-06` policy does not include ML-KEM. AWS has released updated TLS policies that support ML-KEM for ALBs, but switching to a PQ-enabled policy is your responsibility under the shared responsibility model.
+For an AWS estate, that means cataloguing:
 
-Second, SDK versions in Lambda, ECS/Fargate, and EC2. Run a Config rule or use Systems Manager Inventory to catalogue runtime SDK versions. Any Java workload on SDK v1 needs uplift.
+- All SDK calls performing asymmetric key operations (KMS `Decrypt`, `GenerateDataKey`, `Sign`)
+- Custom TLS implementations in Lambda layers, container base images, and EC2 AMIs
+- SSH connectivity to AWS services via Transfer Family or Systems Manager
+- VPN and Direct Connect configurations using IKE/IPsec
+- Certificate authorities managed via ACM Private CA and any third-party PKI
+- Third-party SaaS and vendor integrations using API keys or mutual TLS
 
-Third, long-lived data assets. S3 buckets holding customer PII, financial records, or IP with retention periods beyond 2030 are your highest-priority harvest-now-decrypt-later targets. Tag workloads based on sensitivity, exposure, and data lifespan to focus effort where the risk is greatest.
+<!-- INTERNAL_LINK: managing secrets and credentials across your estate | aws-iam-security-best-practices -->
 
-Fourth, code signing and certificate chains. Any internally signed artefacts including container images, Lambda deployment packages, and AMIs using ECDSA are candidates for ML-DSA uplift via AWS Private CA.
+For custom applications where you cannot delegate cryptography to AWS, the goal is crypto agility -- the ability to update cryptographic algorithms and protocols without a major rearchitecture. That means maintaining current software versions, implementing automated update processes, and designing systems that can absorb algorithm changes.
 
-<!-- INTERNAL_LINK: AWS Security Hub guide | aws-security-hub-guide -->
-<!-- INTERNAL_LINK: Cloud security vulnerability management | cloud-security-vulnerability-management -->
+Use AWS Config rules and Security Hub findings to surface services still using deprecated TLS versions. TLS 1.2 is a prerequisite concern -- TLS 1.3 is required for PQC support, and it is worth getting your estate onto 1.3 before worrying about ML-KEM.
+
+<!-- INTERNAL_LINK: auditing your AWS environment configuration | aws-security-hub-guide -->
 
 ---
 
-## Common pitfalls in post-quantum cryptography and AWS migration
+## Common pitfalls and how to avoid them
 
-These are mistakes I see repeatedly when advising enterprise and public sector clients. They cost time, money, and occasionally create new vulnerabilities in the process of fixing old ones.
+These are the failure modes I see most often when organisations attempt cryptographic migrations.
 
-### 1. Assuming AWS does it all for you
+### 1. Treating this as a pure engineering task
 
-AWS delivers PQC as part of the shared responsibility model. Some PQC features are transparently enabled for all customers. Others are options you must explicitly choose. Enabling PQC on an ALB listener requires a deliberate security policy change. Updating your SDK is your responsibility. Do not assume that because you run on AWS, you are covered.
+The technical changes are not the hard part. The hard part is driving coordinated change across a large, complex organisation where asymmetric cryptography is embedded in every protocol, every vendor dependency, and every legacy system that quietly handles key exchange or digital signatures. Assigning this to the platform team without executive sponsorship and a cross-functional programme structure is how it stalls after the first quarterly review.
 
-### 2. Conflating at-rest and in-transit quantum risk
+### 2. Confusing "AWS handled it" with "we're done"
 
-AES-256 symmetric encryption, used for S3, EBS, and RDS at rest via KMS, is considered quantum-resistant. Properly implemented symmetric encryption is not the problem. It is asymmetric cryptography that faces quantum threats. Do not waste Phase 1 effort trying to PQC-harden your AES-256 at-rest encryption. Focus on asymmetric key exchange and digital signatures.
+AWS secures the managed service endpoints. Your Lambda, your EC2, your containerised microservice, your on-premises to AWS VPN -- those are your responsibility. Customers configure clients that negotiate cryptographic ciphers when connecting to AWS. Which ciphers get negotiated is down to you.
 
-### 3. Migrating away from CRYSTALS-Kyber too slowly
+### 3. Thinking library swaps constitute a migration
 
-If your organisation ran early proof-of-concepts using CRYSTALS-Kyber, the pre-standardisation predecessor to ML-KEM, be aware it is being retired. AWS is phasing out CRYSTALS-Kyber support across endpoints in 2026. Clients on older SDK versions that advertise only CRYSTALS-Kyber will fall back to classical TLS rather than negotiate the deprecated algorithm. A graceful fallback to classical TLS is a silent loss of your PQC protection. You will not see an error, just unprotected connections.
+Swapping an RSA call for an ML-KEM call is a real operation that must happen. It is also approximately 5% of the actual work of a PQC migration, and it is the easiest 5%. The hard work is certificate chains, PKI, HSM compatibility, vendor dependencies, and the third-party integrations your organisation has accumulated over the last decade.
 
-### 4. Ignoring algorithm divergence between ANSSI and NIST
+### 4. Ignoring middle-box failures
 
-ANSSI has explicitly reserved the right to certify an algorithm set that does not exactly match NIST's selections. The agency names FrodoKEM, an unstructured-lattice scheme that trades performance for conservatism, as an acceptable alternative KEM. If your organisation operates or sells into the French government market, a pure ML-KEM implementation may be insufficient for ANSSI certification without a hybrid that also supports FrodoKEM. That is a harder engineering lift than simply adding a new algorithm to the stack.
+ML-KEM's large public key and ciphertext sizes can cause fragmented TLS Client Hello packets. Deep packet inspection appliances, legacy firewalls, and SSL-inspection proxies frequently strip or reject cipher suites they do not recognise. Test your network path end-to-end before rolling out to production. If intermediate hosts or proxies block the new TLS algorithms, you will need to work with your network security team to update firewall rules before any application change will succeed.
 
-### 5. Treating crypto-agility as an afterthought
+### 5. Neglecting vendor dependency mapping
 
-The NCSC guidance notes that traditional and post-quantum cryptography will need to co-exist for some time, and that organisations should seek solutions offering cryptographic agility: the ability to support alternative suites of cryptographic algorithms and to determine when to end support for traditional algorithms. Hard-coding algorithm identifiers in application code rather than externalising them via KMS key aliases or ACM policy is the most common anti-pattern I encounter. It turns a future algorithm rotation into an application deployment event rather than a configuration change.
+Each provider makes its own cryptographic choices on its own timeline. If your identity provider does not support PQC signing for SAML or OAuth tokens, your authentication infrastructure cannot migrate regardless of what you do internally. Map your third-party cryptographic dependencies -- identity providers, payment processors, HSM vendors, SaaS platforms -- and require PQC roadmap commitments in new procurement. GDPR's data protection by design principle gives you leverage here.
 
-### 6. Skipping performance testing in production-like environments
+<!-- INTERNAL_LINK: governing third-party risk in your AWS environment | aws-compliance-and-governance -->
 
-The performance overhead of ML-KEM is modest at the TLS layer, but ML-DSA signatures are meaningfully larger than ECDSA signatures. SLH-DSA, the hash-based option, is substantially slower and produces very large signatures. Test your signing workloads, particularly those involving high-volume token issuance, JWT signing, or code-signing pipelines, before committing to an algorithm choice.
+### 6. Abandoning crypto agility as a goal
 
-<!-- INTERNAL_LINK: AWS Well-Architected Security | aws-well-architected-security -->
+Cryptographic standards will continue to evolve. NIST selected HQC for standardisation in 2025, and further algorithms for digital signatures with specific properties are in the pipeline. A migration that replaces one hard-coded algorithm with another has achieved nothing architectural. Build your systems to swap primitives, maintain a living cryptographic bill of materials (CBOM), and treat algorithm rotation as a routine operational capability rather than a dedicated programme.
+
+<!-- INTERNAL_LINK: well-architected security principles for cloud workloads | aws-well-architected-security -->
 
 ---
 
 ## Key takeaways
 
-Start the cryptographic discovery now, not at Phase 2. The NCSC timeline runs to 2035, but Phase 1 ends in 2028 and it fills up faster than it looks.
+- The HNDL threat is active now. Adversaries are harvesting encrypted traffic today. For UK financial services, government, and healthcare organisations holding long-lived sensitive data, the case for beginning migration work immediately is not speculative -- it is risk management.
 
-Your at-rest AES-256 encryption is not the problem. Focus PQC engineering effort on asymmetric key exchange via ML-KEM hybrid TLS and digital signatures via ML-DSA. Those are the components quantum computers will target.
+- NIST standards are final; NCSC timelines are set. ML-KEM (FIPS 203), ML-DSA (FIPS 204), and SLH-DSA (FIPS 205) are the algorithms to implement. The NCSC's three-phase roadmap sets the planning horizon to 2035. Regulated sectors should target the 2028 milestone for a completed migration plan.
 
-Update your SDKs and TLS policies. AWS plans to deploy ML-KEM support to all AWS services with HTTPS endpoints, but you must update your TLS clients and SDKs to advertise ML-KEM when connecting. This is your side of the shared responsibility model.
+- AWS has delivered hybrid PQC on KMS, ACM, Secrets Manager, and Transfer Family. Update your SDKs and explicitly enable `.postQuantumTlsEnabled(true)` in Java or the `prefer-post-quantum` feature flag in Rust. Verify with TLS handshake inspection -- do not assume fallback will be caught.
 
-Use AWS KMS ML-DSA for code signing in regulated workloads today. AWS KMS creates and protects all ML-DSA keys and signature operations in FIPS 140-3 Security Level 3 validated hardware security modules. That is a production-grade, auditable control you can reference in FCA and NCSC audit responses right now.
+- Client-side SDK upgrades, TLS policy updates on ALBs and NLBs, and firewall rule reviews are your responsibility. AWS secures the managed endpoint. You own the client, the network path, and the custom workload.
 
-Build for crypto-agility, not a one-time migration. NIST is already standardising additional candidates. Externalise algorithm selection into KMS key policies and ACM certificate configurations so future rotations do not require application code changes.
+- Crypto agility is the durable outcome. A migration that replaces one hard-coded algorithm with another has solved nothing at the architectural level. Build configuration-driven cryptographic primitives, maintain an up-to-date CBOM, and treat algorithm rotation as a routine operational capability.
 
-The regulatory clock is independent of Q-Day. Regulators, certification bodies, and procurement authorities are setting their own quantum deadlines, and those deadlines are binding regardless of when a cryptographically relevant quantum computer actually exists. Your board needs to understand this: PQC migration is a compliance deadline, not a future security investment that can wait.
+- Start with a cryptographic inventory before writing a line of migration code. You cannot prioritise what you cannot see. Catalogue every asymmetric operation in your estate -- SDK calls, certificates, VPN endpoints, HSMs, and third-party integrations -- before deciding where to focus first.
+
+<!-- INTERNAL_LINK: managing and rotating secrets in AWS workloads | aws-iam-security-best-practices -->
+<!-- INTERNAL_LINK: detecting and responding to security events across your AWS estate | cloud-incident-response -->
+<!-- INTERNAL_LINK: posture management tooling to surface cryptographic drift | what-is-cspm-cloud-security-posture-management -->
