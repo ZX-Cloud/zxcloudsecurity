@@ -38,10 +38,15 @@ MODEL = "claude-fable-5"
 FALLBACK_MODEL = "claude-opus-4-8"
 MAX_TOKENS = 16000
 # Two phases, not two blind retries: attempt 1 is the standard fix at effort=high;
-# attempt 2 only fires if a major finding survives attempt 1, at effort=max. A
+# attempt 2 only fires if a major finding survives attempt 1, at effort=xhigh. A
 # single-cycle run can leave real progress on the table, but two identical-strength
 # retries risk compounding edits into a regression (observed in testing) — escalating
 # only for majors, at meaningfully higher effort, avoids both failure modes.
+# effort=max was tried first but reliably returned empty responses on these
+# guides — the extra thinking budget it demands left no room in MAX_TOKENS for
+# the full rewritten document, same failure mode technical_reviewer.py hit
+# before its own token budget was raised. xhigh sits much closer to high than
+# to max on Fable 5's five-tier scale and fits the existing budget.
 MAX_FIX_ATTEMPTS = 2
 RETRY_DELAY_SECONDS = 5
 
@@ -191,6 +196,11 @@ def _call_fixer(
         if hasattr(block, "text") and block.text
     ]
     fixed = "\n".join(text_parts).strip()
+    if not fixed:
+        log.warning(
+            f"    No text in response (stop_reason={response.stop_reason}) — "
+            f"thinking likely consumed the whole token budget"
+        )
     return _strip_preamble(fixed)
 
 
@@ -232,11 +242,11 @@ def fix_guide(
             remaining_majors = [f for f in current_findings if f.get("severity") == "major"]
             if not remaining_majors:
                 break
-            effort = "max"
+            effort = "xhigh"
             result.escalated = True
             log.info(
                 f"    {len(remaining_majors)} major finding(s) remain — "
-                f"escalating to max effort ..."
+                f"escalating to xhigh effort ..."
             )
 
         result.attempts = attempt
