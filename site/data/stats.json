@@ -1,23 +1,23 @@
 {
-  "updated": "11 Jul 2026 06:06 UTC",
-  "total": 698,
+  "updated": "12 Jul 2026 06:04 UTC",
+  "total": 721,
   "severity": {
-    "critical": 82,
-    "high": 436,
+    "critical": 84,
+    "high": 457,
     "medium": 159
   },
   "categories": {
     "aws": 42,
-    "azure": 266,
+    "azure": 286,
     "gcp": 1,
-    "general": 389
+    "general": 392
   },
   "top_critical": {
-    "title": "CVE-2026-56291: Balbooa Forms RCE via File Upload",
-    "summary": "A critical vulnerability in Balbooa Forms allows unauthenticated attackers to upload executable files to affected servers, leading to full remote code execution (RCE). The flaw requires no login or pr",
-    "architects_take": "Identify any internet-facing deployments of Balbooa Forms within your environment or those of managed tenants and apply vendor patches immediately \u2014 the CISA remediation deadline is 13 July 2026. If patching cannot be completed promptly, restrict public access to the forms endpoint via WAF rules or network controls and implement file upload scanning to block executable content.",
-    "slug": "balbooa-forms-unrestricted-file-upload-rce-cve-2026-56291",
-    "source": "CISA Known Exploited Vulnerabilities",
+    "title": "Critical Zimbra XSS Flaw Allows Code Execution via Email",
+    "summary": "A critical stored cross-site scripting (XSS) vulnerability in Zimbra's Classic Web Client allows attackers to embed malicious scripts inside specially crafted emails, which then execute within the vic",
+    "architects_take": "If your organisation runs Zimbra on-premises or in a self-managed cloud environment, apply the vendor's patch immediately and audit whether the Classic Web Client is exposed to external senders. Consider enforcing Content Security Policy (CSP) headers and restricting HTML email rendering as interim mitigations if patching cannot happen immediately.",
+    "slug": "zimbra-critical-stored-xss-malicious-email-code-execution",
+    "source": "The Hacker News",
     "category": "general"
   }
 }
