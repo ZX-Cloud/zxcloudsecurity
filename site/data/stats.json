@@ -1,23 +1,16 @@
 {
-  "updated": "12 Jul 2026 06:04 UTC",
-  "total": 721,
+  "updated": "13 Jul 2026 06:01 UTC",
+  "total": 726,
   "severity": {
     "critical": 84,
-    "high": 457,
-    "medium": 159
+    "high": 461,
+    "medium": 160
   },
   "categories": {
     "aws": 42,
-    "azure": 286,
+    "azure": 291,
     "gcp": 1,
     "general": 392
   },
-  "top_critical": {
-    "title": "Critical Zimbra XSS Flaw Allows Code Execution via Email",
-    "summary": "A critical stored cross-site scripting (XSS) vulnerability in Zimbra's Classic Web Client allows attackers to embed malicious scripts inside specially crafted emails, which then execute within the vic",
-    "architects_take": "If your organisation runs Zimbra on-premises or in a self-managed cloud environment, apply the vendor's patch immediately and audit whether the Classic Web Client is exposed to external senders. Consider enforcing Content Security Policy (CSP) headers and restricting HTML email rendering as interim mitigations if patching cannot happen immediately.",
-    "slug": "zimbra-critical-stored-xss-malicious-email-code-execution",
-    "source": "The Hacker News",
-    "category": "general"
-  }
+  "top_critical": null
 }
