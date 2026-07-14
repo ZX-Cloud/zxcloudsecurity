@@ -34,19 +34,15 @@ from technical_reviewer import review_guide
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
 
-MODEL = "claude-fable-5"
-FALLBACK_MODEL = "claude-opus-4-8"
+MODEL = "claude-sonnet-5"
 MAX_TOKENS = 16000
-# Two phases, not two blind retries: attempt 1 is the standard fix at effort=high;
-# attempt 2 only fires if a major finding survives attempt 1, at effort=xhigh. A
-# single-cycle run can leave real progress on the table, but two identical-strength
-# retries risk compounding edits into a regression (observed in testing) — escalating
-# only for majors, at meaningfully higher effort, avoids both failure modes.
-# effort=max was tried first but reliably returned empty responses on these
-# guides — the extra thinking budget it demands left no room in MAX_TOKENS for
-# the full rewritten document, same failure mode technical_reviewer.py hit
-# before its own token budget was raised. xhigh sits much closer to high than
-# to max on Fable 5's five-tier scale and fits the existing budget.
+# Two phases, not two blind retries: attempt 1 is the standard fix at effort=low
+# (cheap, and enough for most fixes); attempt 2 only fires if a major finding
+# survives attempt 1, at effort=high — a real step up, still far cheaper than
+# Fable 5 at any effort, reserved for the cases that actually need it. Two
+# identical-strength retries risk compounding edits into a regression (observed
+# in testing with Fable 5), which is why escalation is conditional on a major
+# surviving rather than an automatic second pass.
 MAX_FIX_ATTEMPTS = 2
 RETRY_DELAY_SECONDS = 5
 
@@ -172,16 +168,14 @@ class FixResult:
 
 
 def _call_fixer(
-    client: anthropic.Anthropic, content: str, findings: list, effort: str = "high"
+    client: anthropic.Anthropic, content: str, findings: list, effort: str = "low"
 ) -> str:
     """One fixer API call. Returns extracted, preamble-stripped text (may be empty)."""
     user_prompt = _build_fixer_user_prompt(content, findings)
-    response = client.beta.messages.create(
+    response = client.messages.create(
         model=MODEL,
         max_tokens=MAX_TOKENS,
         system=FIXER_SYSTEM_PROMPT,
-        betas=["server-side-fallback-2026-06-01"],
-        fallbacks=[{"model": FALLBACK_MODEL}],
         output_config={"effort": effort},
         tools=[{"type": "web_search_20260209", "name": "web_search"}],
         messages=[{"role": "user", "content": user_prompt}],
@@ -237,16 +231,16 @@ def fix_guide(
             break
 
         if attempt == 1:
-            effort = "high"
+            effort = "low"
         else:
             remaining_majors = [f for f in current_findings if f.get("severity") == "major"]
             if not remaining_majors:
                 break
-            effort = "xhigh"
+            effort = "high"
             result.escalated = True
             log.info(
                 f"    {len(remaining_majors)} major finding(s) remain — "
-                f"escalating to xhigh effort ..."
+                f"escalating to high effort ..."
             )
 
         result.attempts = attempt
