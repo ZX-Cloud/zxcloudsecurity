@@ -36,13 +36,11 @@ log = logging.getLogger(__name__)
 
 MODEL = "claude-sonnet-5"
 MAX_TOKENS = 16000
-# Two phases, not two blind retries: attempt 1 is the standard fix at effort=low
-# (cheap, and enough for most fixes); attempt 2 only fires if a major finding
-# survives attempt 1, at effort=high — a real step up, still far cheaper than
-# Fable 5 at any effort, reserved for the cases that actually need it. Two
-# identical-strength retries risk compounding edits into a regression (observed
-# in testing with Fable 5), which is why escalation is conditional on a major
-# surviving rather than an automatic second pass.
+# Both attempts run at effort=low for now (cost-monitoring period) — attempt 2
+# still only fires if a major finding survives attempt 1, so it's a conditional
+# retry rather than a blind one, but it's no longer a strength escalation.
+# Revisit effort=high for attempt 2 if low/low turns out to leave too many
+# guides rejected over the next few days of monitoring.
 MAX_FIX_ATTEMPTS = 2
 RETRY_DELAY_SECONDS = 5
 
@@ -230,17 +228,15 @@ def fix_guide(
         if not current_findings:
             break
 
-        if attempt == 1:
-            effort = "low"
-        else:
+        effort = "low"
+        if attempt > 1:
             remaining_majors = [f for f in current_findings if f.get("severity") == "major"]
             if not remaining_majors:
                 break
-            effort = "high"
             result.escalated = True
             log.info(
                 f"    {len(remaining_majors)} major finding(s) remain — "
-                f"escalating to high effort ..."
+                f"retrying at low effort ..."
             )
 
         result.attempts = attempt
