@@ -1,16 +1,23 @@
 {
-  "updated": "13 Jul 2026 06:01 UTC",
-  "total": 726,
+  "updated": "14 Jul 2026 06:04 UTC",
+  "total": 742,
   "severity": {
-    "critical": 84,
-    "high": 461,
-    "medium": 160
+    "critical": 87,
+    "high": 471,
+    "medium": 163
   },
   "categories": {
     "aws": 42,
-    "azure": 291,
+    "azure": 293,
     "gcp": 1,
-    "general": 392
+    "general": 406
   },
-  "top_critical": null
+  "top_critical": {
+    "title": "CVE-2008-4128: Cisco IOS CSRF Exploit Alert",
+    "summary": "A vulnerability in Cisco IOS 12.4 allows remote attackers to perform cross-site request forgery (CSRF) attacks, tricking authenticated users into executing arbitrary commands on the router via special",
+    "architects_take": "Audit your estate for any Cisco IOS 12.4 devices \u2014 particularly those with HTTP/HTTPS management interfaces exposed \u2014 and disable the web-based management interface immediately where not required. Apply available patches or upgrade IOS versions, and enforce network-level controls to restrict management plane access to trusted IP ranges only.",
+    "slug": "cisco-ios-csrf-remote-command-execution-cve-2008-4128",
+    "source": "CISA Known Exploited Vulnerabilities",
+    "category": "general"
+  }
 }
