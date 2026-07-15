@@ -1,23 +1,23 @@
 {
-  "updated": "14 Jul 2026 06:04 UTC",
-  "total": 742,
+  "updated": "15 Jul 2026 06:08 UTC",
+  "total": 781,
   "severity": {
-    "critical": 87,
-    "high": 471,
-    "medium": 163
+    "critical": 94,
+    "high": 496,
+    "medium": 170
   },
   "categories": {
-    "aws": 42,
-    "azure": 293,
+    "aws": 45,
+    "azure": 313,
     "gcp": 1,
-    "general": 406
+    "general": 422
   },
   "top_critical": {
-    "title": "CVE-2008-4128: Cisco IOS CSRF Exploit Alert",
-    "summary": "A vulnerability in Cisco IOS 12.4 allows remote attackers to perform cross-site request forgery (CSRF) attacks, tricking authenticated users into executing arbitrary commands on the router via special",
-    "architects_take": "Audit your estate for any Cisco IOS 12.4 devices \u2014 particularly those with HTTP/HTTPS management interfaces exposed \u2014 and disable the web-based management interface immediately where not required. Apply available patches or upgrade IOS versions, and enforce network-level controls to restrict management plane access to trusted IP ranges only.",
-    "slug": "cisco-ios-csrf-remote-command-execution-cve-2008-4128",
-    "source": "CISA Known Exploited Vulnerabilities",
+    "title": "Joomla Extensions CVSSv3 10.0 Flaws Exploited in Wild",
+    "summary": "Attackers are actively exploiting critical vulnerabilities (CVSS 10.0) in two popular Joomla extensions \u2014 iCagenda and Balbooa Forms \u2014 to compromise websites running the open-source CMS. Joomla powers",
+    "architects_take": "If your organisation hosts or manages any Joomla-based sites, audit installed extensions immediately and apply patches for iCagenda and Balbooa Forms without delay. Where immediate patching isn't possible, use a web application firewall (WAF) to block exploit attempts and consider temporarily disabling the affected extensions until remediation is confirmed.",
+    "slug": "joomla-icagenda-balbooa-forms-critical-cvss10-exploitation",
+    "source": "The Register \u2014 Security",
     "category": "general"
   }
 }
