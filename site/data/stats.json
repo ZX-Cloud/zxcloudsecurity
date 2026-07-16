@@ -1,23 +1,23 @@
 {
-  "updated": "15 Jul 2026 06:08 UTC",
-  "total": 781,
+  "updated": "16 Jul 2026 06:06 UTC",
+  "total": 810,
   "severity": {
-    "critical": 94,
-    "high": 496,
-    "medium": 170
+    "critical": 98,
+    "high": 516,
+    "medium": 175
   },
   "categories": {
-    "aws": 45,
-    "azure": 313,
+    "aws": 47,
+    "azure": 329,
     "gcp": 1,
-    "general": 422
+    "general": 433
   },
   "top_critical": {
-    "title": "Joomla Extensions CVSSv3 10.0 Flaws Exploited in Wild",
-    "summary": "Attackers are actively exploiting critical vulnerabilities (CVSS 10.0) in two popular Joomla extensions \u2014 iCagenda and Balbooa Forms \u2014 to compromise websites running the open-source CMS. Joomla powers",
-    "architects_take": "If your organisation hosts or manages any Joomla-based sites, audit installed extensions immediately and apply patches for iCagenda and Balbooa Forms without delay. Where immediate patching isn't possible, use a web application firewall (WAF) to block exploit attempts and consider temporarily disabling the affected extensions until remediation is confirmed.",
-    "slug": "joomla-icagenda-balbooa-forms-critical-cvss10-exploitation",
-    "source": "The Register \u2014 Security",
+    "title": "CVE-2026-46817: Oracle E-Business Suite Payments Flaw",
+    "summary": "A critical vulnerability in Oracle E-Business Suite allows an unauthenticated attacker with network access over HTTP to fully compromise Oracle Payments, potentially taking complete control of the pay",
+    "architects_take": "Immediately restrict network access to Oracle E-Business Suite HTTP endpoints at the perimeter and WAF level, prioritising isolation of the Oracle Payments module. Apply Oracle's patch before the CISA remediation deadline of 18 July 2026, and audit access logs for any anomalous unauthenticated HTTP activity against the Payments component.",
+    "slug": "oracle-e-business-suite-payments-privilege-escalation-cve-2026-46817",
+    "source": "CISA Known Exploited Vulnerabilities",
     "category": "general"
   }
 }
