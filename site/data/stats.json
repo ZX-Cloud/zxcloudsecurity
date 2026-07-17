@@ -1,22 +1,22 @@
 {
-  "updated": "16 Jul 2026 06:06 UTC",
-  "total": 810,
+  "updated": "17 Jul 2026 06:07 UTC",
+  "total": 848,
   "severity": {
-    "critical": 98,
-    "high": 516,
-    "medium": 175
+    "critical": 103,
+    "high": 544,
+    "medium": 180
   },
   "categories": {
-    "aws": 47,
-    "azure": 329,
+    "aws": 49,
+    "azure": 342,
     "gcp": 1,
-    "general": 433
+    "general": 456
   },
   "top_critical": {
-    "title": "CVE-2026-46817: Oracle E-Business Suite Payments Flaw",
-    "summary": "A critical vulnerability in Oracle E-Business Suite allows an unauthenticated attacker with network access over HTTP to fully compromise Oracle Payments, potentially taking complete control of the pay",
-    "architects_take": "Immediately restrict network access to Oracle E-Business Suite HTTP endpoints at the perimeter and WAF level, prioritising isolation of the Oracle Payments module. Apply Oracle's patch before the CISA remediation deadline of 18 July 2026, and audit access logs for any anomalous unauthenticated HTTP activity against the Payments component.",
-    "slug": "oracle-e-business-suite-payments-privilege-escalation-cve-2026-46817",
+    "title": "CVE-2026-58644: Microsoft SharePoint RCE Flaw",
+    "summary": "A critical vulnerability in Microsoft SharePoint allows attackers to execute arbitrary code remotely by exploiting unsafe handling of untrusted data during deserialization. This flaw requires no authe",
+    "architects_take": "Prioritise applying Microsoft's patch before the CISA remediation deadline of 19 July 2026; in the interim, restrict network access to SharePoint instances at the perimeter and review audit logs for anomalous deserialization activity or unexpected process spawning from SharePoint worker processes.",
+    "slug": "microsoft-sharepoint-rce-deserialization-cve-2026-58644",
     "source": "CISA Known Exploited Vulnerabilities",
     "category": "general"
   }
