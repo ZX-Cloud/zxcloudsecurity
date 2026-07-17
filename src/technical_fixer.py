@@ -36,11 +36,11 @@ log = logging.getLogger(__name__)
 
 MODEL = "claude-sonnet-5"
 MAX_TOKENS = 16000
-# Both attempts run at effort=low for now (cost-monitoring period) — attempt 2
-# still only fires if a major finding survives attempt 1, so it's a conditional
-# retry rather than a blind one, but it's no longer a strength escalation.
-# Revisit effort=high for attempt 2 if low/low turns out to leave too many
-# guides rejected over the next few days of monitoring.
+# Both attempts run at effort=high — low/low was tried first but rejected
+# every guide in its first real run (Majors survived both attempts on all 3
+# guides, so nothing published that day). Attempt 2 still only fires if a
+# major finding survives attempt 1, so it remains a conditional retry rather
+# than a blind one.
 MAX_FIX_ATTEMPTS = 2
 RETRY_DELAY_SECONDS = 5
 
@@ -166,7 +166,7 @@ class FixResult:
 
 
 def _call_fixer(
-    client: anthropic.Anthropic, content: str, findings: list, effort: str = "low"
+    client: anthropic.Anthropic, content: str, findings: list, effort: str = "high"
 ) -> str:
     """One fixer API call. Returns extracted, preamble-stripped text (may be empty)."""
     user_prompt = _build_fixer_user_prompt(content, findings)
@@ -228,7 +228,7 @@ def fix_guide(
         if not current_findings:
             break
 
-        effort = "low"
+        effort = "high"
         if attempt > 1:
             remaining_majors = [f for f in current_findings if f.get("severity") == "major"]
             if not remaining_majors:
@@ -236,7 +236,7 @@ def fix_guide(
             result.escalated = True
             log.info(
                 f"    {len(remaining_majors)} major finding(s) remain — "
-                f"retrying at low effort ..."
+                f"retrying at high effort ..."
             )
 
         result.attempts = attempt
