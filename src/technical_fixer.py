@@ -273,7 +273,20 @@ def fix_guide(
 
         # Verify the fix actually worked before trusting it
         log.info("    Re-reviewing to verify fix ...")
-        verify_review = review_guide(client, fixed)
+        try:
+            verify_review = review_guide(client, fixed)
+        except anthropic.RateLimitError as e:
+            log.warning(f"    Attempt {attempt}: verification rate limited — waiting 30s: {e}")
+            time.sleep(30)
+            continue
+        except anthropic.APIStatusError as e:
+            log.error(f"    Attempt {attempt}: verification failed — {e.status_code}: {e.message}")
+            result.error = f"Verification failed: {e.status_code} {e.message}"
+            break
+        except Exception as e:
+            log.error(f"    Attempt {attempt}: verification failed unexpectedly: {e}")
+            result.error = f"Verification failed: {e}"
+            break
 
         # Save regardless — even a partial fix is progress, and the re-review
         # tells us exactly what (if anything) still needs attention
@@ -364,9 +377,23 @@ def run(quality_report_path: str = "quality_report.json") -> list:
             ))
             continue
 
-        result, updated_review = fix_guide(
-            client, draft_path, title, guide.get("technical_review", {})
-        )
+        try:
+            result, updated_review = fix_guide(
+                client, draft_path, title, guide.get("technical_review", {})
+            )
+        except Exception as e:
+            # A crash on one guide must never take the whole run down — that
+            # would skip the "Publish drafts and email digest" step entirely,
+            # silently losing the digest for every guide, not just this one.
+            log.error(f"    Unexpected error fixing this guide, skipping it: {e}")
+            results.append(FixResult(
+                slug=draft_path.stem,
+                title=title,
+                error=f"Unexpected error: {e}",
+            ))
+            if i < len(candidates):
+                time.sleep(3)
+            continue
         results.append(result)
 
         guide["technical_review"] = updated_review
