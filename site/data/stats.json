@@ -1,23 +1,16 @@
 {
-  "updated": "18 Jul 2026 06:07 UTC",
-  "total": 884,
+  "updated": "19 Jul 2026 06:02 UTC",
+  "total": 888,
   "severity": {
     "critical": 106,
-    "high": 574,
+    "high": 578,
     "medium": 183
   },
   "categories": {
     "aws": 51,
-    "azure": 362,
+    "azure": 366,
     "gcp": 1,
     "general": 470
   },
-  "top_critical": {
-    "title": "CVE-2026-58644: SharePoint RCE Zero-Day Added to CISA KEV",
-    "summary": "A critical zero-day vulnerability (CVE-2026-58644, CVSS 9.8) in Microsoft SharePoint Server allows remote code execution via a deserialization flaw and is already being actively exploited in the wild.",
-    "architects_take": "Prioritise patching all on-premises and hybrid SharePoint Server deployments immediately \u2014 do not wait for your standard patching cycle. If SharePoint is internet-facing, consider placing it behind a WAF or restricting access whilst the patch is applied, and review logs for signs of deserialization-based exploitation.",
-    "slug": "cisa-kev-sharepoint-rce-zero-day-cve-2026-58644",
-    "source": "The Hacker News",
-    "category": "general"
-  }
+  "top_critical": null
 }
