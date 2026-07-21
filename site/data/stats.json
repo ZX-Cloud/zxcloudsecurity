@@ -1,23 +1,23 @@
 {
-  "updated": "20 Jul 2026 06:02 UTC",
-  "total": 894,
+  "updated": "21 Jul 2026 06:05 UTC",
+  "total": 920,
   "severity": {
-    "critical": 108,
-    "high": 582,
-    "medium": 183
+    "critical": 110,
+    "high": 598,
+    "medium": 191
   },
   "categories": {
     "aws": 51,
-    "azure": 366,
+    "azure": 377,
     "gcp": 1,
-    "general": 476
+    "general": 491
   },
   "top_critical": {
-    "title": "SonicWall SMA 1000 Zero-Days Exploited for Root Access",
-    "summary": "A previously unknown threat actor, tracked as UTA0533, exploited zero-day vulnerabilities in SonicWall SMA 1000 series VPN appliances to gain root-level access before the flaws were publicly disclosed",
-    "architects_take": "If you operate SonicWall SMA 1000 series appliances, apply the relevant patches immediately and treat any unpatched devices as potentially compromised \u2014 initiate forensic review of logs from 22 June 2026 onwards. Consider temporarily restricting or replacing VPN access with zero-trust alternatives whilst remediation is under way.",
-    "slug": "sonicwall-sma-1000-zero-day-exploited-root-access-uta0533",
-    "source": "The Hacker News",
+    "title": "Critical WordPress Vulnerability Exploited in the Wild",
+    "summary": "A critical vulnerability in WordPress is being actively exploited in the wild, with attackers leveraging it to cause a range of malicious outcomes including site takeovers and malware injection. Dozen",
+    "architects_take": "Audit all WordPress deployments across your cloud estate immediately and apply the relevant patch or mitigation \u2014 prioritise internet-facing instances and those handling sensitive data. Consider deploying a Web Application Firewall (WAF) rule to virtual-patch the vulnerability whilst remediation is scheduled, and review whether your vulnerability management pipeline has visibility into CMS-layer risks, not just OS and container layers.",
+    "slug": "critical-wordpress-vulnerability-actively-exploited-poc-public",
+    "source": "The Register \u2014 Security",
     "category": "general"
   }
 }
