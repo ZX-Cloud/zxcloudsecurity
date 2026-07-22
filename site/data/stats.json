@@ -1,23 +1,23 @@
 {
-  "updated": "21 Jul 2026 06:05 UTC",
-  "total": 920,
+  "updated": "22 Jul 2026 06:07 UTC",
+  "total": 958,
   "severity": {
-    "critical": 110,
-    "high": 598,
-    "medium": 191
+    "critical": 120,
+    "high": 614,
+    "medium": 203
   },
   "categories": {
-    "aws": 51,
-    "azure": 377,
+    "aws": 53,
+    "azure": 392,
     "gcp": 1,
-    "general": 491
+    "general": 512
   },
   "top_critical": {
-    "title": "Critical WordPress Vulnerability Exploited in the Wild",
-    "summary": "A critical vulnerability in WordPress is being actively exploited in the wild, with attackers leveraging it to cause a range of malicious outcomes including site takeovers and malware injection. Dozen",
-    "architects_take": "Audit all WordPress deployments across your cloud estate immediately and apply the relevant patch or mitigation \u2014 prioritise internet-facing instances and those handling sensitive data. Consider deploying a Web Application Firewall (WAF) rule to virtual-patch the vulnerability whilst remediation is scheduled, and review whether your vulnerability management pipeline has visibility into CMS-layer risks, not just OS and container layers.",
-    "slug": "critical-wordpress-vulnerability-actively-exploited-poc-public",
-    "source": "The Register \u2014 Security",
+    "title": "CVE-2026-60137: WordPress Core SQL Injection & RCE",
+    "summary": "A SQL injection vulnerability in WordPress Core allows malicious input passed by a plugin or theme to compromise the database layer. When chained with CVE-2026-63030, an unauthenticated attacker can a",
+    "architects_take": "Patch WordPress Core immediately and audit all third-party plugins and themes for untrusted input handling; consider placing WordPress instances behind a WAF with SQL injection and RCE rules enabled, and restrict outbound network access from web servers to limit post-exploitation blast radius.",
+    "slug": "wordpress-core-sql-injection-rce-cve-2026-60137-cve-2026-63030",
+    "source": "CISA Known Exploited Vulnerabilities",
     "category": "general"
   }
 }
