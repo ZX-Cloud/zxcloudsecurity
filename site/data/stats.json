@@ -1,22 +1,22 @@
 {
-  "updated": "22 Jul 2026 06:07 UTC",
-  "total": 958,
+  "updated": "23 Jul 2026 06:07 UTC",
+  "total": 992,
   "severity": {
-    "critical": 120,
-    "high": 614,
-    "medium": 203
+    "critical": 123,
+    "high": 638,
+    "medium": 210
   },
   "categories": {
-    "aws": 53,
-    "azure": 392,
+    "aws": 54,
+    "azure": 408,
     "gcp": 1,
-    "general": 512
+    "general": 529
   },
   "top_critical": {
-    "title": "CVE-2026-60137: WordPress Core SQL Injection & RCE",
-    "summary": "A SQL injection vulnerability in WordPress Core allows malicious input passed by a plugin or theme to compromise the database layer. When chained with CVE-2026-63030, an unauthenticated attacker can a",
-    "architects_take": "Patch WordPress Core immediately and audit all third-party plugins and themes for untrusted input handling; consider placing WordPress instances behind a WAF with SQL injection and RCE rules enabled, and restrict outbound network access from web servers to limit post-exploitation blast radius.",
-    "slug": "wordpress-core-sql-injection-rce-cve-2026-60137-cve-2026-63030",
+    "title": "CVE-2026-16232: Check Point SmartConsole Auth Bypass",
+    "summary": "A critical authentication vulnerability in Check Point SmartConsole allows an unauthenticated remote attacker to steal a login token and gain full administrative access to the network security managem",
+    "architects_take": "Patch SmartConsole immediately ahead of the 25 July 2026 CISA deadline, and in the interim restrict access to the SmartConsole management interface to trusted IP ranges only, ideally via a dedicated management VLAN or VPN \u2014 exposure of the management plane to the internet should be treated as an emergency. Audit recent SmartConsole authentication logs for unexpected token usage or unfamiliar admin sessions.",
+    "slug": "cve-2026-16232-check-point-smartconsole-authentication-bypass",
     "source": "CISA Known Exploited Vulnerabilities",
     "category": "general"
   }
