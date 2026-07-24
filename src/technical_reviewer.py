@@ -8,9 +8,11 @@ inaccuracies quality_checker.py cannot catch: wrong AWS/Azure/GCP service
 names or API calls, malformed IAM policy JSON, fabricated or outdated CVE
 references, and factually incorrect security claims.
 
-Uses Claude Sonnet 5 at medium effort rather than Haiku — accuracy matters
-more than cost here, and guide volume is low enough (a handful per day) that
-the extra spend is immaterial in absolute terms.
+Uses Claude Haiku 4.5 for cost — moved off Sonnet 5 after per-guide API spend
+became a concern. Note: output_config.effort is not supported on Haiku 4.5
+(errors if set), so this call omits it entirely; Haiku 4.5 is materially
+weaker than Sonnet 5 at nuanced technical fact-checking, so watch the
+finding quality (false negatives especially) after this change.
 
 Reads/writes: quality_report.json (adds a "technical_review" field per guide)
 """
@@ -24,9 +26,7 @@ import anthropic
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
 
-MODEL = "claude-sonnet-5"
-# Sonnet 5 runs adaptive thinking by default (thinking tokens count against
-# max_tokens), so keep the same generous budget the Fable 5 version needed.
+MODEL = "claude-haiku-4-5"
 MAX_TOKENS = 16000
 
 SYSTEM_PROMPT = """You are a senior cloud security engineer performing a technical accuracy \
@@ -71,10 +71,7 @@ def review_guide(client: anthropic.Anthropic, content: str) -> dict:
         model=MODEL,
         max_tokens=MAX_TOKENS,
         system=SYSTEM_PROMPT,
-        output_config={
-            "effort": "medium",
-            "format": {"type": "json_schema", "schema": OUTPUT_SCHEMA},
-        },
+        output_config={"format": {"type": "json_schema", "schema": OUTPUT_SCHEMA}},
         messages=[{"role": "user", "content": f"Review this guide:\n\n{content}"}],
     )
 
