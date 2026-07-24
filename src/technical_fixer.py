@@ -174,7 +174,10 @@ def _call_fixer(client: anthropic.Anthropic, content: str, findings: list) -> st
         model=MODEL,
         max_tokens=MAX_TOKENS,
         system=FIXER_SYSTEM_PROMPT,
-        tools=[{"type": "web_search_20260209", "name": "web_search"}],
+        # web_search_20260209's dynamic filtering runs via programmatic tool
+        # calling, which Haiku 4.5 doesn't support — the API 400s on it. The
+        # basic variant works fine and is what older/smaller models should use.
+        tools=[{"type": "web_search_20250305", "name": "web_search"}],
         messages=[{"role": "user", "content": user_prompt}],
     )
 
