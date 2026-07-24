@@ -1,23 +1,23 @@
 {
-  "updated": "23 Jul 2026 06:07 UTC",
-  "total": 992,
+  "updated": "24 Jul 2026 06:07 UTC",
+  "total": 1035,
   "severity": {
-    "critical": 123,
-    "high": 638,
-    "medium": 210
+    "critical": 130,
+    "high": 670,
+    "medium": 214
   },
   "categories": {
-    "aws": 54,
-    "azure": 408,
+    "aws": 57,
+    "azure": 427,
     "gcp": 1,
-    "general": 529
+    "general": 550
   },
   "top_critical": {
     "title": "CVE-2026-16232: Check Point SmartConsole Auth Bypass",
-    "summary": "A critical authentication vulnerability in Check Point SmartConsole allows an unauthenticated remote attacker to steal a login token and gain full administrative access to the network security managem",
-    "architects_take": "Patch SmartConsole immediately ahead of the 25 July 2026 CISA deadline, and in the interim restrict access to the SmartConsole management interface to trusted IP ranges only, ideally via a dedicated management VLAN or VPN \u2014 exposure of the management plane to the internet should be treated as an emergency. Audit recent SmartConsole authentication logs for unexpected token usage or unfamiliar admin sessions.",
-    "slug": "cve-2026-16232-check-point-smartconsole-authentication-bypass",
-    "source": "CISA Known Exploited Vulnerabilities",
+    "summary": "Check Point has patched a critical authentication bypass vulnerability (CVE-2026-16232, CVSS 9.3) in its SmartConsole management interface that is already being actively exploited in the wild. The fla",
+    "architects_take": "Apply Check Point's security updates to all Security Management and MDSM installations immediately \u2014 do not wait for a scheduled maintenance window given confirmed active exploitation. In the interim, restrict SmartConsole access to trusted management networks via firewall ACLs and review recent admin-level audit logs for any anomalous or unrecognised sessions.",
+    "slug": "check-point-smartconsole-authentication-bypass-cve-2026-16232",
+    "source": "The Hacker News",
     "category": "general"
   }
 }
