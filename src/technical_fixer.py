@@ -5,17 +5,17 @@ ZX Cloud Security — Technical Accuracy Auto-Fix
 Takes guides flagged with technical inaccuracies by technical_reviewer.py and
 asks Claude to correct them in the draft file itself, then re-reviews (reusing
 technical_reviewer.review_guide) to confirm the fix actually worked before
-moving on. If a major finding is still unresolved after the fix attempt, the
-guide is rejected outright (outcome set to "reject") rather than published
-with a known-inaccurate claim — publisher.py's existing reject pathway then
-deletes the draft and excludes it from the digest email. Only minor findings,
-or none, ever reach Steve's inbox.
+moving on. A major finding that survives the standard fix gets one escalated
+attempt at higher effort; if a major is still unresolved after that, the guide
+is rejected outright (outcome set to "reject") rather than published with a
+known-inaccurate claim — publisher.py's existing reject pathway then deletes
+the draft and excludes it from the digest email. Only minor findings, or none,
+ever reach Steve's inbox.
 
-Moved to Haiku 4.5 for cost. output_config.effort errors on Haiku 4.5, so
-there's no way to escalate a second attempt at higher effort — a second,
-identical-strength retry was already found (in testing with Fable 5) to risk
-compounding edits into a regression rather than helping, so MAX_FIX_ATTEMPTS
-is 1 for now: one fix attempt, one verification, reject if a major survives.
+The stages are split by cost/capability need: technical_reviewer.py (the
+review/classification call) runs on Haiku 4.5 — cheap, and a real run on
+Haiku 4.5 here (rejecting nothing was fixed) showed that fixing genuinely
+needs more capability than reviewing does, so this stage stays on Sonnet 5.
 
 Must run after technical_reviewer.py and before publisher.py.
 
@@ -39,11 +39,17 @@ from technical_reviewer import review_guide
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
 
-MODEL = "claude-haiku-4-5"
+MODEL = "claude-sonnet-5"
 MAX_TOKENS = 16000
-# No effort tiering available on Haiku 4.5 (see module docstring), so this is
-# a single fix-then-verify pass, not an escalation ladder.
-MAX_FIX_ATTEMPTS = 1
+# Two phases, not two blind retries: attempt 1 is the standard fix at
+# effort=high; attempt 2 only fires if a major finding survives attempt 1, at
+# effort=xhigh. Two identical-strength retries risk compounding edits into a
+# regression (observed in testing) — escalating only for majors, at
+# meaningfully higher effort, avoids both failure modes. effort=max was tried
+# first but reliably returned empty responses (the extra thinking budget it
+# demands left no room in MAX_TOKENS for the full rewritten document); xhigh
+# sits much closer to high than to max and fits the existing budget.
+MAX_FIX_ATTEMPTS = 2
 RETRY_DELAY_SECONDS = 5
 
 FIXER_SYSTEM_PROMPT = """You are a senior cloud security editor fixing factual errors in a \
@@ -167,17 +173,17 @@ class FixResult:
     fixed_at: str = ""
 
 
-def _call_fixer(client: anthropic.Anthropic, content: str, findings: list) -> str:
+def _call_fixer(
+    client: anthropic.Anthropic, content: str, findings: list, effort: str = "high"
+) -> str:
     """One fixer API call. Returns extracted, preamble-stripped text (may be empty)."""
     user_prompt = _build_fixer_user_prompt(content, findings)
     response = client.messages.create(
         model=MODEL,
         max_tokens=MAX_TOKENS,
         system=FIXER_SYSTEM_PROMPT,
-        # web_search_20260209's dynamic filtering runs via programmatic tool
-        # calling, which Haiku 4.5 doesn't support — the API 400s on it. The
-        # basic variant works fine and is what older/smaller models should use.
-        tools=[{"type": "web_search_20250305", "name": "web_search"}],
+        output_config={"effort": effort},
+        tools=[{"type": "web_search_20260209", "name": "web_search"}],
         messages=[{"role": "user", "content": user_prompt}],
     )
 
@@ -230,14 +236,26 @@ def fix_guide(
         if not current_findings:
             break
 
+        effort = "high"
+        if attempt > 1:
+            remaining_majors = [f for f in current_findings if f.get("severity") == "major"]
+            if not remaining_majors:
+                break
+            effort = "xhigh"
+            result.escalated = True
+            log.info(
+                f"    {len(remaining_majors)} major finding(s) remain — "
+                f"escalating to xhigh effort ..."
+            )
+
         result.attempts = attempt
         log.info(
-            f"    Fix attempt {attempt}/{MAX_FIX_ATTEMPTS} — "
+            f"    Fix attempt {attempt}/{MAX_FIX_ATTEMPTS} (effort={effort}) — "
             f"{len(current_findings)} finding(s) ..."
         )
 
         try:
-            fixed = _call_fixer(client, content, current_findings)
+            fixed = _call_fixer(client, content, current_findings, effort=effort)
         except anthropic.RateLimitError as e:
             log.warning(f"    Attempt {attempt}: rate limited — waiting 30s: {e}")
             time.sleep(30)
