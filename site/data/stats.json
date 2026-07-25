@@ -1,22 +1,22 @@
 {
-  "updated": "24 Jul 2026 06:07 UTC",
-  "total": 1035,
+  "updated": "25 Jul 2026 06:05 UTC",
+  "total": 1053,
   "severity": {
-    "critical": 130,
-    "high": 670,
-    "medium": 214
+    "critical": 133,
+    "high": 683,
+    "medium": 216
   },
   "categories": {
     "aws": 57,
-    "azure": 427,
+    "azure": 434,
     "gcp": 1,
-    "general": 550
+    "general": 561
   },
   "top_critical": {
-    "title": "CVE-2026-16232: Check Point SmartConsole Auth Bypass",
-    "summary": "Check Point has patched a critical authentication bypass vulnerability (CVE-2026-16232, CVSS 9.3) in its SmartConsole management interface that is already being actively exploited in the wild. The fla",
-    "architects_take": "Apply Check Point's security updates to all Security Management and MDSM installations immediately \u2014 do not wait for a scheduled maintenance window given confirmed active exploitation. In the interim, restrict SmartConsole access to trusted management networks via firewall ACLs and review recent admin-level audit logs for any anomalous or unrecognised sessions.",
-    "slug": "check-point-smartconsole-authentication-bypass-cve-2026-16232",
+    "title": "Bing Images RCE: CVE-2026-32194 SVG Flaw Explained",
+    "summary": "A maliciously crafted SVG file uploaded to Bing Image Search triggered remote code execution on Microsoft's production image-processing infrastructure, granting attackers SYSTEM-level privileges on Wi",
+    "architects_take": "Review any internal or third-party image-processing pipelines that parse SVG files, and ensure they run in isolated, least-privilege sandboxes with no access to production infrastructure \u2014 SVG parsing is a well-known attack surface for SSRF and RCE. If your organisation uses Bing Image APIs or similar cloud-hosted image services, monitor Microsoft's patch guidance and apply updates immediately once available.",
+    "slug": "bing-images-svg-rce-cve-2026-32194-system-privilege-escalation",
     "source": "The Hacker News",
     "category": "general"
   }
