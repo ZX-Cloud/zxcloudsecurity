@@ -1,22 +1,22 @@
 {
-  "updated": "25 Jul 2026 06:05 UTC",
-  "total": 1053,
+  "updated": "26 Jul 2026 06:03 UTC",
+  "total": 1061,
   "severity": {
-    "critical": 133,
-    "high": 683,
-    "medium": 216
+    "critical": 136,
+    "high": 687,
+    "medium": 217
   },
   "categories": {
     "aws": 57,
     "azure": 434,
     "gcp": 1,
-    "general": 561
+    "general": 569
   },
   "top_critical": {
-    "title": "Bing Images RCE: CVE-2026-32194 SVG Flaw Explained",
-    "summary": "A maliciously crafted SVG file uploaded to Bing Image Search triggered remote code execution on Microsoft's production image-processing infrastructure, granting attackers SYSTEM-level privileges on Wi",
-    "architects_take": "Review any internal or third-party image-processing pipelines that parse SVG files, and ensure they run in isolated, least-privilege sandboxes with no access to production infrastructure \u2014 SVG parsing is a well-known attack surface for SSRF and RCE. If your organisation uses Bing Image APIs or similar cloud-hosted image services, monitor Microsoft's patch guidance and apply updates immediately once available.",
-    "slug": "bing-images-svg-rce-cve-2026-32194-system-privilege-escalation",
+    "title": "Cl0p Exploiting PTC Windchill & FlexPLM RCE Flaws",
+    "summary": "Affiliates of the Cl0p ransomware group are actively exploiting vulnerabilities in PTC Windchill and FlexPLM, two widely used product lifecycle management platforms. Attackers chain a pre-authenticati",
+    "architects_take": "Immediately audit your environment for internet-exposed PTC Windchill or FlexPLM instances and take them off the public internet or place them behind a VPN or zero-trust access gateway. Apply all available vendor patches without delay and review ingress firewall rules and WAF policies to block exploitation attempts at the perimeter while patching is in progress.",
+    "slug": "cl0p-ptc-windchill-flexplm-unauthenticated-rce-exploitation",
     "source": "The Hacker News",
     "category": "general"
   }
