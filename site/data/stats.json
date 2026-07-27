@@ -1,5 +1,5 @@
 {
-  "updated": "26 Jul 2026 06:03 UTC",
+  "updated": "27 Jul 2026 06:01 UTC",
   "total": 1061,
   "severity": {
     "critical": 136,
@@ -12,12 +12,5 @@
     "gcp": 1,
     "general": 569
   },
-  "top_critical": {
-    "title": "Cl0p Exploiting PTC Windchill & FlexPLM RCE Flaws",
-    "summary": "Affiliates of the Cl0p ransomware group are actively exploiting vulnerabilities in PTC Windchill and FlexPLM, two widely used product lifecycle management platforms. Attackers chain a pre-authenticati",
-    "architects_take": "Immediately audit your environment for internet-exposed PTC Windchill or FlexPLM instances and take them off the public internet or place them behind a VPN or zero-trust access gateway. Apply all available vendor patches without delay and review ingress firewall rules and WAF policies to block exploitation attempts at the perimeter while patching is in progress.",
-    "slug": "cl0p-ptc-windchill-flexplm-unauthenticated-rce-exploitation",
-    "source": "The Hacker News",
-    "category": "general"
-  }
+  "top_critical": null
 }
