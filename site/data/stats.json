@@ -1,16 +1,23 @@
 {
-  "updated": "27 Jul 2026 06:01 UTC",
-  "total": 1061,
+  "updated": "28 Jul 2026 06:05 UTC",
+  "total": 1085,
   "severity": {
-    "critical": 136,
-    "high": 687,
-    "medium": 217
+    "critical": 140,
+    "high": 701,
+    "medium": 223
   },
   "categories": {
-    "aws": 57,
-    "azure": 434,
+    "aws": 58,
+    "azure": 442,
     "gcp": 1,
-    "general": 569
+    "general": 584
   },
-  "top_critical": null
+  "top_critical": {
+    "title": "CVE-2025-68686: Fortinet FortiOS Patch Bypass Flaw",
+    "summary": "A vulnerability in Fortinet FortiOS allows remote unauthenticated attackers to bypass a previously issued patch designed to address a symbolic link persistence mechanism used in post-exploitation scen",
+    "architects_take": "If FortiOS devices are part of your network perimeter or cloud connectivity stack, apply Fortinet's latest patch immediately and audit for indicators of compromise at the filesystem level. Additionally, review SSL-VPN exposure and consider restricting management interfaces to trusted IP ranges to reduce the initial attack surface.",
+    "slug": "cve-2025-68686-fortinet-fortios-patch-bypass-symlink-persistence",
+    "source": "CISA Known Exploited Vulnerabilities",
+    "category": "general"
+  }
 }
