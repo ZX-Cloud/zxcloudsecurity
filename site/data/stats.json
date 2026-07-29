@@ -1,23 +1,23 @@
 {
-  "updated": "28 Jul 2026 06:05 UTC",
-  "total": 1085,
+  "updated": "29 Jul 2026 06:06 UTC",
+  "total": 1107,
   "severity": {
-    "critical": 140,
-    "high": 701,
-    "medium": 223
+    "critical": 145,
+    "high": 714,
+    "medium": 227
   },
   "categories": {
     "aws": 58,
-    "azure": 442,
+    "azure": 448,
     "gcp": 1,
-    "general": 584
+    "general": 600
   },
   "top_critical": {
-    "title": "CVE-2025-68686: Fortinet FortiOS Patch Bypass Flaw",
-    "summary": "A vulnerability in Fortinet FortiOS allows remote unauthenticated attackers to bypass a previously issued patch designed to address a symbolic link persistence mechanism used in post-exploitation scen",
-    "architects_take": "If FortiOS devices are part of your network perimeter or cloud connectivity stack, apply Fortinet's latest patch immediately and audit for indicators of compromise at the filesystem level. Additionally, review SSL-VPN exposure and consider restricting management interfaces to trusted IP ranges to reduce the initial attack surface.",
-    "slug": "cve-2025-68686-fortinet-fortios-patch-bypass-symlink-persistence",
-    "source": "CISA Known Exploited Vulnerabilities",
+    "title": "CVE-2026-63077: Critical TeamCity RCE Flaw",
+    "summary": "A critical vulnerability (CVE-2026-63077, CVSS 9.8) in JetBrains TeamCity On-Premises allows unauthenticated attackers to execute arbitrary operating system commands. All on-premises versions are affe",
+    "architects_take": "Patch all TeamCity On-Premises instances to version 2025.11.7 or 2026.1.3 immediately \u2014 unauthenticated RCE on a CI/CD platform represents a critical supply chain exposure. If patching is not immediately possible, restrict network access to TeamCity servers to trusted IP ranges and audit recent build logs for signs of unauthorised command execution.",
+    "slug": "jetbrains-teamcity-unauthenticated-rce-cve-2026-63077",
+    "source": "The Hacker News",
     "category": "general"
   }
 }
