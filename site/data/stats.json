@@ -1,23 +1,23 @@
 {
-  "updated": "30 Jul 2026 06:06 UTC",
-  "total": 1130,
+  "updated": "31 Jul 2026 06:05 UTC",
+  "total": 1151,
   "severity": {
-    "critical": 152,
-    "high": 724,
-    "medium": 230
+    "critical": 155,
+    "high": 737,
+    "medium": 235
   },
   "categories": {
     "aws": 60,
-    "azure": 448,
+    "azure": 453,
     "gcp": 1,
-    "general": 621
+    "general": 637
   },
   "top_critical": {
-    "title": "CVE-2026-20316: Cisco FMC Hard-Coded Password Flaw",
-    "summary": "Cisco Secure Firewall Management Center (FMC) contains a hard-coded password that allows an unauthenticated remote attacker to log in using a low-privileged account. This type of vulnerability is part",
-    "architects_take": "Patch affected Cisco FMC instances immediately and verify that management interfaces are not exposed to the internet or untrusted networks \u2014 place FMC behind a dedicated management VPC or bastion with strict network ACLs. Audit access logs for any unexpected low-privileged account activity as a potential indicator of prior compromise.",
-    "slug": "cisco-fmc-hard-coded-password-cve-2026-20316",
-    "source": "CISA Known Exploited Vulnerabilities",
+    "title": "North Korea Hijacked npm debug & chalk Packages",
+    "summary": "North Korean threat actor Sapphire Sleet has been attributed by Amazon to the September 2025 hijacking of the widely used npm packages debug and chalk, which together account for over 2 billion weekly",
+    "architects_take": "Audit your dependency trees immediately for any packages that pulled updates to debug or chalk between September 2025 and the point of remediation, and review build pipeline artefact integrity. Enforce npm provenance attestation and consider pinning critical transitive dependencies to verified digests rather than version ranges.",
+    "slug": "north-korea-sapphire-sleet-npm-debug-chalk-hijack-supply-chain",
+    "source": "The Hacker News",
     "category": "general"
   }
 }
