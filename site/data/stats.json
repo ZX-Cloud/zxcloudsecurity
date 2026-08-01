@@ -1,23 +1,23 @@
 {
-  "updated": "31 Jul 2026 06:05 UTC",
-  "total": 1151,
+  "updated": "01 Aug 2026 06:05 UTC",
+  "total": 1166,
   "severity": {
-    "critical": 155,
-    "high": 737,
-    "medium": 235
+    "critical": 156,
+    "high": 747,
+    "medium": 239
   },
   "categories": {
-    "aws": 60,
+    "aws": 65,
     "azure": 453,
     "gcp": 1,
-    "general": 637
+    "general": 647
   },
   "top_critical": {
-    "title": "North Korea Hijacked npm debug & chalk Packages",
-    "summary": "North Korean threat actor Sapphire Sleet has been attributed by Amazon to the September 2025 hijacking of the widely used npm packages debug and chalk, which together account for over 2 billion weekly",
-    "architects_take": "Audit your dependency trees immediately for any packages that pulled updates to debug or chalk between September 2025 and the point of remediation, and review build pipeline artefact integrity. Enforce npm provenance attestation and consider pinning critical transitive dependencies to verified digests rather than version ranges.",
-    "slug": "north-korea-sapphire-sleet-npm-debug-chalk-hijack-supply-chain",
-    "source": "The Hacker News",
-    "category": "general"
+    "title": "CVE-2026-18420: RCE in OpenSearch Dashboards TSVB",
+    "summary": "A remote code execution vulnerability has been identified in the TSVB (Time Series Visual Builder) plugin within OpenSearch Dashboards, tracked as CVE-2026-18420. The flaw stems from prototype polluti",
+    "architects_take": "Review your Amazon OpenSearch Service domains immediately to determine whether OpenSearch Dashboards is publicly exposed or accessible to untrusted users, and apply any AWS-issued patches or version updates referenced in the full bulletin. As an interim control, consider restricting network access to Dashboards endpoints using resource-based policies, VPC configurations, or IP allowlisting until patched versions are confirmed in your environment.",
+    "slug": "aws-opensearch-dashboards-rce-prototype-pollution-cve-2026-18420",
+    "source": "AWS Security Bulletins",
+    "category": "aws"
   }
 }
