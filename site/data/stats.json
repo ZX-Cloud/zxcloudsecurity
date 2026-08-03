@@ -1,5 +1,5 @@
 {
-  "updated": "02 Aug 2026 06:04 UTC",
+  "updated": "03 Aug 2026 06:01 UTC",
   "total": 1173,
   "severity": {
     "critical": 158,
@@ -12,12 +12,5 @@
     "gcp": 1,
     "general": 654
   },
-  "top_critical": {
-    "title": "Adobe Campaign Classic CVE-2026-48449 CVSS 10.0 RCE Flaw",
-    "summary": "Adobe has patched a maximum-severity (CVSS 10.0) vulnerability in Campaign Classic, its enterprise marketing automation platform, tracked as CVE-2026-48449. The flaw stems from incorrect authorisation",
-    "architects_take": "Prioritise emergency patching of all Adobe Campaign Classic instances immediately \u2014 CVSS 10.0 with no user interaction required means this is highly exploitable at scale. If patching cannot be done instantly, consider isolating ACC servers from public-facing networks and restricting inbound access to trusted IP ranges whilst the patch is applied.",
-    "slug": "adobe-campaign-classic-cve-2026-48449-cvss-10-rce-flaw",
-    "source": "The Hacker News",
-    "category": "general"
-  }
+  "top_critical": null
 }
