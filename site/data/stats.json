@@ -1,22 +1,22 @@
 {
-  "updated": "04 Aug 2026 06:05 UTC",
-  "total": 1196,
+  "updated": "05 Aug 2026 06:06 UTC",
+  "total": 1216,
   "severity": {
-    "critical": 162,
-    "high": 768,
-    "medium": 242
+    "critical": 168,
+    "high": 780,
+    "medium": 244
   },
   "categories": {
-    "aws": 68,
+    "aws": 70,
     "azure": 455,
     "gcp": 1,
-    "general": 672
+    "general": 690
   },
   "top_critical": {
-    "title": "CVE-2026-18577: N-able N-central Auth Bypass",
-    "summary": "A critical authentication bypass vulnerability in N-able N-central allows attackers to circumvent login controls and take over accounts without valid credentials. This flaw is particularly concerning ",
-    "architects_take": "Prioritise patching N-central immediately ahead of the 6 August 2026 CISA remediation deadline, and audit all N-central administrator accounts for signs of unauthorised access or privilege changes. Given the MSP supply-chain risk, also notify any downstream clients managed via the platform and consider restricting N-central's management interface to trusted IP ranges until patching is confirmed.",
-    "slug": "n-able-ncentral-authentication-bypass-cve-2026-18577",
+    "title": "CVE-2026-18556: N-able N-central Auth Bypass",
+    "summary": "A critical authentication bypass vulnerability has been identified in N-able N-central, a widely used remote monitoring and management (RMM) platform. Attackers can circumvent authentication controls ",
+    "architects_take": "If N-able N-central is deployed in your environment, prioritise patching immediately ahead of the 7 August 2026 deadline and review access logs for signs of unauthorised authentication attempts. Consider isolating N-central management infrastructure behind a VPN or zero-trust access control until the patch is applied, given the platform's privileged access to managed endpoints.",
+    "slug": "cve-2026-18556-n-able-n-central-authentication-bypass",
     "source": "CISA Known Exploited Vulnerabilities",
     "category": "general"
   }
