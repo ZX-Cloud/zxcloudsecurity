@@ -1,23 +1,23 @@
 {
-  "updated": "06 Aug 2026 06:06 UTC",
-  "total": 1240,
+  "updated": "07 Aug 2026 06:08 UTC",
+  "total": 1280,
   "severity": {
-    "critical": 174,
-    "high": 797,
-    "medium": 245
+    "critical": 181,
+    "high": 824,
+    "medium": 251
   },
   "categories": {
-    "aws": 72,
-    "azure": 455,
+    "aws": 75,
+    "azure": 475,
     "gcp": 1,
-    "general": 712
+    "general": 729
   },
   "top_critical": {
-    "title": "CVE-2026-63077: JetBrains TeamCity RCE Flaw",
-    "summary": "A critical vulnerability in JetBrains TeamCity allows unauthenticated attackers to execute arbitrary code remotely by exploiting unsafe deserialisation in the agent polling protocol. Because TeamCity ",
-    "architects_take": "Patch affected TeamCity instances immediately and, if patching cannot be completed at once, restrict network access to the agent polling port to trusted build agents only \u2014 ideally via security group or firewall rules. Audit recent build logs and pipeline configurations for signs of tampering or unexpected artefact modifications.",
-    "slug": "jetbrains-teamcity-rce-deserialization-cve-2026-63077",
-    "source": "CISA Known Exploited Vulnerabilities",
+    "title": "Zbtlink Routers Ship With Root Shell Backdoor",
+    "summary": "At least 20 router models from Chinese manufacturer Zbtlink have been found to ship with a pre-installed backdoor that grants unauthenticated root-level access. The backdoor is present across all 21 f",
+    "architects_take": "Audit your network inventory immediately for any Zbtlink router models and treat them as fully compromised; isolate or replace affected devices and do not attempt to remediate via firmware update alone, as the implant is factory-shipped. If these devices are used in any network segment with cloud connectivity, review access logs for unexpected outbound traffic and rotate any credentials that may have been exposed.",
+    "slug": "zbtlink-routers-factory-backdoor-unauthenticated-root-shell",
+    "source": "The Hacker News",
     "category": "general"
   }
 }
