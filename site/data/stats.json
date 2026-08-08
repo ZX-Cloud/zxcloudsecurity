@@ -1,22 +1,22 @@
 {
-  "updated": "07 Aug 2026 06:08 UTC",
-  "total": 1280,
+  "updated": "08 Aug 2026 06:08 UTC",
+  "total": 1316,
   "severity": {
-    "critical": 181,
-    "high": 824,
-    "medium": 251
+    "critical": 183,
+    "high": 851,
+    "medium": 258
   },
   "categories": {
-    "aws": 75,
-    "azure": 475,
+    "aws": 76,
+    "azure": 492,
     "gcp": 1,
-    "general": 729
+    "general": 747
   },
   "top_critical": {
-    "title": "Zbtlink Routers Ship With Root Shell Backdoor",
-    "summary": "At least 20 router models from Chinese manufacturer Zbtlink have been found to ship with a pre-installed backdoor that grants unauthenticated root-level access. The backdoor is present across all 21 f",
-    "architects_take": "Audit your network inventory immediately for any Zbtlink router models and treat them as fully compromised; isolate or replace affected devices and do not attempt to remediate via firmware update alone, as the implant is factory-shipped. If these devices are used in any network segment with cloud connectivity, review access logs for unexpected outbound traffic and rotate any credentials that may have been exposed.",
-    "slug": "zbtlink-routers-factory-backdoor-unauthenticated-root-shell",
+    "title": "WordPress CVE-2026-64638: Pre-Auth XSS to PHP RCE",
+    "summary": "A pre-authentication reflected XSS vulnerability (CVE-2026-64638, CVSS 8.9) has been discovered in the WordPress login screen, affecting all versions of the CMS. Researchers at pwn.ai demonstrated tha",
+    "architects_take": "Prioritise patching all WordPress instances immediately \u2014 particularly those hosted on cloud infrastructure or serving as entry points to wider environments. In the interim, consider deploying a WAF rule to block reflected XSS payloads targeting the WordPress login endpoint, and restrict wp-login.php access by IP where operationally feasible.",
+    "slug": "wordpress-pre-auth-xss-php-code-execution-cve-2026-64638",
     "source": "The Hacker News",
     "category": "general"
   }
