@@ -1,22 +1,22 @@
 {
-  "updated": "08 Aug 2026 06:08 UTC",
-  "total": 1316,
+  "updated": "09 Aug 2026 06:03 UTC",
+  "total": 1325,
   "severity": {
-    "critical": 183,
-    "high": 851,
-    "medium": 258
+    "critical": 186,
+    "high": 855,
+    "medium": 260
   },
   "categories": {
     "aws": 76,
-    "azure": 492,
+    "azure": 494,
     "gcp": 1,
-    "general": 747
+    "general": 754
   },
   "top_critical": {
-    "title": "WordPress CVE-2026-64638: Pre-Auth XSS to PHP RCE",
-    "summary": "A pre-authentication reflected XSS vulnerability (CVE-2026-64638, CVSS 8.9) has been discovered in the WordPress login screen, affecting all versions of the CMS. Researchers at pwn.ai demonstrated tha",
-    "architects_take": "Prioritise patching all WordPress instances immediately \u2014 particularly those hosted on cloud infrastructure or serving as entry points to wider environments. In the interim, consider deploying a WAF rule to block reflected XSS payloads targeting the WordPress login endpoint, and restrict wp-login.php access by IP where operationally feasible.",
-    "slug": "wordpress-pre-auth-xss-php-code-execution-cve-2026-64638",
+    "title": "CVE-2026-8037: Kemp LoadMaster Flaw Added to CISA KEV",
+    "summary": "A critical command injection vulnerability (CVE-2026-8037, CVSS 9.6) in Progress Kemp LoadMaster has been added to CISA's Known Exploited Vulnerabilities catalogue following nearly 800 confirmed explo",
+    "architects_take": "Patch Progress Kemp LoadMaster immediately if deployed in your environment, and audit internet-facing instances for signs of compromise \u2014 prioritise any LoadMaster nodes sitting at the perimeter or in front of critical workloads. If patching cannot be applied immediately, restrict management interface access to trusted IP ranges and review firewall rules to limit exposure.",
+    "slug": "progress-kemp-loadmaster-command-injection-cve-2026-8037-cisa-kev",
     "source": "The Hacker News",
     "category": "general"
   }
