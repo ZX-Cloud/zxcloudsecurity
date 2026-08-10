@@ -1,23 +1,23 @@
 {
-  "updated": "09 Aug 2026 06:03 UTC",
-  "total": 1325,
+  "updated": "10 Aug 2026 06:04 UTC",
+  "total": 1347,
   "severity": {
-    "critical": 186,
-    "high": 855,
-    "medium": 260
+    "critical": 188,
+    "high": 868,
+    "medium": 267
   },
   "categories": {
     "aws": 76,
-    "azure": 494,
+    "azure": 514,
     "gcp": 1,
-    "general": 754
+    "general": 756
   },
   "top_critical": {
-    "title": "CVE-2026-8037: Kemp LoadMaster Flaw Added to CISA KEV",
-    "summary": "A critical command injection vulnerability (CVE-2026-8037, CVSS 9.6) in Progress Kemp LoadMaster has been added to CISA's Known Exploited Vulnerabilities catalogue following nearly 800 confirmed explo",
-    "architects_take": "Patch Progress Kemp LoadMaster immediately if deployed in your environment, and audit internet-facing instances for signs of compromise \u2014 prioritise any LoadMaster nodes sitting at the perimeter or in front of critical workloads. If patching cannot be applied immediately, restrict management interface access to trusted IP ranges and review firewall rules to limit exposure.",
-    "slug": "progress-kemp-loadmaster-command-injection-cve-2026-8037-cisa-kev",
-    "source": "The Hacker News",
-    "category": "general"
+    "title": "CVE-2026-64676: Kata Containers Confidential VM Memory Tampe",
+    "summary": "CVE-2026-64676 is a vulnerability in Kata Containers where unauthorised access to mem-agent ttRPC methods allows an untrusted host to tamper with the memory of a confidential guest workload. This unde",
+    "architects_take": "Audit any Azure confidential computing deployments using Kata Containers and apply vendor patches immediately; until patched, review whether workloads requiring strong confidentiality guarantees should be temporarily migrated or isolated, and restrict host-level access to ttRPC endpoints as a compensating control.",
+    "slug": "cve-2026-64676-kata-containers-confidential-guest-memory-tampering",
+    "source": "Microsoft Security Response Center",
+    "category": "azure"
   }
 }
