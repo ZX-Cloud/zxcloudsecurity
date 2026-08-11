@@ -1,22 +1,22 @@
 {
-  "updated": "10 Aug 2026 06:04 UTC",
-  "total": 1347,
+  "updated": "11 Aug 2026 06:06 UTC",
+  "total": 1377,
   "severity": {
-    "critical": 188,
-    "high": 868,
-    "medium": 267
+    "critical": 189,
+    "high": 885,
+    "medium": 279
   },
   "categories": {
     "aws": 76,
-    "azure": 514,
+    "azure": 529,
     "gcp": 1,
-    "general": 756
+    "general": 771
   },
   "top_critical": {
-    "title": "CVE-2026-64676: Kata Containers Confidential VM Memory Tampe",
-    "summary": "CVE-2026-64676 is a vulnerability in Kata Containers where unauthorised access to mem-agent ttRPC methods allows an untrusted host to tamper with the memory of a confidential guest workload. This unde",
-    "architects_take": "Audit any Azure confidential computing deployments using Kata Containers and apply vendor patches immediately; until patched, review whether workloads requiring strong confidentiality guarantees should be temporarily migrated or isolated, and restrict host-level access to ttRPC endpoints as a compensating control.",
-    "slug": "cve-2026-64676-kata-containers-confidential-guest-memory-tampering",
+    "title": "CVE-2021-34474: Dynamics 365 Business Central RCE",
+    "summary": "CVE-2021-34474 is a remote code execution vulnerability in Microsoft Dynamics 365 Business Central, a cloud-based ERP platform. This update revises the affected build numbers but introduces no new pat",
+    "architects_take": "Verify that your Dynamics 365 Business Central deployments are running the corrected build numbers listed in the updated advisory, and ensure the original July 2021 patches have been applied. If Business Central is internet-facing or integrated with other Azure services, prioritise confirmation of patch status given the remote code execution impact.",
+    "slug": "cve-2021-34474-dynamics-365-business-central-rce",
     "source": "Microsoft Security Response Center",
     "category": "azure"
   }
