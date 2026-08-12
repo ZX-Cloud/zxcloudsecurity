@@ -1,64 +1,74 @@
 ---
 title: "AWS IAM Best Practices: A Practitioner's Guide for 2026"
-date: 2026-08-01
-description: "A technical guide to AWS IAM best practices covering least privilege, SCPs, MFA, workload identity, and the updated IAM Policy Simulator."
-tags: ["aws", "iam", "cloud-security", "identity-access-management", "least-privilege"]
+date: 2026-08-12
+description: "A technical deep-dive into AWS IAM best practices covering least privilege, SCPs, OIDC federation, Access Analyzer, and AI workload identity."
+tags: ["aws-iam", "cloud-security", "identity-access-management", "least-privilege", "aws-organisations"]
 slug: "aws-iam-best-practices"
 author: "Steve Harrison & AI - Principal Security Architect"
-word_count: 2116
+word_count: 2072
 draft: false
 ---
 
 # AWS IAM best practices: a practitioner's guide for 2026
 
-Identity and Access Management is where most AWS breaches start. Most cloud security incidents trace back to the customer side: identity misuse, misconfiguration, exposed workloads. If you are responsible for securing an AWS environment, whether for an FCA-regulated financial firm, a UK public sector body, or a SaaS scale-up, getting IAM right is the highest-leverage investment you can make in your security posture.
+Identity is the perimeter now. Not metaphorically. Almost every meaningful cloud breach traces back to misconfigured permissions or compromised credentials, not infrastructure-level vulnerabilities. If you are responsible for an AWS environment and you are not actively working through your IAM posture, this guide is for you. It covers the controls that matter in production, the trade-offs you will actually face, and two AWS capabilities from mid-2026 that are quietly changing how teams approach IAM governance for AI workloads and data platforms.
 
-IAM answers two questions: who can access your cloud environment, and what can they do once they are in. Get it wrong and a single compromised credential can cascade into a full account takeover.
-
-This guide covers the controls that matter, the tooling that has matured significantly in mid-2026, and the mistakes I keep seeing teams make in production.
-
-<!-- INTERNAL_LINK: AWS IAM Identity Centre overview | aws-iam-identity-centre -->
-<!-- INTERNAL_LINK: AWS Well-Architected Security pillar | aws-well-architected-security -->
+<!-- INTERNAL_LINK: cloud identity and access management overview | cloud-identity-and-access-management -->
 
 ---
 
-## Principle 1: Lock down the root account first
+## Why IAM discipline is non-negotiable in 2026
 
-Before touching anything else, address root. The root account has unrestricted access to all AWS resources, billing, and account closure. It bypasses all IAM policies and SCPs. A compromised root account is a total account takeover.
+The AWS shared responsibility model places identity, configuration, and workload protection squarely on customers. Misconfiguration and permission creep drive most incidents, and that line in the shared responsibility model is also a regulatory one. From an FCA and GDPR perspective, if your IAM posture is weak, the regulator's view is that you failed, not AWS.
 
-The practical steps are straightforward:
+The NCSC's position is equally unambiguous. The NCSC's 14 Cloud Security Principles form the basis of UK cloud security guidance and help organisations assess whether cloud services meet their security requirements. Principle 9, Identity and Authentication, maps directly to your IAM configuration choices.
 
-- Delete all root access keys immediately. Root should never have programmatic access.
-- Enable hardware MFA (FIDO2/passkey). AWS now recommends phishing-resistant passkeys over TOTP for root.
-- Use root only for the handful of tasks that genuinely require it: account closure, certain AWS Support plan changes, and a small number of billing actions.
+The CIS AWS Foundations Benchmark v3.0.0 covers 60+ security controls across IAM, storage, logging, monitoring, and networking. AWS Security Hub now also supports the CIS AWS Foundations Benchmark v5.0, which includes 40 controls performing automated checks against AWS resources.
 
-The NCSC recommends phishing-resistant MFA (FIDO2 security keys or passkeys) for administrative access. That aligns directly with what AWS is pushing natively, so there is no longer a reason to settle for TOTP apps on privileged accounts. CIS Benchmark v5.0 says the same thing explicitly.
+Between the NCSC principles, the CIS benchmark, and AWS's own security documentation, there is no shortage of authoritative guidance. The problem is consistent execution at scale.
 
 ---
 
-## Principle 2: Eliminate long-lived credentials
+## Least privilege: the foundation you keep skipping
 
-This is the position I take into every architecture review. IAM users rely on long-lived credentials, passwords and access keys, that never automatically expire and are easily leaked.
+Least privilege is the most cited, least implemented control in AWS environments. Every team agrees with it in principle; almost no team enforces it rigorously in practice.
 
-The migration path is IAM Identity Center for humans, IAM Roles Anywhere for on-prem workloads, and OIDC federation for CI/CD. There is no good reason for an IAM user with a static access key in 2026.
+The practical approach I recommend for teams at scale is to start with IAM Access Analyzer. It identifies unused access across your organisation and accounts, validates IAM policies against policy grammar and AWS best practices, and can generate IAM policies based on actual access activity recorded in CloudTrail logs. That last capability matters: you can replace over-broad policies with ones derived from real usage rather than guesswork.
 
-Enforce this at the organisational level with an SCP that prevents anyone from creating new access keys:
+That said, be clear-eyed about what the tool does and does not do. Access Analyzer surfaces unused roles, keys, passwords, and permissions. It does not remove them. Remediation still falls to your security team, and that gap between detection and action is where most organisations stall. You need a human, or an automation with real teeth, to act on the findings.
+
+### Separation of duties
+
+Critical actions should not be controlled by a single identity. The person deploying infrastructure should not be the same person approving security policies. In AWS terms, that means distinct roles for pipeline execution, security administration, and break-glass access. A single `DevOps` role with `AdministratorAccess` doing all three is a risk, not a convenience.
+
+<!-- INTERNAL_LINK: devsecops shift-left security and IAM policy validation | devsecops-shift-left-security -->
+
+---
+
+## Roles over users: no exceptions
+
+Long-lived IAM user credentials are a liability. The rule in 2026 is straightforward: if it is a workload on AWS, use an instance, task, or execution role. If it is CI/CD, use OIDC federation. IAM users exist only for the small number of cases where neither option is possible.
+
+### OIDC federation for CI/CD
+
+OIDC federation lets external identity providers such as GitHub Actions, GitLab CI, or CircleCI exchange short-lived OIDC tokens for temporary AWS credentials. This eliminates the need to store `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` as secrets in your CI/CD system. It also gives you better auditability and fine-grained access control. This is not a nice-to-have for production pipelines.
+
+The trust policy below scopes an OIDC role so that only your specific repository's `main` branch can assume it:
 
 ```json
 {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "DenyIAMUserAndKeyCreation",
-      "Effect": "Deny",
-      "Action": [
-        "iam:CreateUser",
-        "iam:CreateAccessKey"
-      ],
-      "Resource": "*",
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
-        "StringNotEquals": {
-          "aws:PrincipalTag/BreakGlassRole": "true"
+        "StringEquals": {
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+          "token.actions.githubusercontent.com:sub": "repo:my-org/my-repo:ref:refs/heads/main"
         }
       }
     }
@@ -66,152 +76,109 @@ Enforce this at the organisational level with an SCP that prevents anyone from c
 }
 ```
 
-Apply this SCP to all non-management OUs. It forces the conversation and blocks the easy path of handing out access keys. The condition allows a narrow break-glass exemption without punching a hole in the control for everyone.
-
-<!-- INTERNAL_LINK: Shared Responsibility Model | shared-responsibility-model-cloud-security -->
-
-For workloads, IAM roles for EC2, Lambda, and automation mean services assume permissions using temporary credentials rather than long-term keys. Less credential sprawl, smaller blast radius.
+Define trust policies to allow role assumption only from specific repositories and branches. This ensures only approved workflows can authenticate with AWS. Create separate IAM roles for development, staging, and production environments, each with different trust policies and permissions. Your production role might trust only the `main` branch, while development roles trust feature branches.
 
 ---
 
-## Principle 3: Enforce least privilege, and use tooling to get there
+## Service control policies: your organisational guardrails
 
-Least privilege is not a state you arrive at. It is a continuous process. As environments scale, access expands faster than it gets reviewed. Excess privilege accumulates quietly.
+SCPs are the most powerful preventive control available in multi-account AWS environments, and most organisations underuse them. Applied at the organisation root or to specific Organisational Units, they define a permission boundary for every IAM principal in an account. An explicit `Deny` in an SCP overrides any `Allow` in an IAM policy, making them the backstop for enforcing compliance and security baselines.
 
-The practical answer is IAM Access Analyzer. It provides access analysis, policy checks, and policy generation, and it is the mechanism that takes least privilege from an aspiration to something you can actually measure and enforce.
+In September 2025, AWS Organisations extended SCPs with full IAM policy language support, adding `Conditions`, individual resource ARNs, and `NotAction` to Allow statements as well as Deny. That opens up controls that were previously awkward to implement: restricting access to specific AWS regions, preventing deletion of shared administrative roles, and defining exceptions for specific administrator roles while restricting everyone else.
 
-The policy generation feature is the one teams consistently underuse. Access Analyzer examines CloudTrail logs over a specified time window, identifies which AWS services and actions a role or user actually called, and produces a policy template based on that activity for you to review and refine.
+A useful companion to SCPs is the Resource Control Policy type, a distinct AWS Organisations policy introduced by AWS in November 2024. RCPs handle resource-side governance that SCPs cannot fully address; coverage is limited to a specific and expanding list of AWS services, which at launch included S3, STS, KMS, Secrets Manager, and SQS. An RCP can enforce that an S3 bucket may only be accessed by principals from within your organisation, regardless of how the bucket's own resource policy is configured. SCPs cannot enforce that boundary on the resource itself because they only act on principals.
 
-A worked CLI example, generating a least-privilege policy from real CloudTrail activity for an application role:
+The following SCP denies root account usage across all member accounts. It is a baseline every AWS Organisation should have in place:
 
-```bash
-# Step 1: Start policy generation job based on actual CloudTrail activity
-aws accessanalyzer start-policy-generation \
-  --policy-generation-details '{
-    "principalArn": "arn:aws:iam::123456789012:role/MyAppRole"
-  }' \
-  --cloud-trail-details '{
-    "trails": [{
-      "cloudTrailArn": "arn:aws:cloudtrail:eu-west-2:123456789012:trail/management-trail",
-      "regions": ["eu-west-2"],
-      "allRegions": false
-    }],
-    "accessRole": "arn:aws:iam::123456789012:role/AccessAnalyzerRole",
-    "startTime": "2026-06-01T00:00:00Z",
-    "endTime": "2026-07-31T00:00:00Z"
-  }'
-
-# Step 2: Poll for completion (status: IN_PROGRESS → SUCCEEDED)
-aws accessanalyzer get-generated-policy \
-  --job-id "<job-id-from-previous-step>" \
-  --query 'jobDetails.status'
-
-# Step 3: Retrieve and review the generated policy
-aws accessanalyzer get-generated-policy \
-  --job-id "<job-id-from-previous-step>"
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyRootAccountUsage",
+      "Effect": "Deny",
+      "Action": "*",
+      "Resource": "*",
+      "Condition": {
+        "StringLike": {
+          "aws:PrincipalArn": "arn:aws:iam::*:root"
+        }
+      }
+    }
+  ]
+}
 ```
 
-It gives you a solid starting point grounded in real usage data rather than guesswork. Run it quarterly at minimum.
+The root user bypasses all IAM policies and has unrestricted access to all resources, billing information, and account closure. This SCP prevents accidental or malicious use of root credentials and enforces the use of IAM roles with proper audit trails and scoped permissions.
 
-For CI/CD pipelines and Terraform workflows, `iamlive`, a third-party open-source tool maintained by the community rather than an AWS-managed service, is a useful complement. It runs as a local proxy, captures the actual AWS API calls your application makes, and generates a minimum policy. It is the right tool when Access Analyzer's policy generation is too coarse for your workload.
-
-<!-- INTERNAL_LINK: DevSecOps shift-left security | devsecops-shift-left-security -->
+<!-- INTERNAL_LINK: AWS Well-Architected Security pillar and multi-account governance | aws-well-architected-security -->
 
 ---
 
-## Principle 4: Use SCPs as guardrails, not permissions
+## IAM and AI workloads: a new governance dimension
 
-SCPs and IAM policies serve different purposes. SCPs set the maximum permissions for accounts in your AWS Organisation. They do not grant access; they define the boundary of what IAM policies can grant. They are a ceiling, not a floor. Teams that write SCP Allows expecting them to grant access are building a false sense of security.
+As Bedrock usage scales across enterprise AWS estates, a new IAM governance challenge emerges: how do you attribute and control AI inference costs and access by identity?
 
-In September 2025, AWS significantly expanded the IAM policy language supported in SCPs, adding conditions in Allow statements, individual resource ARNs, the NotAction element with Allow statements, wildcards at the start or middle of Action element strings, and the NotResource element. That is a substantial expansion, and it enables much more precise guardrails than were previously possible, though it is not complete parity with IAM policies. Some elements, including certain uses of Principal, remain unsupported in SCPs, so it is worth checking the current documentation before assuming an IAM policy construct will carry over unchanged.
+Until recently, answering "which team or application is driving Bedrock spend?" required manual reconciliation, correlating CloudTrail logs with billing data to map API calls back to specific identities. That process is slow, error-prone, and difficult to maintain at scale.
 
-A practical minimum SCP baseline for a production OU should cover:
+Amazon Bedrock now supports cost allocation by IAM principal, covering IAM users and IAM roles, in AWS Cost and Usage Report 2.0 and Cost Explorer. You can tag IAM users and roles with attributes such as team, project, or cost centre, activate them as cost allocation tags, and analyse Bedrock model inference costs by those tags in Cost Explorer or at line-item level in CUR 2.0. IAM principal tags appear in billing with the `iamPrincipal/` prefix to avoid collision with resource tags.
 
-- Deny leaving the AWS Organisation
-- Deny root account usage
-- Deny creation of IAM users and access keys (as shown above)
-- Region restriction to approved regions (relevant for UK data residency and FCA/GDPR requirements)
-- Deny disabling CloudTrail
+The security implication is as significant as the FinOps one. You now have a native, attribution-grade audit trail linking every Bedrock inference call to a specific IAM identity, without custom logging pipelines. Pair this with IAM Access Analyzer and GuardDuty to detect over-privileged AI service roles. That risk is growing. According to Teleport's 2026 Infrastructure Identity Survey, 70% of organisations grant AI systems more access than they would give a human employee performing the same job.
 
-<!-- INTERNAL_LINK: AWS Security Hub guide | aws-security-hub-guide -->
+<!-- INTERNAL_LINK: securing AI agents on cloud infrastructure | securing-ai-agents-cloud-infrastructure -->
 
----
-
-## Principle 5: Use permission boundaries to delegate safely
-
-This is the IAM feature most teams either ignore or implement incorrectly. Permission boundaries let you safely give developers `iam:CreateRole` without handing them effective admin access to the entire account.
-
-Without them, you have a privilege escalation path that has contributed to real incidents. The pattern goes like this: a user with `iam:CreateRole` and `iam:AttachRolePolicy` creates a new role, attaches the AWS-managed `AdministratorAccess` policy, assumes that role, and is now an admin. It is not subtle once you see it, but it catches teams out regularly.
-
-Permission boundaries work by restricting the effective permissions of a principal to the intersection of its identity-based policies and the boundary, whichever is more restrictive. Enforce the boundary at creation time by requiring it as a condition on the `iam:CreateRole` action.
+Also worth noting for data platform teams: when working in the AWS Glue console, you now have one-click access to open SageMaker Unified Studio using the same IAM role. For Glue console customers who have not yet set up SageMaker Unified Studio, a new inline permissions panel helps you create and configure the required IAM policies directly within the setup workflow. Convenient, but review those inline-generated policies carefully. Inline policy generation tools produce permissive starting points; they do not enforce least privilege on your behalf.
 
 <!-- INTERNAL_LINK: AWS KMS key management best practices | aws-kms-key-management-best-practices -->
 
 ---
 
-## Principle 6: Workload identity, IRSA, Pod Identity, and beyond
+## Common IAM pitfalls in production environments
 
-For containerised workloads, the no-static-credentials principle extends to Kubernetes. In the early days of EKS, if pods needed to access AWS services like S3 or DynamoDB, you attached IAM policies to the node's instance profile. Every pod on that node got the same permissions. That is a serious problem at any meaningful scale.
+I see these mistakes repeatedly across client environments. They are all easy to fall into.
 
-IAM Roles for Service Accounts (IRSA) fixes this by letting you assign specific IAM roles to individual Kubernetes service accounts. Each pod gets exactly the permissions it needs.
+1. Wildcard actions on broad resources. The pattern `"Action": "*"` combined with `"Resource": "*"` is equivalent to `AdministratorAccess` and frequently appears in developer-created inline policies that never get reviewed. Enforce custom policy checks in your CI/CD pipeline using IAM Access Analyzer's policy validation APIs.
 
-For EKS clusters, AWS also offers EKS Pod Identity as a simpler alternative. Launched at re:Invent 2023, it eliminates the need for OIDC provider setup and per-cluster trust policies. The association model maps Kubernetes service accounts to IAM roles directly through the EKS API.
+2. Inline policies that escape governance. Managed policies are visible, versioned, and auditable. Inline policies are none of those things at scale. Make managed policies the organisational standard and use SCPs to detect or prevent inline policy attachment where necessary.
 
-The trade-off is portability. IRSA works across EKS in the cloud, EKS Anywhere, self-managed Kubernetes on EC2, and ROSA. If you are running a hybrid Kubernetes setup, a pattern I see regularly in UK financial services where teams run workloads both on-prem and in AWS, IRSA with a self-hosted OIDC provider remains the right mechanism. The OIDC discovery endpoint and JWKS must be publicly reachable by AWS STS; a public S3 bucket configured for static hosting is one common way to expose them for a self-managed cluster, though any HTTPS-reachable endpoint will do. Key rotation requires updating the JWKS in lockstep; operationally, that is the primary pain point to plan for.
+3. CI/CD roles with `AdministratorAccess`. If your workflow credentials are ever compromised, a custom policy scoped to a specific bucket means an attacker can only affect that bucket, not every S3 bucket in your account. Never attach `AdministratorAccess` to a CI/CD role.
 
-For new EKS-in-cloud clusters with no portability requirement, EKS Pod Identity is the simpler path.
+4. Forgetting the `sts:AssumeRole` chain. When Role A assumes Role B which assumes Role C, the effective permissions and trust chain become difficult to reason about. IAM Access Analyzer helps you identify resources shared with external entities and unintended cross-account access. Use it to audit complex role chains.
 
-<!-- INTERNAL_LINK: Cross-cloud security services comparison | cross-cloud-security-services-comparison -->
+5. Not enforcing MFA for destructive actions. The NCSC recommends phishing-resistant MFA, specifically FIDO2 security keys or passkeys, for administrative access. A condition block requiring `aws:MultiFactorAuthPresent: "true"` on destructive IAM and billing actions is a low-effort, high-value control. The CIS AWS Foundations Benchmark is explicit on this: MFA for all IAM users with console access, and no credentials unused for 45 or more days.
 
----
+6. Treating IAM as a one-time setup. Unused roles accumulate. Developers join and leave teams. Services get decommissioned but their roles linger. Schedule quarterly IAM Access Analyzer reviews and act on the findings rather than letting them pile up.
 
-## Principle 7: Test policies before you deploy them
-
-IAM Policy Simulator has long been part of the IAM toolkit, and it has been able to test how Service Control Policies interact with identity and resource policies since late 2023. What has changed more recently is the depth of that SCP modelling and the flexibility to cover more of the scenarios that security and platform teams care about in practice.
-
-For multi-account organisations, SCP simulation is the feature most worth building into your workflow. You can test how your organisation's SCP hierarchy interacts with identity and resource policies, and through the API, test how condition keys such as region restrictions and tag requirements affect the outcome.
-
-The ability to exclude specific policies also matters. Modelling "what if I remove this policy?" is a common scenario during triage, and previously you had to do it manually. Cross-account simulations now report per-policy decisions for identity and resource-based policies, with matched statements returned for denied requests.
-
-Embed policy simulation into your CI/CD pipeline using `aws iam simulate-principal-policy` as a pre-deployment check. It gives you a safety net before any policy change reaches production.
-
-One caveat worth keeping in mind: policy simulator results can differ from your live environment. AWS recommends checking policies against your live environment after testing to confirm you are getting the results you expect.
-
-<!-- INTERNAL_LINK: Cloud incident response | cloud-incident-response -->
+<!-- INTERNAL_LINK: cloud threat detection and monitoring | cloud-threat-detection -->
 
 ---
 
-## Common pitfalls
+## Operationalising IAM: shift left and automate
 
-After fifteen years of reviewing AWS IAM configurations, these are the patterns that keep costing teams.
+IAM policy checks can run directly inside DevOps pipelines, scanning Terraform plans, GitHub and GitLab changes, and policy JSON before deployment. Unsafe permissions get blocked early, before they reach production.
 
-Using `"Resource": "*"` without conditions. Wildcarding resources is sometimes unavoidable, as List* actions often have no resource-level support, but doing it habitually on write actions is a significant blast-radius problem. Always pair resource wildcards with condition keys where available: `aws:ResourceTag`, region restrictions, or `aws:SourceAccount`.
+The toolchain for this is mature. AWS CloudFormation Guard, `cfn-policy-validator`, and IAM Access Analyzer's policy validation API can all run in a pre-merge check. If a policy contains `"Effect": "Allow"` with `"Resource": "*"` and no conditions, fail the pipeline. This is not theoretical. Several UK financial services firms I have worked with have eliminated the most common IAM misconfiguration patterns from reaching production using exactly this approach.
 
-Confusing SCP allows with granted permissions. An action must be allowed by both SCPs and IAM policies. An SCP Allow does not grant permissions; it only permits the possibility of having that permission via an IAM policy. Teams that misunderstand this end up with controls that look right on paper but do nothing.
+For ongoing monitoring, your security teams can automate notification workflows to help development teams identify and remove unused access by integrating with Amazon EventBridge. An integration with AWS Security Hub provides an aggregated view of external and unused access findings alongside your other security findings.
 
-Ignoring service-linked roles in audits. These are managed by AWS, but their permissions can still surprise you, particularly when a service updates them without notice. Audit them quarterly.
-
-Stacking inline policies. Inline policies attached directly to users or roles are invisible to policy searches and difficult to audit at scale. Everything should go through managed policies with a clear naming convention, defined in IaC (Terraform or CDK), and reviewed through version control.
-
-Letting IRSA fall back silently to the node instance profile. If the web identity lookup fails for any reason, a missing file, an expired JWT, or STS rejecting the call, the SDK falls back to IMDS and silently uses the EC2 node instance profile. This is why a broken IRSA setup often looks like "my pod works, just with the wrong permissions" rather than a loud failure. Set the IMDS hop limit to 1 on your EC2 node groups to harden against this.
-
-Skipping the credential report. AWS generates a credential report showing last-used timestamps for every IAM user and key. Running it quarterly and acting on stale credentials is basic hygiene that many teams skip entirely.
-
-<!-- INTERNAL_LINK: Cloud security vulnerability management | cloud-security-vulnerability-management -->
-<!-- INTERNAL_LINK: Cloud threat detection | cloud-threat-detection -->
+<!-- INTERNAL_LINK: devsecops and shift-left security practices | devsecops-shift-left-security -->
 
 ---
 
-## Summary
+## Key takeaways
 
-Root account is your highest-risk identity. Enable FIDO2 MFA, delete all access keys, and use it only for the tasks that genuinely require it. NCSC and CIS Benchmark v5.0 both explicitly recommend phishing-resistant authentication for privileged access.
+- Roles always, users rarely. Every workload should authenticate via an IAM role. Every CI/CD system should use OIDC federation. Long-lived access keys are a liability, not a convenience.
 
-Long-lived credentials are a solved problem. Use IAM Identity Center for humans, IAM roles for workloads, OIDC federation for CI/CD, and IAM Roles Anywhere for on-prem systems. An SCP denying `iam:CreateAccessKey` makes this non-negotiable across your organisation.
+- SCPs are your backstop. Even the most permissive account-level IAM policies cannot bypass an SCP `Deny`. Build a baseline SCP layer covering root account denial, region restriction, and CloudTrail protection, and apply it organisation-wide from day one.
 
-Least privilege requires active tooling, not good intentions. IAM Access Analyzer's policy generation feature, driven from real CloudTrail activity, is the most practical mechanism to right-size permissions at scale.
+- Access Analyzer is a visibility tool, not an enforcement mechanism. It tells you where the problems are; you still need process and automation to act on findings. Build the remediation loop, not just the detection.
 
-SCPs are guardrails, not permissions grants. An action must be allowed by both SCPs and IAM policies. In September 2025, AWS significantly expanded the IAM policy language supported in SCPs, including conditions in Allow statements and NotResource, though some elements, such as certain uses of Principal, are still not supported.
+- Tag IAM principals for AI cost and access governance. With Bedrock's IAM principal cost allocation now live in CUR 2.0, tagging roles with `team`, `cost-centre`, and `environment` gives you both a FinOps dashboard and an audit trail linking inference activity to specific identities.
 
-Test policy changes before they reach production. IAM Policy Simulator's SCP simulation capability, built into the IAM console, removes the excuse for deploying untested policy changes. Automate `simulate-principal-policy` checks in your CI/CD pipeline.
+- Align to CIS and NCSC baselines from the start. The CIS AWS Foundations Benchmark v5.0 is now supported in AWS Security Hub. Enable it, resolve the IAM-related findings first, and treat it as a continuous compliance gate rather than a one-time audit.
 
-For containerised workloads, choose EKS Pod Identity for new EKS-in-cloud clusters and retain IRSA where you need cross-environment portability, self-hosted Kubernetes, or EKS Anywhere. In either case, set the IMDS hop limit to 1 to prevent silent fallback to node credentials.
+- Inline-generated IAM policies need manual review. Whether from the AWS Console, SageMaker Unified Studio's Glue integration, or any other helper tool, generated policies are permissive starting points. Review, scope down, and version-control them before they reach production.
+
+<!-- INTERNAL_LINK: cloud compliance frameworks overview | cloud-compliance-frameworks -->
+<!-- INTERNAL_LINK: PCI DSS on AWS compliance guide | pci-dss-aws-compliance-guide -->
+<!-- INTERNAL_LINK: cloud incident response planning | cloud-incident-response -->
