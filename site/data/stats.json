@@ -1,22 +1,22 @@
 {
-  "updated": "11 Aug 2026 06:06 UTC",
-  "total": 1377,
+  "updated": "12 Aug 2026 06:07 UTC",
+  "total": 1415,
   "severity": {
-    "critical": 189,
-    "high": 885,
-    "medium": 279
+    "critical": 196,
+    "high": 910,
+    "medium": 285
   },
   "categories": {
     "aws": 76,
-    "azure": 529,
-    "gcp": 1,
-    "general": 771
+    "azure": 540,
+    "gcp": 17,
+    "general": 782
   },
   "top_critical": {
-    "title": "CVE-2021-34474: Dynamics 365 Business Central RCE",
-    "summary": "CVE-2021-34474 is a remote code execution vulnerability in Microsoft Dynamics 365 Business Central, a cloud-based ERP platform. This update revises the affected build numbers but introduces no new pat",
-    "architects_take": "Verify that your Dynamics 365 Business Central deployments are running the corrected build numbers listed in the updated advisory, and ensure the original July 2021 patches have been applied. If Business Central is internet-facing or integrated with other Azure services, prioritise confirmation of patch status given the remote code execution impact.",
-    "slug": "cve-2021-34474-dynamics-365-business-central-rce",
+    "title": "CVE-2026-65768: Microsoft Teams Android RCE Flaw",
+    "summary": "A path traversal vulnerability in Microsoft Teams for Android allows an unauthenticated attacker to remotely execute arbitrary code on affected devices without requiring user interaction beyond having",
+    "architects_take": "Ensure Microsoft Teams for Android is updated to the patched version across your mobile device fleet via your MDM solution (e.g. Intune) as a priority. Consider temporarily restricting Teams on Android to managed, compliant devices only through Conditional Access policies until patching is confirmed complete.",
+    "slug": "microsoft-teams-android-rce-path-traversal-cve-2026-65768",
     "source": "Microsoft Security Response Center",
     "category": "azure"
   }
