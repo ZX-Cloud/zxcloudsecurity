@@ -1,23 +1,23 @@
 {
-  "updated": "12 Aug 2026 06:07 UTC",
-  "total": 1415,
+  "updated": "13 Aug 2026 06:06 UTC",
+  "total": 1446,
   "severity": {
-    "critical": 196,
-    "high": 910,
-    "medium": 285
+    "critical": 201,
+    "high": 932,
+    "medium": 289
   },
   "categories": {
-    "aws": 76,
-    "azure": 540,
+    "aws": 78,
+    "azure": 551,
     "gcp": 17,
-    "general": 782
+    "general": 800
   },
   "top_critical": {
-    "title": "CVE-2026-65768: Microsoft Teams Android RCE Flaw",
-    "summary": "A path traversal vulnerability in Microsoft Teams for Android allows an unauthenticated attacker to remotely execute arbitrary code on affected devices without requiring user interaction beyond having",
-    "architects_take": "Ensure Microsoft Teams for Android is updated to the patched version across your mobile device fleet via your MDM solution (e.g. Intune) as a priority. Consider temporarily restricting Teams on Android to managed, compliant devices only through Conditional Access policies until patching is confirmed complete.",
-    "slug": "microsoft-teams-android-rce-path-traversal-cve-2026-65768",
-    "source": "Microsoft Security Response Center",
-    "category": "azure"
+    "title": "SAP Commerce Cloud CVE-2026-58231: Critical RCE Flaw",
+    "summary": "SAP has patched a maximum-severity vulnerability (CVE-2026-58231, CVSS 10.0) in Commerce Cloud's Data Hub Adapter that allows unauthenticated attackers to execute arbitrary code. The flaw stems from i",
+    "architects_take": "Apply SAP's patch immediately \u2014 a CVSS 10.0 unauthenticated RCE with no prerequisite access is as bad as it gets. Until patched, consider placing WAF rules or network-level controls in front of the Data Hub Adapter endpoint to restrict access to trusted IP ranges only.",
+    "slug": "sap-commerce-cloud-unauthenticated-rce-cve-2026-58231",
+    "source": "The Hacker News",
+    "category": "general"
   }
 }
